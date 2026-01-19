@@ -80,11 +80,18 @@ section:not(.hero):not(.final-cta):not(.application):not(.pricing) .section-titl
     margin-bottom: var(--spacing-sm);
     letter-spacing: 0.02em;
     position: relative;
+    white-space: nowrap;
 }
 
 .hero__brand::after {
-    content: '|';
+    content: '';
+    display: inline-block;
+    width: 0.15em;
+    height: 1em;
+    background-color: var(--color-text);
+    margin-left: 0.1em;
     animation: blink 1s infinite;
+    vertical-align: text-bottom;
 }
 
 @keyframes blink {
