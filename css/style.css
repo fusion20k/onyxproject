@@ -86,12 +86,12 @@ section:not(.hero):not(.final-cta):not(.application):not(.pricing) .section-titl
 .hero__brand::after {
     content: '';
     display: inline-block;
-    width: 0.15em;
-    height: 1em;
+    width: 2px;
+    height: 0.9em;
     background-color: var(--color-text);
     margin-left: 0.1em;
     animation: blink 1s infinite;
-    vertical-align: text-bottom;
+    vertical-align: baseline;
 }
 
 @keyframes blink {
