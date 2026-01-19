@@ -74,6 +74,13 @@ section:not(.hero):not(.final-cta):not(.application):not(.pricing) .section-titl
     padding: var(--spacing-md) 0;
 }
 
+.hero__brand {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: var(--spacing-sm);
+    letter-spacing: 0.02em;
+}
+
 .hero__headline {
     font-size: 2.5rem;
     margin-bottom: var(--spacing-xs);
@@ -353,6 +360,10 @@ section:not(.hero):not(.final-cta):not(.application):not(.pricing) .section-titl
     
     .container {
         padding: var(--spacing-xs);
+    }
+    
+    .hero__brand {
+        font-size: 2rem;
     }
     
     .hero__headline {
