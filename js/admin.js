@@ -1,7 +1,21 @@
 const API_BASE_URL = '/api';
 
-let authToken = null;
+let session = null;
 let currentApplicationId = null;
+
+function getSession() {
+    if (session) return session;
+    const stored = localStorage.getItem('session');
+    if (stored) {
+        session = JSON.parse(stored);
+    }
+    return session;
+}
+
+function getAccessToken() {
+    const sess = getSession();
+    return sess ? sess.access_token : null;
+}
 
 function showState(stateId) {
     document.querySelectorAll('.admin__state').forEach(state => {
@@ -51,8 +65,12 @@ async function login(email, password) {
         }
 
         const data = await response.json();
-        authToken = data.token || 'demo-token';
-        localStorage.setItem('admin_token', authToken);
+        
+        if (data.session) {
+            session = data.session;
+            localStorage.setItem('session', JSON.stringify(data.session));
+        }
+        
         return { success: true };
     } catch (error) {
         console.error('Login error:', error);
@@ -62,11 +80,15 @@ async function login(email, password) {
 
 async function fetchApplications() {
     try {
-        const token = authToken || localStorage.getItem('admin_token');
+        const accessToken = getAccessToken();
+        
+        if (!accessToken) {
+            return { success: false, error: 'Not authenticated' };
+        }
         
         const response = await fetch(`${API_BASE_URL}/admin/applications`, {
             headers: {
-                'Authorization': `Bearer ${token}`,
+                'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json'
             },
             credentials: 'include'
@@ -90,12 +112,16 @@ async function fetchApplications() {
 
 async function approveApplication(applicationId) {
     try {
-        const token = authToken || localStorage.getItem('admin_token');
+        const accessToken = getAccessToken();
+        
+        if (!accessToken) {
+            return { success: false, error: 'Not authenticated' };
+        }
         
         const response = await fetch(`${API_BASE_URL}/admin/approve`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`,
+                'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json'
             },
             credentials: 'include',
@@ -116,12 +142,16 @@ async function approveApplication(applicationId) {
 
 async function denyApplication(applicationId, reason) {
     try {
-        const token = authToken || localStorage.getItem('admin_token');
+        const accessToken = getAccessToken();
+        
+        if (!accessToken) {
+            return { success: false, error: 'Not authenticated' };
+        }
         
         const response = await fetch(`${API_BASE_URL}/admin/deny`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`,
+                'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json'
             },
             credentials: 'include',
@@ -256,8 +286,8 @@ async function loadApplications() {
 }
 
 function logout() {
-    authToken = null;
-    localStorage.removeItem('admin_token');
+    session = null;
+    localStorage.removeItem('session');
     showState('auth-state');
 }
 
@@ -268,9 +298,8 @@ function escapeHtml(text) {
 }
 
 function checkAuth() {
-    const token = localStorage.getItem('admin_token');
-    if (token) {
-        authToken = token;
+    const sess = getSession();
+    if (sess && sess.access_token) {
         showState('dashboard-state');
         loadApplications();
     } else {
