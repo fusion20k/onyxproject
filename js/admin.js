@@ -45,16 +45,18 @@ async function login(email, password) {
         });
 
         if (!response.ok) {
-            return { success: false, error: 'Invalid credentials' };
+            const errorText = await response.text();
+            console.error('Login failed:', response.status, errorText);
+            return { success: false, error: `Login failed (${response.status}). Check backend logs.` };
         }
 
         const data = await response.json();
-        authToken = data.token;
+        authToken = data.token || 'demo-token';
         localStorage.setItem('admin_token', authToken);
         return { success: true };
     } catch (error) {
         console.error('Login error:', error);
-        return { success: false, error: 'Login failed' };
+        return { success: false, error: 'Cannot connect to backend. Check if backend is running.' };
     }
 }
 
@@ -71,19 +73,18 @@ async function fetchApplications() {
         });
 
         if (response.status === 401) {
-            logout();
-            return { success: false, error: 'Unauthorized' };
+            return { success: false, error: 'Authentication failed. Please check your credentials.' };
         }
 
         if (!response.ok) {
-            return { success: false, error: 'Failed to fetch applications' };
+            return { success: false, error: 'Failed to fetch applications. Backend may not be ready.' };
         }
 
         const data = await response.json();
         return { success: true, applications: data.applications || [] };
     } catch (error) {
         console.error('Fetch applications error:', error);
-        return { success: false, error: 'Failed to fetch applications' };
+        return { success: false, error: 'Cannot connect to backend. Please check if backend is running.' };
     }
 }
 
