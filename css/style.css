@@ -75,10 +75,25 @@ section:not(.hero):not(.final-cta):not(.application):not(.pricing) .section-titl
 }
 
 .hero__brand {
-    font-size: 3rem;
+    font-size: 6rem;
     font-weight: bold;
     margin-bottom: var(--spacing-sm);
     letter-spacing: 0.02em;
+    position: relative;
+}
+
+.hero__brand::after {
+    content: '|';
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0%, 50% {
+        opacity: 1;
+    }
+    51%, 100% {
+        opacity: 0;
+    }
 }
 
 .hero__headline {
@@ -363,7 +378,7 @@ section:not(.hero):not(.final-cta):not(.application):not(.pricing) .section-titl
     }
     
     .hero__brand {
-        font-size: 2rem;
+        font-size: 4rem;
     }
     
     .hero__headline {
