@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Payment - Onyx</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/payment.css">
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <main class="container">
+        <section class="payment">
+            <div class="payment__brand">the onyx project</div>
+            
+            <div id="loading-state" class="payment__state">
+                <p class="payment__message">Verifying account...</p>
+            </div>
+
+            <div id="unauthorized-state" class="payment__state" style="display: none;">
+                <h1 class="payment__title">Access Denied</h1>
+                <p class="payment__message">You must create an account first.</p>
+                <a href="/invite" class="cta">Go to invite page</a>
+            </div>
+
+            <div id="already-paid-state" class="payment__state" style="display: none;">
+                <h1 class="payment__title">Already Paid</h1>
+                <p class="payment__message">Your account is already active.</p>
+                <a href="/app" class="cta">Go to workspace</a>
+            </div>
+
+            <div id="payment-state" class="payment__state" style="display: none;">
+                <h1 class="payment__title">Complete Your Membership</h1>
+                <p class="payment__message" id="user-email"></p>
+                
+                <div class="payment__details">
+                    <div class="payment__plan">
+                        <div class="payment__plan-name">Founding Membership</div>
+                        <div class="payment__plan-price">$100<span>/month</span></div>
+                        <ul class="payment__plan-features">
+                            <li>Private decision support workspace</li>
+                            <li>Access to curated member community</li>
+                            <li>Cancel anytime</li>
+                        </ul>
+                    </div>
+
+                    <button id="checkout-btn" class="cta">Proceed to Payment</button>
+                    
+                    <div class="payment__secure">
+                        <span>🔒</span> Secure payment powered by Stripe
+                    </div>
+                </div>
+
+                <div id="payment-error" class="payment__error" style="display: none;"></div>
+            </div>
+
+            <div id="processing-state" class="payment__state" style="display: none;">
+                <h1 class="payment__title">Processing Payment</h1>
+                <p class="payment__message">Please wait...</p>
+            </div>
+
+            <div id="success-state" class="payment__state" style="display: none;">
+                <h1 class="payment__title">Payment Successful</h1>
+                <p class="payment__message">Welcome to Onyx. Redirecting to your workspace...</p>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/payment.js"></script>
+</body>
+</html>

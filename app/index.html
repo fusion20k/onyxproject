@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Workspace - Onyx</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/app.css">
+</head>
+<body>
+    <main class="container">
+        <section class="app">
+            <div id="loading-state" class="app__state">
+                <p class="app__message">Loading workspace...</p>
+            </div>
+
+            <div id="unauthorized-state" class="app__state" style="display: none;">
+                <div class="app__brand">the onyx project</div>
+                <h1 class="app__title">Access Denied</h1>
+                <p class="app__message">You must be logged in and have an active subscription.</p>
+                <a href="/invite" class="cta">Get Access</a>
+            </div>
+
+            <div id="unpaid-state" class="app__state" style="display: none;">
+                <div class="app__brand">the onyx project</div>
+                <h1 class="app__title">Payment Required</h1>
+                <p class="app__message">Please complete payment to access your workspace.</p>
+                <a href="/payment" class="cta">Complete Payment</a>
+            </div>
+
+            <div id="workspace-state" class="app__state" style="display: none;">
+                <div class="app__header">
+                    <div class="app__brand">the onyx project</div>
+                    <div class="app__user">
+                        <span id="user-name"></span>
+                        <button id="logout-btn" class="app__logout">Logout</button>
+                    </div>
+                </div>
+
+                <div class="app__content">
+                    <h1 class="app__welcome">Welcome to Onyx</h1>
+                    <p class="app__description">Your private workspace is being built.</p>
+                    <p class="app__description">Full functionality coming soon.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="../js/app.js"></script>
+</body>
+</html>

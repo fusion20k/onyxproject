@@ -182,9 +182,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (result.success) {
                 showState('success-state');
-                // Redirect to /app after 2 seconds
+                // Redirect to /payment after 2 seconds
                 setTimeout(() => {
-                    window.location.href = '/app';
+                    window.location.href = '/payment';
                 }, 2000);
             } else {
                 submitButton.disabled = false;
