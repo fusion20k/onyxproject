@@ -4,8 +4,8 @@
 /invite    /invite.html    200
 /invite/*  /invite.html    200
 
-# API proxy (will be configured when backend is ready)
-/api/*  https://your-backend-url.com/api/:splat  200
+# API proxy
+/api/*  https://onyxbackend-55af.onrender.com/api/:splat  200
 
 # SPA fallback for /app (future)
 /app/*  /app/index.html  200
