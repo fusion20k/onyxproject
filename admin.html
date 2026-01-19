@@ -11,13 +11,12 @@
 <body>
     <main class="container">
         <section class="admin">
-            <div class="admin__header">
-                <div class="admin__brand">the onyx project</div>
-                <h1 class="admin__title">Admin Panel</h1>
-                <button id="logout-btn" class="admin__logout">Logout</button>
-            </div>
-
             <div id="auth-state" class="admin__state">
+                <div class="admin__header">
+                    <div class="admin__brand">the onyx project</div>
+                    <h1 class="admin__title">Admin Panel</h1>
+                </div>
+
                 <h2 class="admin__subtitle">Admin Login</h2>
                 <form id="login-form" class="admin__form">
                     <div class="form-group">
@@ -37,6 +36,12 @@
             </div>
 
             <div id="dashboard-state" class="admin__state" style="display: none;">
+                <div class="admin__header">
+                    <div class="admin__brand">the onyx project</div>
+                    <h1 class="admin__title">Admin Panel</h1>
+                    <button id="logout-btn" class="admin__logout">Logout</button>
+                </div>
+
                 <div class="admin__controls">
                     <button id="refresh-btn" class="admin__button">Refresh</button>
                     <div class="admin__stats">
