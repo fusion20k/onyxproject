@@ -82,7 +82,7 @@
 
         <!-- Section 6: Access & Curation -->
         <section class="access">
-            <p class="access__text">Membership is curated through manual review. Every applicant is evaluated to maintain signal quality and ensure serious participation.</p>
+            <p class="access__text">Access is curated. Every member is reviewed to maintain signal quality.</p>
         </section>
 
         <!-- Section 7: Pricing -->
@@ -105,8 +105,8 @@
             <form class="application__form" id="application-form-element" name="onyx-application" method="POST" data-netlify="true" netlify-honeypot="bot-field">
                 <input type="hidden" name="form-name" value="onyx-application">
                 
-                <p style="display:none;">
-                    <label>Don't fill this out if you're human: <input name="bot-field"></label>
+                <p style="display:none;" aria-hidden="true">
+                    <label>Don't fill this out if you're human: <input name="bot-field" tabindex="-1"></label>
                 </p>
                 
                 <div class="form-group">
