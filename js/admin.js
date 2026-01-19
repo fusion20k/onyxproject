@@ -65,10 +65,16 @@ async function login(email, password) {
         }
 
         const data = await response.json();
+        console.log('Login response:', data);
         
         if (data.session) {
             session = data.session;
             localStorage.setItem('session', JSON.stringify(data.session));
+            console.log('Stored session:', session);
+            console.log('Access token:', session.access_token);
+        } else {
+            console.error('No session in login response. Full response:', data);
+            return { success: false, error: 'Invalid login response format' };
         }
         
         return { success: true };
@@ -82,7 +88,11 @@ async function fetchApplications() {
     try {
         const accessToken = getAccessToken();
         
+        console.log('Fetching applications with token:', accessToken);
+        console.log('Full session:', getSession());
+        
         if (!accessToken) {
+            console.error('No access token available');
             return { success: false, error: 'Not authenticated' };
         }
         
@@ -93,6 +103,8 @@ async function fetchApplications() {
             },
             credentials: 'include'
         });
+        
+        console.log('Applications response status:', response.status);
 
         if (response.status === 401) {
             return { success: false, error: 'Authentication failed. Please check your credentials.' };
