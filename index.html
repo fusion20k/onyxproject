@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Private decision support for serious builders. A paid, curated environment for developers and founders.">
+    <title>Onyx - Private Decision Support</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <main class="container">
+        <!-- Section 1: Above the Fold -->
+        <section class="hero">
+            <h1 class="hero__headline">Private decision support for serious builders</h1>
+            <p class="hero__subheadline">A paid, curated environment for developers and founders who need fast, credible feedback on real technical and product decisions — without public noise.</p>
+            <a href="#apply" class="cta">Apply for access</a>
+        </section>
+
+        <!-- Section 2: Problem Framing -->
+        <section class="problem">
+            <h2 class="section-title">The problem isn't lack of information. It's lack of signal.</h2>
+            <ul class="problem__list">
+                <li>Public forums are noisy and unreliable</li>
+                <li>Discords reward speed, not correctness</li>
+                <li>Feedback arrives too late or not at all</li>
+                <li>Wrong decisions quietly waste weeks</li>
+            </ul>
+            <p class="problem__transition">When the cost of being wrong is high, free feedback stops making sense.</p>
+        </section>
+
+        <!-- Section 3: What Onyx Is (and Is Not) -->
+        <section class="definition">
+            <div class="definition__grid">
+                <div class="definition__column">
+                    <h3 class="definition__heading">Onyx is:</h3>
+                    <ul class="definition__list">
+                        <li>Private and paid</li>
+                        <li>Curated for seriousness</li>
+                        <li>Focused on real decisions</li>
+                        <li>Text-only, distraction-free</li>
+                        <li>Designed for outcomes</li>
+                    </ul>
+                </div>
+                <div class="definition__column">
+                    <h3 class="definition__heading">Onyx is not:</h3>
+                    <ul class="definition__list">
+                        <li>A public community</li>
+                        <li>A Discord or forum</li>
+                        <li>A coaching program</li>
+                        <li>A course or content library</li>
+                        <li>A beginner help desk</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: How It Works -->
+        <section class="process">
+            <h2 class="section-title">How It Works</h2>
+            <ol class="process__list">
+                <li>Apply for access</li>
+                <li>Applications are reviewed manually</li>
+                <li>Approved members subscribe</li>
+                <li>Post real problems in private rooms</li>
+                <li>Receive structured, credible feedback</li>
+            </ol>
+            <p class="process__end">No feeds. No noise. No spectators.</p>
+        </section>
+
+        <!-- Section 5: Value Justification -->
+        <section class="value">
+            <h2 class="section-title">Why people pay for Onyx</h2>
+            <ul class="value__list">
+                <li>Reduce costly technical and product mistakes</li>
+                <li>Shorten decision timelines from weeks to hours</li>
+                <li>Get private feedback without public exposure</li>
+                <li>Think clearly under pressure</li>
+            </ul>
+            <p class="value__anchor">One avoided mistake often pays for months of access.</p>
+        </section>
+
+        <!-- Section 6: Access & Curation -->
+        <section class="access">
+            <p class="access__text">Onyx is intentionally small. Every member is reviewed to preserve signal and seriousness.</p>
+        </section>
+
+        <!-- Section 7: Pricing -->
+        <section class="pricing">
+            <div class="pricing__amount">Founding membership: $100/month</div>
+            <p class="pricing__details">Cancel anytime</p>
+            <p class="pricing__details">Limited availability</p>
+            <p class="pricing__filter">If this feels expensive, Onyx is not designed for you.</p>
+        </section>
+
+        <!-- Section 8: Final CTA -->
+        <section class="final-cta" id="apply">
+            <a href="#application-form" class="cta">Apply for access</a>
+            <p class="final-cta__subtext">Applications are reviewed manually.</p>
+        </section>
+
+        <!-- Application Form -->
+        <section class="application" id="application-form">
+            <h2 class="section-title">Application</h2>
+            <form class="application__form" id="application-form-element" name="onyx-application" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+                <input type="hidden" name="form-name" value="onyx-application">
+                
+                <p style="display:none;">
+                    <label>Don't fill this out if you're human: <input name="bot-field"></label>
+                </p>
+                
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="role">Current role</label>
+                    <input type="text" id="role" name="role" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="reason">Why are you applying?</label>
+                    <textarea id="reason" name="reason" rows="6" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="project">Current project or company (optional)</label>
+                    <input type="text" id="project" name="project">
+                </div>
+                
+                <button type="submit" class="cta">Submit application</button>
+            </form>
+            
+            <div class="application__message application__message--success" id="success-message">
+                Application submitted. You will hear from us within 72 hours.
+            </div>
+            
+            <div class="application__message application__message--error" id="error-message">
+                Submission failed. Please try again or email directly.
+            </div>
+        </section>
+    </main>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
