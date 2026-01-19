@@ -1,0 +1,93 @@
+/* Invite Page Specific Styles */
+
+.invite {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    max-width: 500px;
+    margin: 0 auto;
+    padding: var(--spacing-sm);
+}
+
+.invite__brand {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: var(--spacing-md);
+    letter-spacing: 0.02em;
+    text-align: center;
+}
+
+.invite__state {
+    width: 100%;
+}
+
+.invite__title {
+    font-size: 1.5rem;
+    font-weight: normal;
+    margin-bottom: var(--spacing-xs);
+    text-align: center;
+}
+
+.invite__message {
+    text-align: center;
+    opacity: 0.7;
+    margin-bottom: var(--spacing-sm);
+    line-height: 1.6;
+}
+
+.invite__form {
+    margin-top: var(--spacing-sm);
+}
+
+.invite__form .form-group {
+    margin-bottom: var(--spacing-sm);
+}
+
+.invite__form label {
+    display: block;
+    margin-bottom: 0.5em;
+    font-size: 0.875rem;
+    opacity: 0.8;
+}
+
+.invite__form input {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: 1rem;
+}
+
+.invite__form input:focus {
+    outline: none;
+    border-color: var(--color-text);
+}
+
+.invite__form button[type="submit"] {
+    width: 100%;
+    margin-top: var(--spacing-xs);
+}
+
+.invite__error {
+    margin-top: var(--spacing-xs);
+    padding: var(--spacing-xs);
+    border: 1px solid #ff4444;
+    color: #ff4444;
+    text-align: center;
+    font-size: 0.875rem;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .invite__brand {
+        font-size: 1.5rem;
+    }
+    
+    .invite__title {
+        font-size: 1.25rem;
+    }
+}

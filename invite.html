@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Invite - Onyx</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/invite.css">
+</head>
+<body>
+    <main class="container">
+        <section class="invite">
+            <div class="invite__brand">the onyx project</div>
+            
+            <!-- State: Loading -->
+            <div id="loading-state" class="invite__state">
+                <p class="invite__message">Verifying invitation...</p>
+            </div>
+
+            <!-- State: Invalid Token -->
+            <div id="invalid-state" class="invite__state" style="display: none;">
+                <h1 class="invite__title">Invite expired or invalid</h1>
+                <p class="invite__message">This invitation link is no longer valid.</p>
+            </div>
+
+            <!-- State: No Token (Email Verification) -->
+            <div id="email-state" class="invite__state" style="display: none;">
+                <h1 class="invite__title">Approved applicants only</h1>
+                <p class="invite__message">This page is for approved applicants only.</p>
+                
+                <form id="email-form" class="invite__form">
+                    <div class="form-group">
+                        <label for="email">Email address</label>
+                        <input type="email" id="email" name="email" required autofocus>
+                    </div>
+                    
+                    <button type="submit" class="cta">Continue</button>
+                </form>
+
+                <div id="email-error" class="invite__error" style="display: none;"></div>
+            </div>
+
+            <!-- State: Email Not Approved -->
+            <div id="not-approved-state" class="invite__state" style="display: none;">
+                <h1 class="invite__title">Access not granted</h1>
+                <p class="invite__message">This email has not been approved for access.</p>
+            </div>
+
+            <!-- State: Create Account (Token Valid or Email Approved) -->
+            <div id="create-account-state" class="invite__state" style="display: none;">
+                <h1 class="invite__title">Create your account</h1>
+                <p class="invite__message" id="account-email"></p>
+                
+                <form id="account-form" class="invite__form">
+                    <div class="form-group">
+                        <label for="display-name">Display name (optional)</label>
+                        <input type="text" id="display-name" name="displayName">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required minlength="8">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirm-password">Confirm password</label>
+                        <input type="password" id="confirm-password" name="confirmPassword" required>
+                    </div>
+                    
+                    <button type="submit" class="cta">Create account</button>
+                </form>
+
+                <div id="account-error" class="invite__error" style="display: none;"></div>
+            </div>
+
+            <!-- State: Success -->
+            <div id="success-state" class="invite__state" style="display: none;">
+                <h1 class="invite__title">Account created</h1>
+                <p class="invite__message">Redirecting to workspace...</p>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/invite.js"></script>
+</body>
+</html>

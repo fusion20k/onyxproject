@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /invite
+Disallow: /invite.html
+Disallow: /app
+Disallow: /app/
+
+Allow: /
+Sitemap: https://onyx-project.com/sitemap.xml
