@@ -115,7 +115,12 @@ async function fetchApplications() {
         }
 
         const data = await response.json();
-        return { success: true, applications: data.applications || [] };
+        console.log('Applications data received:', data);
+        console.log('Applications array:', data.applications || data);
+        
+        // Backend might return data.applications or just an array directly
+        const applications = data.applications || data || [];
+        return { success: true, applications: applications };
     } catch (error) {
         console.error('Fetch applications error:', error);
         return { success: false, error: 'Cannot connect to backend. Please check if backend is running.' };
@@ -183,6 +188,9 @@ async function denyApplication(applicationId, reason) {
 }
 
 function renderApplications(applications) {
+    console.log('renderApplications called with:', applications);
+    console.log('applications type:', typeof applications, 'isArray:', Array.isArray(applications));
+    
     const tbody = document.getElementById('applications-tbody');
     const container = document.getElementById('applications-container');
     const noApps = document.getElementById('no-applications');
@@ -192,6 +200,7 @@ function renderApplications(applications) {
     loading.style.display = 'none';
 
     if (!applications || applications.length === 0) {
+        console.log('No applications to display');
         container.style.display = 'none';
         noApps.style.display = 'block';
         statsText.textContent = 'No applications';
@@ -284,15 +293,19 @@ function hideModal(modalId) {
 }
 
 async function loadApplications() {
+    console.log('loadApplications called');
     document.getElementById('loading-table').style.display = 'block';
     document.getElementById('applications-container').style.display = 'none';
     document.getElementById('no-applications').style.display = 'none';
 
     const result = await fetchApplications();
+    console.log('fetchApplications result:', result);
 
     if (result.success) {
+        console.log('Success - rendering applications');
         renderApplications(result.applications);
     } else {
+        console.log('Failed - showing error:', result.error);
         document.getElementById('loading-table').textContent = result.error || 'Failed to load applications';
     }
 }
