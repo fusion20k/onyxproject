@@ -19,8 +19,11 @@
             </div>
 
             <div id="unauthorized-state" class="payment__state" style="display: none;">
-                <h1 class="payment__title">Access Denied</h1>
-                <p class="payment__message">You must create an account first.</p>
+                <h1 class="payment__title">Authentication Required</h1>
+                <p class="payment__message">Unable to verify your account. Check the console for details.</p>
+                <p class="payment__message" style="margin-top: 20px; font-size: 0.875rem; color: #888;">
+                    Backend /auth/status endpoint may not be implemented yet.
+                </p>
                 <a href="/invite" class="cta">Go to invite page</a>
             </div>
 

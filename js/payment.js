@@ -23,21 +23,27 @@ function showError(elementId, message) {
 
 async function checkAuthStatus() {
     try {
+        console.log('Checking auth status at:', `${API_BASE_URL}/auth/status`);
         const response = await fetch(`${API_BASE_URL}/auth/status`, {
             credentials: 'include'
         });
 
+        console.log('Auth status response:', response.status, response.statusText);
+
         if (!response.ok) {
+            console.warn('Auth check failed - endpoint may not be implemented yet');
             return { authenticated: false };
         }
 
         const data = await response.json();
+        console.log('Auth status data:', data);
         return { 
             authenticated: true, 
             user: data.user 
         };
     } catch (error) {
         console.error('Auth check error:', error);
+        console.warn('Backend /auth/status endpoint not available');
         return { authenticated: false };
     }
 }
@@ -109,19 +115,20 @@ async function initialize() {
 
     const authStatus = await checkAuthStatus();
 
-    if (!authStatus.authenticated) {
+    if (!authStatus.authenticated || !authStatus.user) {
         showState('unauthorized-state');
         return;
     }
 
     currentUser = authStatus.user;
 
-    if (currentUser.paid) {
+    if (currentUser && currentUser.paid) {
         showState('already-paid-state');
         return;
     }
 
-    document.getElementById('user-email').textContent = currentUser.email;
+    const userEmail = currentUser?.email || 'your account';
+    document.getElementById('user-email').textContent = userEmail;
     showState('payment-state');
 
     try {
