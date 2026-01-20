@@ -61,23 +61,48 @@ document.addEventListener('DOMContentLoaded', function() {
             .join("&");
     }
     
-    function submitApplication(data) {
-        const formData = new FormData(form);
+    async function submitApplication(data) {
+        const submitButton = form.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Submitting...';
         
-        fetch("/", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: encode({
-                "form-name": "onyx-application",
-                ...data
-            })
-        })
-        .then(() => {
+        try {
+            // Submit to backend API (primary - goes to Supabase)
+            const apiResponse = await fetch('/api/applications/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: data.name,
+                    email: data.email,
+                    role: data.role,
+                    reason: data.reason,
+                    project: data.project || null
+                })
+            });
+            
+            if (!apiResponse.ok) {
+                throw new Error('API submission failed');
+            }
+            
+            // Also submit to Netlify Forms (backup/notification)
+            fetch("/", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: encode({
+                    "form-name": "onyx-application",
+                    ...data
+                })
+            }).catch(err => console.log('Netlify Forms backup failed:', err));
+            
             showSuccess();
-        })
-        .catch(error => {
+        } catch (error) {
             console.error('Form submission error:', error);
             showError('Submission failed. Please try again or email directly.');
-        });
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Submit application';
+        }
     }
 });
