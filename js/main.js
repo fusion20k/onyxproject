@@ -1,3 +1,5 @@
+const BACKEND_URL = 'https://onyxbackend-55af.onrender.com';
+
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('application-form-element');
     const successMessage = document.getElementById('success-message');
@@ -68,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         try {
             // Submit to backend API (primary - goes to Supabase)
-            const apiResponse = await fetch('/api/applications/submit', {
+            const apiResponse = await fetch(`${BACKEND_URL}/api/applications/submit`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
