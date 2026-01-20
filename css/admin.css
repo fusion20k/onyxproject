@@ -72,6 +72,11 @@
     gap: var(--spacing-xs);
 }
 
+.admin__controls-left {
+    display: flex;
+    gap: 12px;
+}
+
 .admin__stats {
     font-size: 0.875rem;
     color: #888;
@@ -168,6 +173,7 @@
 
 .admin__table {
     width: 100%;
+    min-width: 1400px;
     border-collapse: collapse;
     font-size: 0.875rem;
     margin-top: var(--spacing-sm);
@@ -203,11 +209,25 @@
     opacity: 0.3;
 }
 
+#applications-container {
+    overflow-x: auto;
+}
+
+.admin__table th:nth-child(1) { width: 100px; }
+.admin__table th:nth-child(2) { width: 120px; }
+.admin__table th:nth-child(3) { width: 180px; }
+.admin__table th:nth-child(4) { width: 100px; }
+.admin__table th:nth-child(5) { width: 400px; }
+.admin__table th:nth-child(6) { width: 120px; }
+.admin__table th:nth-child(7) { width: 100px; }
+.admin__table th:nth-child(8) { width: 180px; }
+
 .admin__reason {
     line-height: 1.5;
     word-wrap: break-word;
     overflow-wrap: break-word;
     hyphens: auto;
+    max-width: 400px;
 }
 
 .admin__status {

@@ -189,6 +189,36 @@ async function denyApplication(applicationId, reason) {
     }
 }
 
+async function clearDeniedApplications() {
+    try {
+        const accessToken = getAccessToken();
+        
+        if (!accessToken) {
+            return { success: false, error: 'Not authenticated' };
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/admin/clear-denied`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            return { success: false, error: error.message || 'Failed to clear denied applications' };
+        }
+
+        const data = await response.json();
+        return { success: true, count: data.count || 0 };
+    } catch (error) {
+        console.error('Clear denied error:', error);
+        return { success: false, error: 'Failed to clear denied applications' };
+    }
+}
+
 function renderApplications(applications) {
     allApplications = applications || [];
     
@@ -376,6 +406,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (refreshBtn) {
         refreshBtn.addEventListener('click', loadApplications);
+    }
+
+    const clearDeniedBtn = document.getElementById('clear-denied-btn');
+    if (clearDeniedBtn) {
+        clearDeniedBtn.addEventListener('click', async function() {
+            const deniedCount = allApplications.filter(a => a.status === 'denied').length;
+            
+            if (deniedCount === 0) {
+                alert('No denied applications to clear');
+                return;
+            }
+            
+            if (!confirm(`Are you sure you want to permanently delete ${deniedCount} denied application(s)?`)) {
+                return;
+            }
+
+            this.disabled = true;
+            this.textContent = 'Clearing...';
+
+            const result = await clearDeniedApplications();
+
+            this.disabled = false;
+            this.textContent = 'Clear Denied';
+
+            if (result.success) {
+                alert(`Successfully deleted ${result.count} denied application(s)`);
+                await loadApplications();
+            } else {
+                alert(result.error || 'Failed to clear denied applications');
+            }
+        });
     }
 
     if (denyForm) {
