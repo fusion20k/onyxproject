@@ -1,3 +1,7 @@
+.admin-page .container {
+    max-width: 1600px;
+}
+
 .admin {
     padding: var(--spacing-sm) 0;
 }
@@ -173,10 +177,11 @@
 
 .admin__table {
     width: 100%;
-    min-width: 1400px;
+    min-width: 1500px;
     border-collapse: collapse;
     font-size: 0.875rem;
     margin-top: var(--spacing-sm);
+    table-layout: fixed;
 }
 
 .admin__table th {
@@ -213,21 +218,21 @@
     overflow-x: auto;
 }
 
-.admin__table th:nth-child(1) { width: 100px; }
-.admin__table th:nth-child(2) { width: 120px; }
-.admin__table th:nth-child(3) { width: 180px; }
-.admin__table th:nth-child(4) { width: 100px; }
-.admin__table th:nth-child(5) { width: 400px; }
-.admin__table th:nth-child(6) { width: 120px; }
-.admin__table th:nth-child(7) { width: 100px; }
-.admin__table th:nth-child(8) { width: 180px; }
+.admin__table th:nth-child(1) { width: 110px; }
+.admin__table th:nth-child(2) { width: 130px; }
+.admin__table th:nth-child(3) { width: 200px; }
+.admin__table th:nth-child(4) { width: 110px; }
+.admin__table th:nth-child(5) { width: 500px; }
+.admin__table th:nth-child(6) { width: 130px; }
+.admin__table th:nth-child(7) { width: 110px; }
+.admin__table th:nth-child(8) { width: 210px; }
 
 .admin__reason {
     line-height: 1.5;
     word-wrap: break-word;
     overflow-wrap: break-word;
     hyphens: auto;
-    max-width: 400px;
+    max-width: 500px;
 }
 
 .admin__status {
