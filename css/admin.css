@@ -77,6 +77,36 @@
     color: #888;
 }
 
+.admin__filters {
+    display: flex;
+    gap: 12px;
+    margin-top: var(--spacing-sm);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.admin__filter-btn {
+    background: transparent;
+    color: #888;
+    border: 1px solid var(--color-border);
+    padding: 8px 16px;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.admin__filter-btn:hover {
+    background-color: var(--color-hover-bg);
+    color: var(--color-text);
+}
+
+.admin__filter-btn.active {
+    background-color: var(--color-text);
+    color: var(--color-bg);
+    border-color: var(--color-text);
+}
+
 .admin__loading {
     text-align: center;
     padding: var(--spacing-md);
@@ -141,28 +171,19 @@
     border-collapse: collapse;
     font-size: 0.875rem;
     margin-top: var(--spacing-sm);
-    table-layout: fixed;
 }
 
 .admin__table th {
     text-align: left;
-    padding: 12px 12px;
+    padding: 12px;
     border-bottom: 2px solid var(--color-border);
     font-weight: normal;
     color: #888;
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    white-space: nowrap;
 }
-
-.admin__table th:nth-child(1) { width: 90px; }  /* Date */
-.admin__table th:nth-child(2) { width: 120px; } /* Name */
-.admin__table th:nth-child(3) { width: 180px; } /* Email */
-.admin__table th:nth-child(4) { width: 100px; } /* Role */
-.admin__table th:nth-child(5) { width: auto; }  /* Reason */
-.admin__table th:nth-child(6) { width: 120px; } /* Project */
-.admin__table th:nth-child(7) { width: 90px; }  /* Status */
-.admin__table th:nth-child(8) { width: 180px; } /* Actions */
 
 .admin__table td {
     padding: 16px 12px;

@@ -2,6 +2,8 @@ const API_BASE_URL = '/api';
 
 let session = null;
 let currentApplicationId = null;
+let currentFilter = 'pending';
+let allApplications = [];
 
 function getSession() {
     if (session) return session;
@@ -188,8 +190,7 @@ async function denyApplication(applicationId, reason) {
 }
 
 function renderApplications(applications) {
-    console.log('renderApplications called with:', applications);
-    console.log('applications type:', typeof applications, 'isArray:', Array.isArray(applications));
+    allApplications = applications || [];
     
     const tbody = document.getElementById('applications-tbody');
     const container = document.getElementById('applications-container');
@@ -199,25 +200,31 @@ function renderApplications(applications) {
 
     loading.style.display = 'none';
 
-    if (!applications || applications.length === 0) {
-        console.log('No applications to display');
+    // Filter applications based on current filter
+    let filteredApps = allApplications;
+    if (currentFilter !== 'all') {
+        filteredApps = allApplications.filter(a => a.status === currentFilter);
+    }
+
+    // Update stats with all applications
+    const pending = allApplications.filter(a => a.status === 'pending').length;
+    const approved = allApplications.filter(a => a.status === 'approved').length;
+    const denied = allApplications.filter(a => a.status === 'denied').length;
+    statsText.textContent = `Pending: ${pending} | Approved: ${approved} | Denied: ${denied}`;
+
+    if (filteredApps.length === 0) {
         container.style.display = 'none';
         noApps.style.display = 'block';
-        statsText.textContent = 'No applications';
+        noApps.textContent = `No ${currentFilter} applications`;
         return;
     }
 
     noApps.style.display = 'none';
     container.style.display = 'block';
 
-    const pending = applications.filter(a => a.status === 'pending').length;
-    const approved = applications.filter(a => a.status === 'approved').length;
-    const denied = applications.filter(a => a.status === 'denied').length;
-    statsText.textContent = `Total: ${applications.length} | Pending: ${pending} | Approved: ${approved} | Denied: ${denied}`;
-
     tbody.innerHTML = '';
 
-    applications.forEach(app => {
+    filteredApps.forEach(app => {
         const tr = document.createElement('tr');
         tr.dataset.status = app.status;
         
@@ -400,6 +407,18 @@ document.addEventListener('DOMContentLoaded', function() {
             hideModal('deny-modal');
         });
     }
+
+    const filterBtns = document.querySelectorAll('.admin__filter-btn');
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            currentFilter = this.dataset.filter;
+            
+            filterBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            renderApplications(allApplications);
+        });
+    });
 
     checkAuth();
 });
