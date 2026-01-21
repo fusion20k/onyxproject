@@ -166,18 +166,25 @@ async function initialize() {
     const authStatus = await checkAuthStatus();
 
     if (!authStatus.authenticated || !authStatus.user) {
-        showState('unauthorized-state');
-        return;
+        const localUser = localStorage.getItem('user');
+        if (localUser) {
+            console.log('Using cached user data from localStorage');
+            currentUser = JSON.parse(localUser);
+        } else {
+            showState('unauthorized-state');
+            return;
+        }
+    } else {
+        currentUser = authStatus.user;
     }
-
-    currentUser = authStatus.user;
 
     if (currentUser && currentUser.paid) {
         showState('already-paid-state');
         return;
     }
 
-    const userEmail = currentUser?.email || 'your account';
+    const userEmail = currentUser?.email || currentUser?.user_metadata?.email || 'Account';
+    console.log('Displaying email:', userEmail);
     document.getElementById('user-email').textContent = userEmail;
     showState('payment-state');
 
