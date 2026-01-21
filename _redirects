@@ -16,4 +16,5 @@
 /api/*  https://onyxbackend-55af.onrender.com/api/:splat  200
 
 # SPA fallback for /app
-/app/*  /app/index.html  200
+/app     /app/index.html  200
+/app/*   /app/index.html  200

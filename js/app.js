@@ -1,3 +1,4 @@
+console.log('[APP] Script loaded');
 const API_BASE_URL = '/api';
 
 let currentUser = null;
