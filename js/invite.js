@@ -90,6 +90,18 @@ async function createAccount(data) {
             return { success: false, error: error.message || 'Account creation failed' };
         }
         
+        const responseData = await response.json();
+        
+        if (responseData.session) {
+            localStorage.setItem('session', JSON.stringify(responseData.session));
+            console.log('Session stored:', responseData.session);
+        }
+        
+        if (responseData.user) {
+            localStorage.setItem('user', JSON.stringify(responseData.user));
+            console.log('User stored:', responseData.user);
+        }
+        
         return { success: true };
     } catch (error) {
         console.error('Account creation error:', error);

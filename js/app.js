@@ -14,7 +14,23 @@ function showState(stateId) {
 
 async function checkAuthStatus() {
     try {
+        const sessionData = localStorage.getItem('session');
+        
+        if (!sessionData) {
+            return { authenticated: false };
+        }
+        
+        const session = JSON.parse(sessionData);
+        const accessToken = session.access_token;
+        
+        if (!accessToken) {
+            return { authenticated: false };
+        }
+        
         const response = await fetch(`${API_BASE_URL}/auth/status`, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            },
             credentials: 'include'
         });
 
@@ -24,7 +40,7 @@ async function checkAuthStatus() {
 
         const data = await response.json();
         return { 
-            authenticated: true, 
+            authenticated: data.authenticated !== false, 
             user: data.user 
         };
     } catch (error) {
@@ -35,13 +51,26 @@ async function checkAuthStatus() {
 
 async function logout() {
     try {
+        const sessionData = localStorage.getItem('session');
+        const session = sessionData ? JSON.parse(sessionData) : null;
+        const accessToken = session?.access_token;
+        
+        const headers = {};
+        if (accessToken) {
+            headers['Authorization'] = `Bearer ${accessToken}`;
+        }
+        
         await fetch(`${API_BASE_URL}/auth/logout`, {
             method: 'POST',
+            headers,
             credentials: 'include'
         });
     } catch (error) {
         console.error('Logout error:', error);
     }
+    
+    localStorage.removeItem('session');
+    localStorage.removeItem('user');
     
     window.location.href = '/';
 }

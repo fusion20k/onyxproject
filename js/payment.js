@@ -23,38 +23,70 @@ function showError(elementId, message) {
 
 async function checkAuthStatus() {
     try {
+        const sessionData = localStorage.getItem('session');
+        const userData = localStorage.getItem('user');
+        
         console.log('Checking auth status at:', `${API_BASE_URL}/auth/status`);
+        console.log('Session data:', sessionData ? 'found' : 'not found');
+        console.log('User data:', userData ? 'found' : 'not found');
+        
+        if (!sessionData) {
+            console.warn('No session found in localStorage');
+            return { authenticated: false };
+        }
+        
+        const session = JSON.parse(sessionData);
+        const accessToken = session.access_token;
+        
+        if (!accessToken) {
+            console.warn('No access token in session');
+            return { authenticated: false };
+        }
+        
+        console.log('Sending request with access token');
         const response = await fetch(`${API_BASE_URL}/auth/status`, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            },
             credentials: 'include'
         });
 
         console.log('Auth status response:', response.status, response.statusText);
 
         if (!response.ok) {
-            console.warn('Auth check failed - endpoint may not be implemented yet');
+            console.warn('Auth check failed');
             return { authenticated: false };
         }
 
         const data = await response.json();
         console.log('Auth status data:', data);
         return { 
-            authenticated: true, 
+            authenticated: data.authenticated !== false, 
             user: data.user 
         };
     } catch (error) {
         console.error('Auth check error:', error);
-        console.warn('Backend /auth/status endpoint not available');
         return { authenticated: false };
     }
 }
 
 async function createCheckoutSession() {
     try {
+        const sessionData = localStorage.getItem('session');
+        const session = sessionData ? JSON.parse(sessionData) : null;
+        const accessToken = session?.access_token;
+        
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        if (accessToken) {
+            headers['Authorization'] = `Bearer ${accessToken}`;
+        }
+        
         const response = await fetch(`${API_BASE_URL}/payment/create-checkout`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers,
             credentials: 'include'
         });
 
@@ -73,11 +105,21 @@ async function createCheckoutSession() {
 
 async function verifyPayment() {
     try {
+        const sessionData = localStorage.getItem('session');
+        const session = sessionData ? JSON.parse(sessionData) : null;
+        const accessToken = session?.access_token;
+        
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        if (accessToken) {
+            headers['Authorization'] = `Bearer ${accessToken}`;
+        }
+        
         const response = await fetch(`${API_BASE_URL}/payment/verify`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers,
             credentials: 'include'
         });
 
