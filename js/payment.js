@@ -59,9 +59,17 @@ async function checkAuthStatus() {
         }
 
         const data = await response.json();
-        console.log('Auth status data:', data);
+        console.log('Auth status data:', JSON.stringify(data, null, 2));
+        console.log('data.authenticated:', data.authenticated);
+        console.log('data.user:', data.user);
+        
+        if (!data.user) {
+            console.error('Backend returned 200 but missing user data');
+            return { authenticated: false };
+        }
+        
         return { 
-            authenticated: data.authenticated !== false, 
+            authenticated: true, 
             user: data.user 
         };
     } catch (error) {
