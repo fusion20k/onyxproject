@@ -4,6 +4,7 @@ const API_BASE_URL = '/api';
 let currentUser = null;
 let currentDecision = null;
 let currentFeedback = [];
+let allDecisions = { active: null, resolved: [] };
 
 function showState(stateId) {
     document.querySelectorAll('.workspace-state').forEach(state => {
@@ -83,6 +84,35 @@ async function getActiveDecision() {
         return { success: true, decision: data.decision, feedback: data.feedback || [] };
     } catch (error) {
         console.error('[WORKSPACE] Error getting active decision:', error);
+        return { success: false };
+    }
+}
+
+async function getArchive() {
+    try {
+        const sessionData = localStorage.getItem('session');
+        const session = sessionData ? JSON.parse(sessionData) : null;
+        const accessToken = session?.access_token;
+        
+        if (!accessToken) {
+            return { success: false };
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/workspace/archive`, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            return { success: false };
+        }
+
+        const data = await response.json();
+        return { success: true, decisions: data.decisions || [] };
+    } catch (error) {
+        console.error('[WORKSPACE] Error getting archive:', error);
         return { success: false };
     }
 }
@@ -240,6 +270,75 @@ async function logout() {
     window.location.href = '/';
 }
 
+function renderHub() {
+    const activeCount = allDecisions.active ? 1 : 0;
+    const resolvedCount = allDecisions.resolved.length;
+    
+    document.getElementById('active-count').textContent = activeCount;
+    document.getElementById('resolved-count').textContent = resolvedCount;
+    
+    if (resolvedCount > 0) {
+        const totalResolutionTime = allDecisions.resolved.reduce((sum, d) => {
+            const created = new Date(d.created_at);
+            const resolved = new Date(d.resolved_at);
+            return sum + (resolved - created);
+        }, 0);
+        const avgDays = Math.round(totalResolutionTime / resolvedCount / (1000 * 60 * 60 * 24));
+        document.getElementById('avg-time').textContent = `${avgDays}d`;
+    } else {
+        document.getElementById('avg-time').textContent = '—';
+    }
+    
+    const decisionsList = document.getElementById('decisions-list');
+    const noDecisions = document.getElementById('no-decisions');
+    const startBtn = document.getElementById('start-new-decision-btn');
+    
+    decisionsList.innerHTML = '';
+    
+    if (allDecisions.active) {
+        noDecisions.style.display = 'none';
+        decisionsList.style.display = 'flex';
+        
+        const decision = allDecisions.active;
+        const card = document.createElement('div');
+        card.className = 'hub-decision-card';
+        card.onclick = () => navigateToDecision(decision.id);
+        
+        const statusMap = {
+            'in_progress': 'In Progress',
+            'under_review': 'Under Review',
+            'responded': 'Responded',
+            'resolved': 'Resolved'
+        };
+        
+        const timestamp = new Date(decision.updated_at).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+        });
+        
+        card.innerHTML = `
+            <div class="hub-decision-info">
+                <div class="hub-decision-title">${escapeHtml(decision.title || decision.situation.substring(0, 50) + '...')}</div>
+                <div class="hub-decision-meta">Last updated ${timestamp}</div>
+            </div>
+            <div class="hub-decision-badge hub-decision-badge--${decision.status}">
+                ${statusMap[decision.status]}
+            </div>
+        `;
+        
+        decisionsList.appendChild(card);
+        startBtn.disabled = true;
+    } else {
+        decisionsList.style.display = 'none';
+        noDecisions.style.display = 'block';
+        startBtn.disabled = false;
+    }
+    
+    showState('hub-state');
+}
+
 function renderDecisionForm(decision) {
     currentDecision = decision;
     
@@ -317,6 +416,28 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+async function navigateToHub() {
+    await loadHubData();
+    renderHub();
+}
+
+async function navigateToDecision(decisionId) {
+    const result = await getActiveDecision();
+    
+    if (result.success && result.decision) {
+        currentFeedback = result.feedback || [];
+        renderDecisionForm(result.decision);
+    }
+}
+
+async function loadHubData() {
+    const activeResult = await getActiveDecision();
+    const archiveResult = await getArchive();
+    
+    allDecisions.active = activeResult.success ? activeResult.decision : null;
+    allDecisions.resolved = archiveResult.success ? archiveResult.decisions : [];
+}
+
 async function initialize() {
     console.log('[WORKSPACE] Initializing workspace...');
     const authStatus = await checkAuthStatus();
@@ -349,9 +470,8 @@ async function initialize() {
         return;
     }
 
-    if (result.decision) {
-        currentFeedback = result.feedback || [];
-        renderDecisionForm(result.decision);
+    if (result.decision || (await getArchive()).success) {
+        await navigateToHub();
     } else {
         showState('first-time-state');
     }
@@ -381,7 +501,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await createDecision(situation);
             
             if (result.success) {
-                await initialize();
+                await navigateToHub();
             } else {
                 alert(result.error || 'Failed to create decision');
                 submitBtn.disabled = false;
@@ -414,7 +534,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(async () => {
                     saveBtn.disabled = false;
                     saveBtn.textContent = 'Save Progress';
-                    await initialize();
+                    await navigateToDecision(currentDecision.id);
                 }, 1000);
             } else {
                 alert('Failed to save progress');
@@ -443,12 +563,72 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (result.success) {
                 input.value = '';
-                await initialize();
+                await navigateToDecision(currentDecision.id);
             } else {
                 alert('Failed to send feedback');
             }
             
             submitBtn.disabled = false;
+        });
+    }
+
+    const startNewBtn = document.getElementById('start-new-decision-btn');
+    if (startNewBtn) {
+        startNewBtn.addEventListener('click', function() {
+            showState('first-time-state');
+        });
+    }
+
+    const requestSupportBtn = document.getElementById('request-support-btn');
+    if (requestSupportBtn) {
+        requestSupportBtn.addEventListener('click', function() {
+            alert('Support functionality coming soon. Please email support@onyx-project.com for assistance.');
+        });
+    }
+
+    const viewInsightsBtn = document.getElementById('view-insights-btn');
+    if (viewInsightsBtn) {
+        viewInsightsBtn.addEventListener('click', function() {
+            alert('Insights functionality coming soon.');
+        });
+    }
+
+    const navWorkspace = document.getElementById('nav-workspace');
+    if (navWorkspace) {
+        navWorkspace.addEventListener('click', async function(e) {
+            e.preventDefault();
+            document.querySelectorAll('.workspace-nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            navWorkspace.classList.add('active');
+            await navigateToHub();
+        });
+    }
+
+    const navArchive = document.getElementById('nav-archive');
+    if (navArchive) {
+        navArchive.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelectorAll('.workspace-nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            navArchive.classList.add('active');
+            alert('Archive view coming soon.');
+        });
+    }
+
+    const backToHubBtn = document.getElementById('back-to-hub-btn');
+    if (backToHubBtn) {
+        backToHubBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            document.querySelectorAll('.workspace-nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            const navWorkspace = document.getElementById('nav-workspace');
+            if (navWorkspace) {
+                navWorkspace.classList.add('active');
+            }
+            await navigateToHub();
         });
     }
 

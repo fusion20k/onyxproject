@@ -14,8 +14,8 @@
         <aside class="workspace-sidebar" id="workspace-sidebar" style="display: none;">
             <div class="workspace-brand">ONYX</div>
             <nav class="workspace-nav">
-                <a href="#" class="workspace-nav-item active" data-section="active">Active Decision</a>
-                <a href="#" class="workspace-nav-item" data-section="archive">Archive</a>
+                <a href="#" class="workspace-nav-item active" id="nav-workspace">Workspace</a>
+                <a href="#" class="workspace-nav-item" id="nav-archive">Archive</a>
             </nav>
             <div class="workspace-sidebar-footer">
                 <button id="sidebar-logout-btn" class="workspace-logout">Logout</button>
@@ -70,11 +70,64 @@
                     </form>
                 </div>
             </div>
+            <!-- Workspace Hub (Overview) -->
+            <div id="hub-state" class="workspace-state" style="display: none;">
+                <div class="workspace-header">
+                    <div class="workspace-header-left">
+                        <h1 class="workspace-title">Workspace</h1>
+                    </div>
+                    <button id="logout-btn-hub" class="workspace-logout">Logout</button>
+                </div>
+                
+                <div class="workspace-content">
+                    <!-- Zone 1: Status Overview -->
+                    <div class="hub-stats">
+                        <div class="hub-stat-card">
+                            <div class="hub-stat-value" id="active-count">0</div>
+                            <div class="hub-stat-label">Active Decisions</div>
+                        </div>
+                        <div class="hub-stat-card">
+                            <div class="hub-stat-value" id="resolved-count">0</div>
+                            <div class="hub-stat-label">Resolved</div>
+                        </div>
+                        <div class="hub-stat-card">
+                            <div class="hub-stat-value" id="avg-time">—</div>
+                            <div class="hub-stat-label">Avg. Resolution Time</div>
+                        </div>
+                    </div>
+
+                    <!-- Zone 2: Active Decisions List -->
+                    <div class="hub-section">
+                        <h2 class="hub-section-title">Active Decisions</h2>
+                        <div id="decisions-list" class="hub-decisions-list">
+                            <!-- Decisions populated by JS -->
+                        </div>
+                        <div id="no-decisions" class="hub-empty" style="display: none;">
+                            No active decisions. Start one below.
+                        </div>
+                    </div>
+
+                    <!-- Zone 3: Actions -->
+                    <div class="hub-actions">
+                        <button id="start-new-decision-btn" class="hub-action-btn hub-action-btn--primary">
+                            Start New Decision
+                        </button>
+                        <button id="request-support-btn" class="hub-action-btn">
+                            Request Support
+                        </button>
+                        <button id="view-insights-btn" class="hub-action-btn">
+                            View Insights
+                        </button>
+                    </div>
+                </div>
+            </div>
+
 
             <!-- Active Decision: Structured Form -->
             <div id="decision-form-state" class="workspace-state" style="display: none;">
                 <div class="workspace-header">
                     <div class="workspace-header-left">
+                        <button id="back-to-hub-btn" class="workspace-back-btn">← Back</button>
                         <h1 class="workspace-title" id="decision-title">Active Decision</h1>
                         <div class="workspace-status-badge" id="status-badge">In Progress</div>
                     </div>
