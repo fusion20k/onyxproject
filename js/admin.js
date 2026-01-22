@@ -3,7 +3,10 @@ const API_BASE_URL = '/api';
 let session = null;
 let currentApplicationId = null;
 let currentFilter = 'pending';
+let currentDecisionFilter = 'all';
 let allApplications = [];
+let allDecisions = [];
+let currentDecisionDetail = null;
 
 function getSession() {
     if (session) return session;
@@ -20,12 +23,32 @@ function getAccessToken() {
 }
 
 function showState(stateId) {
-    document.querySelectorAll('.admin__state').forEach(state => {
+    document.querySelectorAll('.admin-state').forEach(state => {
         state.style.display = 'none';
     });
     const targetState = document.getElementById(stateId);
     if (targetState) {
-        targetState.style.display = 'block';
+        targetState.style.display = stateId === 'dashboard-state' ? 'flex' : 'block';
+    }
+}
+
+function showSection(sectionId) {
+    document.querySelectorAll('.admin-section').forEach(section => {
+        section.classList.remove('active');
+        section.style.display = 'none';
+    });
+    const targetSection = document.getElementById(sectionId);
+    if (targetSection) {
+        targetSection.classList.add('active');
+        targetSection.style.display = 'block';
+    }
+    
+    document.querySelectorAll('.admin-nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    const activeNavItem = document.querySelector(`[data-section="${sectionId.replace('-section', '')}"]`);
+    if (activeNavItem) {
+        activeNavItem.classList.add('active');
     }
 }
 
@@ -47,6 +70,22 @@ function formatDate(dateString) {
         day: 'numeric', 
         year: 'numeric' 
     });
+}
+
+function formatDateTime(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+    });
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
 }
 
 async function login(email, password) {
@@ -120,12 +159,103 @@ async function fetchApplications() {
         console.log('Applications data received:', data);
         console.log('Applications array:', data.applications || data);
         
-        // Backend might return data.applications or just an array directly
         const applications = data.applications || data || [];
         return { success: true, applications: applications };
     } catch (error) {
         console.error('Fetch applications error:', error);
         return { success: false, error: 'Cannot connect to backend. Please check if backend is running.' };
+    }
+}
+
+async function fetchDecisions(statusFilter = null) {
+    try {
+        const accessToken = getAccessToken();
+        
+        if (!accessToken) {
+            return { success: false, error: 'Not authenticated' };
+        }
+        
+        let url = `${API_BASE_URL}/admin/decisions`;
+        if (statusFilter && statusFilter !== 'all') {
+            url += `?status=${statusFilter}`;
+        }
+        
+        const response = await fetch(url, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            return { success: false, error: 'Failed to fetch decisions' };
+        }
+
+        const data = await response.json();
+        const decisions = data.decisions || data || [];
+        return { success: true, decisions: decisions };
+    } catch (error) {
+        console.error('Fetch decisions error:', error);
+        return { success: false, error: 'Failed to fetch decisions' };
+    }
+}
+
+async function fetchDecisionDetail(decisionId) {
+    try {
+        const accessToken = getAccessToken();
+        
+        if (!accessToken) {
+            return { success: false, error: 'Not authenticated' };
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/admin/decisions/${decisionId}`, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            return { success: false, error: 'Failed to fetch decision detail' };
+        }
+
+        const data = await response.json();
+        return { success: true, data: data };
+    } catch (error) {
+        console.error('Fetch decision detail error:', error);
+        return { success: false, error: 'Failed to fetch decision detail' };
+    }
+}
+
+async function respondToDecision(decisionId, content) {
+    try {
+        const accessToken = getAccessToken();
+        
+        if (!accessToken) {
+            return { success: false, error: 'Not authenticated' };
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/admin/decisions/${decisionId}/respond`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({ content })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            return { success: false, error: error.message || 'Failed to send response' };
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error('Respond to decision error:', error);
+        return { success: false, error: 'Failed to send response' };
     }
 }
 
@@ -159,7 +289,7 @@ async function approveApplication(applicationId) {
     }
 }
 
-async function denyApplication(applicationId, reason) {
+async function denyApplication(applicationId, reason = '') {
     try {
         const accessToken = getAccessToken();
         
@@ -225,22 +355,18 @@ function renderApplications(applications) {
     const tbody = document.getElementById('applications-tbody');
     const container = document.getElementById('applications-container');
     const noApps = document.getElementById('no-applications');
-    const loading = document.getElementById('loading-table');
-    const statsText = document.getElementById('stats-text');
+    const loading = document.getElementById('loading-applications');
+    const badge = document.getElementById('applications-badge');
 
     loading.style.display = 'none';
 
-    // Filter applications based on current filter
     let filteredApps = allApplications;
     if (currentFilter !== 'all') {
         filteredApps = allApplications.filter(a => a.status === currentFilter);
     }
 
-    // Update stats with all applications
     const pending = allApplications.filter(a => a.status === 'pending').length;
-    const approved = allApplications.filter(a => a.status === 'approved').length;
-    const denied = allApplications.filter(a => a.status === 'denied').length;
-    statsText.textContent = `Pending: ${pending} | Approved: ${approved} | Denied: ${denied}`;
+    if (badge) badge.textContent = pending;
 
     if (filteredApps.length === 0) {
         container.style.display = 'none';
@@ -263,27 +389,216 @@ function renderApplications(applications) {
             <td>${escapeHtml(app.name)}</td>
             <td>${escapeHtml(app.email)}</td>
             <td>${escapeHtml(app.role || 'N/A')}</td>
-            <td class="admin__reason">${escapeHtml(app.reason || app.context || 'N/A')}</td>
+            <td>${escapeHtml(app.reason || app.context || 'N/A')}</td>
             <td>${escapeHtml(app.project || 'N/A')}</td>
-            <td><span class="admin__status admin__status--${app.status}">${app.status}</span></td>
-            <td class="admin__actions">
+            <td><span class="admin-table__status admin-table__status--${app.status}">${app.status}</span></td>
+            <td>
+                <div class="admin-table__actions">
                 ${app.status === 'pending' ? `
-                    <button class="admin__button admin__button--approve" data-id="${app.id}">Approve</button>
-                    <button class="admin__button admin__button--deny" data-id="${app.id}">Deny</button>
+                    <button class="admin-table__action-btn admin-table__action-btn--approve" data-id="${app.id}">Approve</button>
+                    <button class="admin-table__action-btn admin-table__action-btn--deny" data-id="${app.id}">Deny</button>
                 ` : '-'}
+                </div>
             </td>
         `;
 
         tbody.appendChild(tr);
     });
 
-    document.querySelectorAll('.admin__button--approve').forEach(btn => {
+    document.querySelectorAll('.admin-table__action-btn--approve').forEach(btn => {
         btn.addEventListener('click', handleApprove);
     });
 
-    document.querySelectorAll('.admin__button--deny').forEach(btn => {
+    document.querySelectorAll('.admin-table__action-btn--deny').forEach(btn => {
         btn.addEventListener('click', handleDeny);
     });
+}
+
+function renderDecisions(decisions) {
+    allDecisions = decisions || [];
+    
+    const listView = document.getElementById('decisions-list-view');
+    const noDecisions = document.getElementById('no-decisions');
+    const loading = document.getElementById('loading-decisions');
+    const badge = document.getElementById('decisions-badge');
+
+    loading.style.display = 'none';
+
+    let filteredDecisions = allDecisions;
+    if (currentDecisionFilter !== 'all') {
+        filteredDecisions = allDecisions.filter(d => d.status === currentDecisionFilter);
+    }
+
+    const underReview = allDecisions.filter(d => d.status === 'under_review').length;
+    if (badge) badge.textContent = underReview;
+
+    if (filteredDecisions.length === 0) {
+        listView.style.display = 'none';
+        noDecisions.style.display = 'block';
+        noDecisions.textContent = `No ${currentDecisionFilter} decisions`;
+        return;
+    }
+
+    noDecisions.style.display = 'none';
+    listView.style.display = 'grid';
+
+    listView.innerHTML = '';
+
+    filteredDecisions.forEach(decision => {
+        const card = document.createElement('div');
+        card.className = 'decision-card';
+        card.dataset.id = decision.id;
+        
+        const statusMap = {
+            'in_progress': 'In Progress',
+            'under_review': 'Under Review',
+            'responded': 'Responded',
+            'resolved': 'Resolved'
+        };
+        
+        card.innerHTML = `
+            <div class="decision-card-header">
+                <div>
+                    <div class="decision-card-user">${escapeHtml(decision.user_name || decision.user_email)}</div>
+                    <div class="decision-card-email">${escapeHtml(decision.user_email)}</div>
+                </div>
+                <span class="decision-card-status decision-card-status--${decision.status}">${statusMap[decision.status] || decision.status}</span>
+            </div>
+            <div class="decision-card-situation">${escapeHtml(decision.title || decision.situation || 'No situation provided')}</div>
+            <div class="decision-card-meta">
+                <span>Created ${formatDate(decision.created_at)}</span>
+                <span>${decision.feedback_count || 0} messages</span>
+            </div>
+        `;
+        
+        card.addEventListener('click', () => {
+            showDecisionDetail(decision.id);
+        });
+
+        listView.appendChild(card);
+    });
+}
+
+async function showDecisionDetail(decisionId) {
+    const listView = document.getElementById('decisions-list-view');
+    const detailView = document.getElementById('decision-detail-view');
+    const loading = document.getElementById('loading-decisions');
+    const noDecisions = document.getElementById('no-decisions');
+
+    listView.style.display = 'none';
+    noDecisions.style.display = 'none';
+    loading.style.display = 'block';
+    detailView.style.display = 'none';
+
+    const result = await fetchDecisionDetail(decisionId);
+
+    loading.style.display = 'none';
+
+    if (!result.success) {
+        alert(result.error || 'Failed to load decision detail');
+        listView.style.display = 'grid';
+        return;
+    }
+
+    currentDecisionDetail = result.data;
+    const { decision, user, feedback } = result.data;
+
+    const detailContent = document.getElementById('decision-detail-content');
+    
+    const statusMap = {
+        'in_progress': 'In Progress',
+        'under_review': 'Under Review',
+        'responded': 'Responded',
+        'resolved': 'Resolved'
+    };
+
+    detailContent.innerHTML = `
+        <div class="decision-detail-header">
+            <div class="decision-detail-user">${escapeHtml(user.display_name || user.email)}</div>
+            <div class="decision-detail-meta">
+                <span>Email: ${escapeHtml(user.email)}</span>
+                <span>Status: <span class="decision-card-status decision-card-status--${decision.status}">${statusMap[decision.status]}</span></span>
+                <span>Created: ${formatDate(decision.created_at)}</span>
+            </div>
+        </div>
+
+        <div class="decision-detail-sections">
+            <div class="decision-detail-section decision-detail-section--full">
+                <h3>Situation</h3>
+                <p>${escapeHtml(decision.situation) || '<span class="empty">No situation provided</span>'}</p>
+            </div>
+
+            <div class="decision-detail-section">
+                <h3>Context</h3>
+                <p>${decision.context ? escapeHtml(decision.context) : '<span class="empty">Not provided</span>'}</p>
+            </div>
+
+            <div class="decision-detail-section">
+                <h3>Risks</h3>
+                <p>${decision.risks ? escapeHtml(decision.risks) : '<span class="empty">Not provided</span>'}</p>
+            </div>
+
+            <div class="decision-detail-section">
+                <h3>Unknowns</h3>
+                <p>${decision.unknowns ? escapeHtml(decision.unknowns) : '<span class="empty">Not provided</span>'}</p>
+            </div>
+
+            <div class="decision-detail-section decision-detail-section--full">
+                <h3>Options</h3>
+                <p><strong>A:</strong> ${decision.option_a ? escapeHtml(decision.option_a) : '<span class="empty">Not provided</span>'}</p>
+                <p><strong>B:</strong> ${decision.option_b ? escapeHtml(decision.option_b) : '<span class="empty">Not provided</span>'}</p>
+                ${decision.option_c ? `<p><strong>C:</strong> ${escapeHtml(decision.option_c)}</p>` : ''}
+            </div>
+        </div>
+
+        <div class="decision-feedback-section">
+            <h2>Communication Thread</h2>
+            <div class="decision-feedback-list">
+                ${feedback && feedback.length > 0 ? feedback.map(item => `
+                    <div class="decision-feedback-item decision-feedback-item--${item.author_type}">
+                        <div class="decision-feedback-meta">
+                            <span class="decision-feedback-author">${item.author_type === 'admin' ? 'Admin' : 'User'}</span>
+                            <span class="decision-feedback-time">${formatDateTime(item.created_at)}</span>
+                        </div>
+                        <div class="decision-feedback-content">${escapeHtml(item.content)}</div>
+                    </div>
+                `).join('') : '<p class="empty">No messages yet</p>'}
+            </div>
+
+            <form class="decision-response-form" id="decision-response-form">
+                <textarea id="admin-response-input" placeholder="Type your response to the user..." required></textarea>
+                <button type="submit">Send Response</button>
+            </form>
+        </div>
+    `;
+
+    detailView.style.display = 'block';
+
+    const responseForm = document.getElementById('decision-response-form');
+    if (responseForm) {
+        responseForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const input = document.getElementById('admin-response-input');
+            const content = input.value.trim();
+            
+            if (!content) return;
+            
+            const submitBtn = responseForm.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+            
+            const result = await respondToDecision(decision.id, content);
+            
+            if (result.success) {
+                await showDecisionDetail(decision.id);
+            } else {
+                alert(result.error || 'Failed to send response');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Send Response';
+            }
+        });
+    }
 }
 
 async function handleApprove(e) {
@@ -315,6 +630,7 @@ function handleDeny(e) {
 function showModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
+        modal.classList.add('show');
         modal.style.display = 'flex';
     }
 }
@@ -322,28 +638,65 @@ function showModal(modalId) {
 function hideModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
+        modal.classList.remove('show');
         modal.style.display = 'none';
-        if (modalId === 'deny-modal') {
-            document.getElementById('deny-reason').value = '';
+        
+        const form = modal.querySelector('form');
+        if (form) {
+            form.reset();
         }
     }
 }
 
 async function loadApplications() {
-    console.log('loadApplications called');
-    document.getElementById('loading-table').style.display = 'block';
-    document.getElementById('applications-container').style.display = 'none';
-    document.getElementById('no-applications').style.display = 'none';
+    const loading = document.getElementById('loading-applications');
+    const container = document.getElementById('applications-container');
+    const noApps = document.getElementById('no-applications');
+
+    if (!loading || !container || !noApps) {
+        console.error('Application elements not found');
+        return;
+    }
+
+    loading.style.display = 'block';
+    container.style.display = 'none';
+    noApps.style.display = 'none';
 
     const result = await fetchApplications();
-    console.log('fetchApplications result:', result);
+
+    loading.style.display = 'none';
 
     if (result.success) {
-        console.log('Success - rendering applications');
         renderApplications(result.applications);
     } else {
-        console.log('Failed - showing error:', result.error);
-        document.getElementById('loading-table').textContent = result.error || 'Failed to load applications';
+        noApps.style.display = 'block';
+        noApps.textContent = result.error || 'Failed to load applications';
+    }
+}
+
+async function loadDecisions() {
+    const loading = document.getElementById('loading-decisions');
+    const listView = document.getElementById('decisions-list-view');
+    const noDecisions = document.getElementById('no-decisions');
+
+    if (!loading || !listView || !noDecisions) {
+        console.error('Decision elements not found');
+        return;
+    }
+
+    loading.style.display = 'block';
+    listView.style.display = 'none';
+    noDecisions.style.display = 'none';
+
+    const result = await fetchDecisions(currentDecisionFilter !== 'all' ? currentDecisionFilter : null);
+
+    loading.style.display = 'none';
+
+    if (result.success) {
+        renderDecisions(result.decisions);
+    } else {
+        noDecisions.style.display = 'block';
+        noDecisions.textContent = result.error || 'Failed to load decisions';
     }
 }
 
@@ -353,17 +706,15 @@ function logout() {
     showState('auth-state');
 }
 
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function checkAuth() {
+async function checkAuth() {
     const sess = getSession();
+    
     if (sess && sess.access_token) {
         showState('dashboard-state');
-        loadApplications();
+        setTimeout(async () => {
+            await loadApplications();
+            await loadDecisions();
+        }, 50);
     } else {
         showState('auth-state');
     }
@@ -372,7 +723,8 @@ function checkAuth() {
 document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('login-form');
     const logoutBtn = document.getElementById('logout-btn');
-    const refreshBtn = document.getElementById('refresh-btn');
+    const refreshApplicationsBtn = document.getElementById('refresh-applications-btn');
+    const refreshDecisionsBtn = document.getElementById('refresh-decisions-btn');
     const denyForm = document.getElementById('deny-form');
     const cancelDenyBtn = document.getElementById('cancel-deny');
 
@@ -383,19 +735,24 @@ document.addEventListener('DOMContentLoaded', function() {
             const email = document.getElementById('admin-email').value;
             const password = document.getElementById('admin-password').value;
             const submitButton = loginForm.querySelector('button[type="submit"]');
+            const loginError = document.getElementById('login-error');
 
+            loginError.style.display = 'none';
             submitButton.disabled = true;
-            submitButton.textContent = 'Logging in...';
+            submitButton.textContent = 'Signing in...';
 
             const result = await login(email, password);
 
             if (result.success) {
                 showState('dashboard-state');
-                loadApplications();
+                setTimeout(async () => {
+                    await loadApplications();
+                    await loadDecisions();
+                }, 50);
             } else {
+                showError('login-error', result.error || 'Login failed');
                 submitButton.disabled = false;
-                submitButton.textContent = 'Login';
-                showError('login-error', result.error);
+                submitButton.textContent = 'Sign In';
             }
         });
     }
@@ -404,8 +761,12 @@ document.addEventListener('DOMContentLoaded', function() {
         logoutBtn.addEventListener('click', logout);
     }
 
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', loadApplications);
+    if (refreshApplicationsBtn) {
+        refreshApplicationsBtn.addEventListener('click', loadApplications);
+    }
+
+    if (refreshDecisionsBtn) {
+        refreshDecisionsBtn.addEventListener('click', loadDecisions);
     }
 
     const clearDeniedBtn = document.getElementById('clear-denied-btn');
@@ -469,7 +830,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    const filterBtns = document.querySelectorAll('.admin__filter-btn');
+    const filterBtns = document.querySelectorAll('.admin-filter-btn');
     filterBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             currentFilter = this.dataset.filter;
@@ -480,6 +841,45 @@ document.addEventListener('DOMContentLoaded', function() {
             renderApplications(allApplications);
         });
     });
+
+    const decisionFilterBtns = document.querySelectorAll('.admin-filter-btn-decisions');
+    decisionFilterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            currentDecisionFilter = this.dataset.filter;
+            
+            decisionFilterBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            renderDecisions(allDecisions);
+        });
+    });
+
+    const navItems = document.querySelectorAll('.admin-nav-item');
+    navItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const section = this.dataset.section;
+            showSection(`${section}-section`);
+            
+            if (section === 'decisions') {
+                const detailView = document.getElementById('decision-detail-view');
+                detailView.style.display = 'none';
+                const listView = document.getElementById('decisions-list-view');
+                listView.style.display = 'grid';
+            }
+        });
+    });
+
+    const backToDecisionsBtn = document.getElementById('back-to-decisions-list');
+    if (backToDecisionsBtn) {
+        backToDecisionsBtn.addEventListener('click', function() {
+            const listView = document.getElementById('decisions-list-view');
+            const detailView = document.getElementById('decision-detail-view');
+            
+            detailView.style.display = 'none';
+            listView.style.display = 'grid';
+        });
+    }
 
     checkAuth();
 });
