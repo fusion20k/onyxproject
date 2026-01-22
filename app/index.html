@@ -9,167 +9,210 @@
     <link rel="stylesheet" href="../css/workspace.css">
 </head>
 <body class="workspace-page">
-    <main class="workspace-container">
-        <!-- Loading State -->
-        <div id="loading-state" class="workspace-state">
-            <p class="workspace-loading">Loading workspace...</p>
-        </div>
-
-        <!-- Unauthorized State -->
-        <div id="unauthorized-state" class="workspace-state" style="display: none;">
-            <div class="workspace-brand">the onyx project</div>
-            <h1 class="workspace-error-title">Access Denied</h1>
-            <p class="workspace-error-text">You must be logged in and have an active subscription.</p>
-            <a href="/invite" class="workspace-cta">Get Access</a>
-        </div>
-
-        <!-- Unpaid State -->
-        <div id="unpaid-state" class="workspace-state" style="display: none;">
-            <div class="workspace-brand">the onyx project</div>
-            <h1 class="workspace-error-title">Payment Required</h1>
-            <p class="workspace-error-text">Please complete payment to access your workspace.</p>
-            <a href="/payment" class="workspace-cta">Complete Payment</a>
-        </div>
-
-        <!-- First-Time User: Initial Prompt -->
-        <div id="first-time-state" class="workspace-state" style="display: none;">
-            <div class="workspace-header">
-                <h1 class="workspace-title">Workspace</h1>
-                <button id="logout-btn-1" class="workspace-logout">Logout</button>
+    <div class="workspace-container">
+        <!-- Sidebar -->
+        <aside class="workspace-sidebar" id="workspace-sidebar" style="display: none;">
+            <div class="workspace-brand">ONYX</div>
+            <nav class="workspace-nav">
+                <a href="#" class="workspace-nav-item active" data-section="active">Active Decision</a>
+                <a href="#" class="workspace-nav-item" data-section="archive">Archive</a>
+            </nav>
+            <div class="workspace-sidebar-footer">
+                <button id="sidebar-logout-btn" class="workspace-logout">Logout</button>
             </div>
-            
-            <p class="workspace-instruction">This space is private.<br>Use it to work through a decision that matters.</p>
-            
-            <form id="initial-decision-form" class="workspace-form">
-                <div class="form-section">
-                    <label for="situation" class="form-label">Describe the situation you are facing.</label>
-                    <textarea id="situation" name="situation" rows="8" required></textarea>
-                </div>
-                <button type="submit" class="workspace-submit">Continue</button>
-            </form>
-        </div>
+        </aside>
 
-        <!-- Active Decision: Structured Form -->
-        <div id="decision-form-state" class="workspace-state" style="display: none;">
-            <div class="workspace-header">
-                <h1 class="workspace-title" id="decision-title">Decision</h1>
-                <div class="workspace-status-badge" id="status-badge">In Progress</div>
-                <button id="logout-btn-2" class="workspace-logout">Logout</button>
+        <!-- Main Content -->
+        <main class="workspace-main">
+            <!-- Loading State -->
+            <div id="loading-state" class="workspace-state">
+                <div class="workspace-content">
+                    <p class="workspace-loading">Loading workspace...</p>
+                </div>
             </div>
 
-            <div class="decision-thread">
-                <!-- Situation (locked) -->
-                <div class="decision-section decision-section--locked">
-                    <h3 class="section-heading">Situation</h3>
-                    <div class="section-content" id="situation-display"></div>
+            <!-- Unauthorized State -->
+            <div id="unauthorized-state" class="workspace-state" style="display: none;">
+                <div class="workspace-content" style="text-align: center; padding-top: 120px;">
+                    <h1 class="workspace-error-title">Access Denied</h1>
+                    <p class="workspace-error-text">You must be logged in and have an active subscription.</p>
+                    <a href="/invite" class="workspace-cta">Get Access</a>
+                </div>
+            </div>
+
+            <!-- Unpaid State -->
+            <div id="unpaid-state" class="workspace-state" style="display: none;">
+                <div class="workspace-content" style="text-align: center; padding-top: 120px;">
+                    <h1 class="workspace-error-title">Payment Required</h1>
+                    <p class="workspace-error-text">Please complete payment to access your workspace.</p>
+                    <a href="/payment" class="workspace-cta">Complete Payment</a>
+                </div>
+            </div>
+
+            <!-- First-Time User: Initial Prompt -->
+            <div id="first-time-state" class="workspace-state" style="display: none;">
+                <div class="workspace-header">
+                    <div class="workspace-header-left">
+                        <h1 class="workspace-title">New Decision</h1>
+                    </div>
+                    <button id="logout-btn-1" class="workspace-logout">Logout</button>
+                </div>
+                
+                <div class="workspace-content">
+                    <p class="workspace-instruction">This space is private. Use it to work through a decision that matters.<br>Begin by describing the situation you are facing.</p>
+                    
+                    <form id="initial-decision-form" class="workspace-form">
+                        <div class="form-section">
+                            <label for="situation" class="form-label">Situation</label>
+                            <textarea id="situation" name="situation" rows="10" placeholder="Describe the decision you need to make..." required></textarea>
+                        </div>
+                        <button type="submit" class="workspace-submit">Create Decision</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Active Decision: Structured Form -->
+            <div id="decision-form-state" class="workspace-state" style="display: none;">
+                <div class="workspace-header">
+                    <div class="workspace-header-left">
+                        <h1 class="workspace-title" id="decision-title">Active Decision</h1>
+                        <div class="workspace-status-badge" id="status-badge">In Progress</div>
+                    </div>
+                    <button id="logout-btn-2" class="workspace-logout">Logout</button>
                 </div>
 
-                <!-- Context -->
-                <div class="decision-section">
-                    <h3 class="section-heading">Context</h3>
-                    <p class="section-prompt">What led to this point? Include constraints, deadlines, and stakes.</p>
-                    <textarea id="context" name="context" rows="6"></textarea>
+                <div class="workspace-content">
+                    <div class="decision-thread">
+                        <!-- Situation (locked) -->
+                        <div class="decision-section decision-section--locked decision-section--full">
+                            <h3 class="section-heading">Situation</h3>
+                            <div class="section-content" id="situation-display"></div>
+                        </div>
+
+                        <!-- Context -->
+                        <div class="decision-section">
+                            <h3 class="section-heading">Context</h3>
+                            <p class="section-prompt">What led to this point? Include constraints, deadlines, and stakes.</p>
+                            <textarea id="context" name="context"></textarea>
+                        </div>
+
+                        <!-- Risks -->
+                        <div class="decision-section">
+                            <h3 class="section-heading">Risks</h3>
+                            <p class="section-prompt">What could go wrong? What is irreversible?</p>
+                            <textarea id="risks" name="risks"></textarea>
+                        </div>
+
+                        <!-- Unknowns -->
+                        <div class="decision-section">
+                            <h3 class="section-heading">Unknowns</h3>
+                            <p class="section-prompt">What information is missing or uncertain?</p>
+                            <textarea id="unknowns" name="unknowns"></textarea>
+                        </div>
+
+                        <!-- Options -->
+                        <div class="decision-section decision-section--full">
+                            <h3 class="section-heading">Options</h3>
+                            <p class="section-prompt">List the realistic paths forward.</p>
+                            <div class="options-grid">
+                                <div class="option-field">
+                                    <label>Option A</label>
+                                    <textarea id="option-a" name="option_a"></textarea>
+                                </div>
+                                <div class="option-field">
+                                    <label>Option B</label>
+                                    <textarea id="option-b" name="option_b"></textarea>
+                                </div>
+                                <div class="option-field">
+                                    <label>Option C (optional)</label>
+                                    <textarea id="option-c" name="option_c"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="decision-actions">
+                            <button id="save-decision-btn" class="workspace-submit">Save Progress</button>
+                        </div>
+                    </div>
+
+                    <!-- Feedback Thread (unlocked when under review) -->
+                    <div id="feedback-section" class="feedback-thread" style="display: none;">
+                        <h2 class="feedback-heading">Communication Thread</h2>
+                        <div id="feedback-list" class="feedback-list"></div>
+                        
+                        <form id="feedback-form" class="feedback-form">
+                            <textarea id="feedback-input" placeholder="Add a response or clarification..." required></textarea>
+                            <button type="submit" class="feedback-submit">Send Message</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resolution State -->
+            <div id="resolution-state" class="workspace-state" style="display: none;">
+                <div class="workspace-header">
+                    <div class="workspace-header-left">
+                        <h1 class="workspace-title">Resolve Decision</h1>
+                    </div>
+                    <button id="logout-btn-3" class="workspace-logout">Logout</button>
                 </div>
 
-                <!-- Options -->
-                <div class="decision-section">
-                    <h3 class="section-heading">Options</h3>
-                    <p class="section-prompt">List the realistic paths forward.</p>
-                    <div class="options-grid">
-                        <div class="option-field">
-                            <label>Option A</label>
-                            <textarea id="option-a" name="option_a" rows="3"></textarea>
+                <div class="workspace-content">
+                    <form id="resolution-form" class="workspace-form">
+                        <div class="form-section">
+                            <label for="final-direction" class="form-label">Final Direction</label>
+                            <textarea id="final-direction" name="final_direction" rows="4" placeholder="What did you decide?" required></textarea>
                         </div>
-                        <div class="option-field">
-                            <label>Option B</label>
-                            <textarea id="option-b" name="option_b" rows="3"></textarea>
+
+                        <div class="form-section">
+                            <label for="reasoning" class="form-label">Reasoning</label>
+                            <textarea id="reasoning" name="reasoning" rows="6" placeholder="Why did you make this choice?" required></textarea>
                         </div>
-                        <div class="option-field">
-                            <label>Option C (optional)</label>
-                            <textarea id="option-c" name="option_c" rows="3"></textarea>
+
+                        <div class="form-section">
+                            <label class="form-label">Immediate Next Steps (1-3)</label>
+                            <input type="text" id="next-step-1" placeholder="1. First action step" required>
+                            <input type="text" id="next-step-2" placeholder="2. Second action step" required>
+                            <input type="text" id="next-step-3" placeholder="3. Third action step (optional)">
                         </div>
+
+                        <button type="submit" class="workspace-submit">Mark as Resolved</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Archive List -->
+            <div id="archive-state" class="workspace-state" style="display: none;">
+                <div class="workspace-header">
+                    <div class="workspace-header-left">
+                        <h1 class="workspace-title">Archived Decisions</h1>
+                    </div>
+                    <div style="display: flex; gap: 16px; align-items: center;">
+                        <button id="new-decision-btn" class="workspace-cta">New Decision</button>
+                        <button id="logout-btn-4" class="workspace-logout">Logout</button>
                     </div>
                 </div>
 
-                <!-- Risks -->
-                <div class="decision-section">
-                    <h3 class="section-heading">Risks</h3>
-                    <p class="section-prompt">What could go wrong? What is irreversible?</p>
-                    <textarea id="risks" name="risks" rows="6"></textarea>
+                <div class="workspace-content">
+                    <div id="archive-list" class="archive-list"></div>
                 </div>
-
-                <!-- Unknowns -->
-                <div class="decision-section">
-                    <h3 class="section-heading">Unknowns</h3>
-                    <p class="section-prompt">What information is missing or uncertain?</p>
-                    <textarea id="unknowns" name="unknowns" rows="6"></textarea>
-                </div>
-
-                <button id="save-decision-btn" class="workspace-submit">Save Progress</button>
             </div>
 
-            <!-- Feedback Thread (unlocked when under review) -->
-            <div id="feedback-section" class="feedback-thread" style="display: none;">
-                <h2 class="feedback-heading">Feedback</h2>
-                <div id="feedback-list" class="feedback-list"></div>
-                
-                <form id="feedback-form" class="feedback-form">
-                    <textarea id="feedback-input" placeholder="Add a response or clarification..." rows="4" required></textarea>
-                    <button type="submit" class="feedback-submit">Send</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Resolution State -->
-        <div id="resolution-state" class="workspace-state" style="display: none;">
-            <div class="workspace-header">
-                <h1 class="workspace-title">Decision Summary</h1>
-                <button id="logout-btn-3" class="workspace-logout">Logout</button>
-            </div>
-
-            <form id="resolution-form" class="workspace-form">
-                <div class="form-section">
-                    <label for="final-direction" class="form-label">Final direction</label>
-                    <textarea id="final-direction" name="final_direction" rows="4" required></textarea>
+            <!-- Archive Detail (Read-Only) -->
+            <div id="archive-detail-state" class="workspace-state" style="display: none;">
+                <div class="workspace-header">
+                    <div class="workspace-header-left">
+                        <button id="back-to-archive-btn" class="workspace-back">← Back to Archive</button>
+                    </div>
+                    <button id="logout-btn-5" class="workspace-logout">Logout</button>
                 </div>
 
-                <div class="form-section">
-                    <label for="reasoning" class="form-label">Reasoning</label>
-                    <textarea id="reasoning" name="reasoning" rows="6" required></textarea>
+                <div class="workspace-content">
+                    <div id="archive-detail-content"></div>
                 </div>
-
-                <div class="form-section">
-                    <label class="form-label">Immediate next steps (1-3)</label>
-                    <input type="text" id="next-step-1" placeholder="1." required>
-                    <input type="text" id="next-step-2" placeholder="2." required>
-                    <input type="text" id="next-step-3" placeholder="3. (optional)">
-                </div>
-
-                <button type="submit" class="workspace-submit">Mark as Resolved</button>
-            </form>
-        </div>
-
-        <!-- Archive List -->
-        <div id="archive-state" class="workspace-state" style="display: none;">
-            <div class="workspace-header">
-                <h1 class="workspace-title">Archived Decisions</h1>
-                <button id="new-decision-btn" class="workspace-cta">Start New Decision</button>
-                <button id="logout-btn-4" class="workspace-logout">Logout</button>
             </div>
-
-            <div id="archive-list" class="archive-list"></div>
-        </div>
-
-        <!-- Archive Detail (Read-Only) -->
-        <div id="archive-detail-state" class="workspace-state" style="display: none;">
-            <div class="workspace-header">
-                <button id="back-to-archive-btn" class="workspace-back">← Back to Archive</button>
-                <button id="logout-btn-5" class="workspace-logout">Logout</button>
-            </div>
-
-            <div id="archive-detail-content"></div>
-        </div>
-    </main>
+        </main>
+    </div>
 
     <script src="../js/workspace.js"></script>
 </body>

@@ -4,21 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Admin - Onyx</title>
+    <title>Admin Hub - Onyx</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/admin.css">
 </head>
 <body class="admin-page">
-    <main class="container">
-        <section class="admin">
-            <div id="auth-state" class="admin__state">
-                <div class="admin__header">
-                    <div class="admin__brand">the onyx project</div>
-                    <h1 class="admin__title">Admin Panel</h1>
-                </div>
-
-                <h2 class="admin__subtitle">Admin Login</h2>
-                <form id="login-form" class="admin__form">
+    <div class="admin-container">
+        <!-- Login State -->
+        <div id="auth-state" class="admin-state">
+            <div class="admin-login-wrapper">
+                <div class="admin-brand-large">ONYX</div>
+                <h1 class="admin-login-title">Admin Hub</h1>
+                
+                <form id="login-form" class="admin-login-form">
                     <div class="form-group">
                         <label for="admin-email">Email</label>
                         <input type="email" id="admin-email" name="email" required autofocus>
@@ -29,77 +27,140 @@
                         <input type="password" id="admin-password" name="password" required>
                     </div>
                     
-                    <button type="submit" class="cta">Login</button>
+                    <button type="submit" class="admin-login-btn">Sign In</button>
                 </form>
 
-                <div id="login-error" class="admin__error" style="display: none;"></div>
+                <div id="login-error" class="admin-error" style="display: none;"></div>
             </div>
+        </div>
 
-            <div id="dashboard-state" class="admin__state" style="display: none;">
-                <div class="admin__header">
-                    <div class="admin__brand">the onyx project</div>
-                    <h1 class="admin__title">Admin Panel</h1>
-                    <button id="logout-btn" class="admin__logout">Logout</button>
+        <!-- Admin Dashboard -->
+        <div id="dashboard-state" class="admin-state" style="display: none;">
+            <!-- Sidebar -->
+            <aside class="admin-sidebar">
+                <div class="admin-brand">ONYX<span class="admin-brand-label">ADMIN</span></div>
+                <nav class="admin-nav">
+                    <a href="#" class="admin-nav-item active" data-section="applications">
+                        <span class="admin-nav-icon">📋</span>
+                        <span>Applications</span>
+                        <span class="admin-nav-badge" id="applications-badge">0</span>
+                    </a>
+                    <a href="#" class="admin-nav-item" data-section="decisions">
+                        <span class="admin-nav-icon">💬</span>
+                        <span>Decisions</span>
+                        <span class="admin-nav-badge" id="decisions-badge">0</span>
+                    </a>
+                </nav>
+                <div class="admin-sidebar-footer">
+                    <button id="logout-btn" class="admin-logout-btn">Logout</button>
                 </div>
+            </aside>
 
-                <div class="admin__controls">
-                    <div class="admin__controls-left">
-                        <button id="refresh-btn" class="admin__button">Refresh</button>
-                        <button id="clear-denied-btn" class="admin__button admin__button--danger">Clear Denied</button>
+            <!-- Main Content -->
+            <main class="admin-main">
+                <!-- Applications Section -->
+                <section id="applications-section" class="admin-section active">
+                    <div class="admin-header">
+                        <div class="admin-header-left">
+                            <h1 class="admin-title">Applications</h1>
+                            <p class="admin-subtitle">Review and manage membership applications</p>
+                        </div>
+                        <div class="admin-header-actions">
+                            <button id="refresh-applications-btn" class="admin-button">Refresh</button>
+                            <button id="clear-denied-btn" class="admin-button admin-button--danger">Clear Denied</button>
+                        </div>
                     </div>
-                    <div class="admin__stats">
-                        <span id="stats-text">Loading...</span>
+
+                    <div class="admin-filters">
+                        <button class="admin-filter-btn active" data-filter="pending">Pending</button>
+                        <button class="admin-filter-btn" data-filter="approved">Approved</button>
+                        <button class="admin-filter-btn" data-filter="denied">Denied</button>
+                        <button class="admin-filter-btn" data-filter="all">All</button>
                     </div>
-                </div>
 
-                <div class="admin__filters">
-                    <button class="admin__filter-btn active" data-filter="pending">Pending</button>
-                    <button class="admin__filter-btn" data-filter="approved">Approved</button>
-                    <button class="admin__filter-btn" data-filter="denied">Denied</button>
-                    <button class="admin__filter-btn" data-filter="all">All</button>
-                </div>
+                    <div id="loading-applications" class="admin-loading">
+                        Loading applications...
+                    </div>
 
-                <div id="loading-table" class="admin__loading">
-                    Loading applications...
-                </div>
+                    <div id="applications-container" class="admin-table-container" style="display: none;">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Reason</th>
+                                    <th>Project</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="applications-tbody">
+                            </tbody>
+                        </table>
+                    </div>
 
-                <div id="applications-container" style="display: none;">
-                    <table class="admin__table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Reason</th>
-                                <th>Project</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="applications-tbody">
-                        </tbody>
-                    </table>
-                </div>
+                    <div id="no-applications" class="admin-empty" style="display: none;">
+                        No applications found.
+                    </div>
+                </section>
 
-                <div id="no-applications" class="admin__empty" style="display: none;">
-                    No applications found.
-                </div>
-            </div>
-        </section>
-    </main>
+                <!-- Decisions Section -->
+                <section id="decisions-section" class="admin-section" style="display: none;">
+                    <div class="admin-header">
+                        <div class="admin-header-left">
+                            <h1 class="admin-title">User Decisions</h1>
+                            <p class="admin-subtitle">View and respond to user decision threads</p>
+                        </div>
+                        <div class="admin-header-actions">
+                            <button id="refresh-decisions-btn" class="admin-button">Refresh</button>
+                        </div>
+                    </div>
 
+                    <div class="admin-filters">
+                        <button class="admin-filter-btn-decisions active" data-filter="all">All</button>
+                        <button class="admin-filter-btn-decisions" data-filter="in_progress">In Progress</button>
+                        <button class="admin-filter-btn-decisions" data-filter="under_review">Under Review</button>
+                        <button class="admin-filter-btn-decisions" data-filter="responded">Responded</button>
+                        <button class="admin-filter-btn-decisions" data-filter="resolved">Resolved</button>
+                    </div>
+
+                    <div id="loading-decisions" class="admin-loading">
+                        Loading decisions...
+                    </div>
+
+                    <!-- Decisions List -->
+                    <div id="decisions-list-view" class="decisions-list" style="display: none;">
+                    </div>
+
+                    <!-- Decision Detail View -->
+                    <div id="decision-detail-view" style="display: none;">
+                        <button id="back-to-decisions-list" class="admin-back-btn">← Back to Decisions</button>
+                        <div id="decision-detail-content"></div>
+                    </div>
+
+                    <div id="no-decisions" class="admin-empty" style="display: none;">
+                        No decisions found.
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Deny Application Modal -->
     <div id="deny-modal" class="modal" style="display: none;">
-        <div class="modal__content">
-            <h2 class="modal__title">Deny Application</h2>
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <h2 class="modal-title">Deny Application</h2>
             <form id="deny-form">
                 <div class="form-group">
                     <label for="deny-reason">Reason (optional)</label>
                     <textarea id="deny-reason" name="reason" rows="4" placeholder="Optional message to applicant"></textarea>
                 </div>
-                <div class="modal__actions">
-                    <button type="button" id="cancel-deny" class="admin__button">Cancel</button>
-                    <button type="submit" class="admin__button admin__button--danger">Confirm Deny</button>
+                <div class="modal-actions">
+                    <button type="button" id="cancel-deny" class="admin-button">Cancel</button>
+                    <button type="submit" class="admin-button admin-button--danger">Confirm Deny</button>
                 </div>
             </form>
         </div>

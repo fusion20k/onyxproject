@@ -336,6 +336,11 @@ async function initialize() {
         return;
     }
 
+    const sidebar = document.getElementById('workspace-sidebar');
+    if (sidebar) {
+        sidebar.style.display = 'block';
+    }
+
     const result = await getActiveDecision();
     
     if (!result.success) {
@@ -353,7 +358,7 @@ async function initialize() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('[id^="logout-btn"]').forEach(btn => {
+    document.querySelectorAll('[id^="logout-btn"], #sidebar-logout-btn').forEach(btn => {
         btn.addEventListener('click', logout);
     });
 
