@@ -41,7 +41,17 @@
             <div id="first-time-state" class="workspace-state" style="display: none;">
                 <div class="workspace-header">
                     <h1 class="workspace-header-title">Workspace</h1>
-                    <span class="workspace-header-info">Private session</span>
+                    <div class="user-account-menu">
+                        <button class="user-account-trigger" id="user-account-trigger-first">
+                            <span id="header-username-first">User</span>
+                        </button>
+                        <div class="user-account-dropdown" id="user-account-dropdown-first">
+                            <div class="user-account-dropdown-label">Account</div>
+                            <div class="user-account-dropdown-item" data-action="settings">Settings</div>
+                            <div class="user-account-dropdown-item" data-action="payment">Payment details</div>
+                            <div class="user-account-dropdown-item" data-action="logout">Logout</div>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="workspace-content">
@@ -56,7 +66,17 @@
             <div id="hub-state" class="workspace-state" style="display: none;">
                 <div class="workspace-header">
                     <h1 class="workspace-header-title">Workspace</h1>
-                    <span class="workspace-header-info">Private session</span>
+                    <div class="user-account-menu">
+                        <button class="user-account-trigger" id="user-account-trigger">
+                            <span id="header-username">User</span>
+                        </button>
+                        <div class="user-account-dropdown" id="user-account-dropdown">
+                            <div class="user-account-dropdown-label">Account</div>
+                            <div class="user-account-dropdown-item" id="account-settings">Settings</div>
+                            <div class="user-account-dropdown-item" id="account-payment">Payment details</div>
+                            <div class="user-account-dropdown-item" id="account-logout">Logout</div>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="workspace-content">

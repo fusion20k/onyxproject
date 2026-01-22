@@ -299,6 +299,8 @@ function renderHub() {
     const decisionsList = document.getElementById('decisions-list');
     const decisionsFilter = document.getElementById('decisions-filter');
     
+    updateHeaderUsername();
+    
     if (allDecisions.active) {
         const decision = allDecisions.active;
         activeCard.style.display = 'flex';
@@ -338,6 +340,25 @@ function renderHub() {
     decisionsFilter.onchange = () => renderAllDecisions(decisionsFilter.value);
     
     showState('hub-state');
+}
+
+function updateHeaderUsername() {
+    if (!currentUser) return;
+    
+    const displayName = currentUser.display_name 
+        || currentUser.user_metadata?.display_name 
+        || currentUser.raw_user_meta_data?.display_name
+        || currentUser.email?.split('@')[0] 
+        || 'User';
+    
+    const usernameElements = [
+        document.getElementById('header-username'),
+        document.getElementById('header-username-first')
+    ];
+    
+    usernameElements.forEach(el => {
+        if (el) el.textContent = displayName;
+    });
 }
 
 function renderAllDecisions(filter = 'all') {
@@ -691,6 +712,7 @@ async function initialize() {
     if (result.decision || (await getArchive()).success) {
         await navigateToHub();
     } else {
+        updateHeaderUsername();
         showState('first-time-state');
     }
 }
@@ -700,10 +722,57 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', logout);
     });
 
+    setupUserAccountDropdowns();
+
     const initialStartBtn = document.getElementById('initial-start-btn');
     if (initialStartBtn) {
         initialStartBtn.addEventListener('click', function() {
             startDecisionStep1();
+        });
+    }
+    
+    function setupUserAccountDropdowns() {
+        const dropdowns = [
+            { trigger: 'user-account-trigger', dropdown: 'user-account-dropdown' },
+            { trigger: 'user-account-trigger-first', dropdown: 'user-account-dropdown-first' }
+        ];
+        
+        dropdowns.forEach(({ trigger, dropdown }) => {
+            const triggerEl = document.getElementById(trigger);
+            const dropdownEl = document.getElementById(dropdown);
+            
+            if (triggerEl && dropdownEl) {
+                triggerEl.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    dropdownEl.classList.toggle('active');
+                    
+                    document.querySelectorAll('.user-account-dropdown').forEach(dd => {
+                        if (dd !== dropdownEl) dd.classList.remove('active');
+                    });
+                });
+                
+                dropdownEl.querySelectorAll('.user-account-dropdown-item').forEach(item => {
+                    item.addEventListener('click', async function() {
+                        const action = this.id || this.dataset.action;
+                        
+                        if (action === 'account-logout' || action === 'logout') {
+                            await logout();
+                        } else if (action === 'account-settings' || action === 'settings') {
+                            alert('Settings page coming soon');
+                        } else if (action === 'account-payment' || action === 'payment') {
+                            alert('Payment details page coming soon');
+                        }
+                        
+                        dropdownEl.classList.remove('active');
+                    });
+                });
+            }
+        });
+        
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.user-account-dropdown').forEach(dd => {
+                dd.classList.remove('active');
+            });
         });
     }
 
