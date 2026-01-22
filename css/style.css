@@ -143,6 +143,11 @@ section:not(.hero):not(.final-cta):not(.application):not(.pricing) .section-titl
     max-width: 700px;
 }
 
+.problem__text {
+    line-height: 1.8;
+    margin-bottom: 1.5em;
+}
+
 .problem__list {
     list-style: none;
     margin-bottom: var(--spacing-sm);
@@ -179,6 +184,7 @@ section:not(.hero):not(.final-cta):not(.application):not(.pricing) .section-titl
 
 .definition__list {
     list-style: none;
+    margin-bottom: var(--spacing-sm);
 }
 
 .definition__list li {
@@ -191,6 +197,12 @@ section:not(.hero):not(.final-cta):not(.application):not(.pricing) .section-titl
     content: "—";
     position: absolute;
     left: 0;
+}
+
+.definition__anchor {
+    font-size: 1.125rem;
+    opacity: 0.9;
+    margin-top: var(--spacing-sm);
 }
 
 /* Process Section */
@@ -226,6 +238,11 @@ section:not(.hero):not(.final-cta):not(.application):not(.pricing) .section-titl
 /* Value Section */
 .value {
     max-width: 700px;
+}
+
+.value__text {
+    line-height: 1.8;
+    margin-bottom: 1.5em;
 }
 
 .value__list {
