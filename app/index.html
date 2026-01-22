@@ -46,15 +46,9 @@
                 
                 <div class="workspace-content">
                     <div class="empty-state">
-                        <p style="margin-bottom: 24px; max-width: 600px; margin-left: auto; margin-right: auto;">This space is private. Use it to work through a decision that matters. Begin by describing the situation you are facing.</p>
+                        <p style="margin-bottom: 32px; max-width: 600px; margin-left: auto; margin-right: auto;">This space is private. Use it to work through a decision that matters.</p>
                         
-                        <form id="initial-decision-form" style="max-width: 700px; margin: 0 auto;">
-                            <div class="form-section">
-                                <label for="situation" class="form-label">Situation</label>
-                                <textarea id="situation" name="situation" class="input" rows="10" placeholder="Describe the decision you need to make..." required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Create Decision</button>
-                        </form>
+                        <button id="initial-start-btn" class="btn btn-primary">Start new decision</button>
                     </div>
                 </div>
             </div>
@@ -101,80 +95,131 @@
             </div>
 
 
-            <!-- Active Decision: Structured Form -->
-            <div id="decision-form-state" class="workspace-state" style="display: none;">
-                <div class="decision-header">
-                    <div class="decision-header-top">
-                        <button id="back-to-hub-btn" class="btn-text">← Back</button>
-                    </div>
-                    <input type="text" id="decision-title-input" class="decision-title-input" placeholder="Decision title" />
-                    <div class="decision-meta-line">
-                        <span id="decision-stage-text">Stage: In progress</span>
-                        <span class="text-dim"> • </span>
-                        <span class="text-dim" id="decision-updated-text">Updated today</span>
+            <!-- Step 1: Frame the Decision -->
+            <div id="decision-step1-state" class="workspace-state" style="display: none;">
+                <div class="workspace-header">
+                    <h1 class="workspace-header-title">Frame the decision</h1>
+                    <button id="back-from-step1" class="btn-text">← Back</button>
+                </div>
+                
+                <div class="workspace-content">
+                    <div class="decision-step-form">
+                        <div class="form-section">
+                            <label class="form-label">What decision are you making?</label>
+                            <input type="text" id="step1-title" class="input" placeholder="Decision title" />
+                        </div>
+
+                        <div class="form-section">
+                            <label class="form-label">What is at stake if you get this wrong?</label>
+                            <textarea id="step1-stakes" class="input" rows="4" placeholder="Stakes..."></textarea>
+                        </div>
+
+                        <div class="form-section">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="step1-time-sensitive" />
+                                <span class="text-body">This is time-sensitive</span>
+                            </label>
+                            <input type="date" id="step1-deadline" class="input" style="margin-top: 12px; display: none;" />
+                        </div>
+
+                        <button id="step1-next" class="btn btn-primary">Next: Options</button>
                     </div>
                 </div>
+            </div>
 
-                <div class="decision-body">
-                    <!-- 1. Context -->
-                    <div class="decision-section">
-                        <h2 class="decision-section-title">Context</h2>
-                        <p class="text-dim" style="margin-bottom: 16px;">What led to this decision? What constraints or deadlines matter?</p>
-                        <textarea id="context" class="input" rows="6" placeholder="Describe the context..."></textarea>
-                    </div>
+            <!-- Step 2: Options & Expectations -->
+            <div id="decision-step2-state" class="workspace-state" style="display: none;">
+                <div class="workspace-header">
+                    <h1 class="workspace-header-title">What could you do?</h1>
+                    <button id="back-from-step2" class="btn-text">← Back</button>
+                </div>
+                
+                <div class="workspace-content">
+                    <div class="decision-step-form">
+                        <div id="step2-options-container"></div>
+                        
+                        <p class="text-dim" style="margin: 16px 0;">Two strong options are enough.</p>
 
-                    <!-- 2. Options -->
-                    <div class="decision-section">
-                        <h2 class="decision-section-title">Options</h2>
-                        <p class="text-dim" style="margin-bottom: 16px;">What are the possible paths forward?</p>
-                        <div id="options-list" class="options-list">
-                            <!-- Options populated by JS -->
-                        </div>
-                        <button id="add-option-btn" class="btn" style="margin-top: 16px;">Add option</button>
-                    </div>
-
-                    <!-- 3. Choice & expectations -->
-                    <div class="decision-section">
-                        <h2 class="decision-section-title">Choice & expectations</h2>
                         <div class="form-section">
-                            <label class="form-label">Which option are you leaning toward?</label>
-                            <textarea id="choice" class="input" rows="3" placeholder="Your current thinking..."></textarea>
+                            <label class="form-label">Current favorite</label>
+                            <div id="step2-favorite-radios"></div>
                         </div>
-                        <div class="form-section">
-                            <label class="form-label">What outcome do you expect?</label>
-                            <textarea id="expectations" class="input" rows="4" placeholder="Expected results..."></textarea>
-                        </div>
-                    </div>
 
-                    <!-- 4. Feelings & risks -->
-                    <div class="decision-section">
-                        <h2 class="decision-section-title">Feelings & risks</h2>
-                        <div class="form-section">
-                            <label class="form-label">How do you feel about this decision?</label>
-                            <textarea id="feelings" class="input" rows="3" placeholder="Your emotional response..."></textarea>
-                        </div>
-                        <div class="form-section">
-                            <label class="form-label">What could go wrong?</label>
-                            <textarea id="risks" class="input" rows="4" placeholder="Potential risks..."></textarea>
-                        </div>
+                        <button id="step2-next" class="btn btn-primary">Next: Commit</button>
                     </div>
+                </div>
+            </div>
 
-                    <!-- 5. Follow-up -->
-                    <div class="decision-section">
-                        <h2 class="decision-section-title">Follow-up</h2>
+            <!-- Step 3: Commit & Check -->
+            <div id="decision-step3-state" class="workspace-state" style="display: none;">
+                <div class="workspace-header">
+                    <h1 class="workspace-header-title">Commit to a move</h1>
+                    <button id="back-from-step3" class="btn-text">← Back</button>
+                </div>
+                
+                <div class="workspace-content">
+                    <div class="decision-step-form">
                         <div class="form-section">
-                            <label class="form-label">What immediate next steps will you take?</label>
-                            <input type="text" id="next-step-1" class="input" placeholder="1. First action" style="margin-bottom: 12px;" />
-                            <input type="text" id="next-step-2" class="input" placeholder="2. Second action" style="margin-bottom: 12px;" />
-                            <input type="text" id="next-step-3" class="input" placeholder="3. Third action (optional)" />
+                            <label class="form-label">Your choice</label>
+                            <select id="step3-choice" class="input">
+                                <option value="">Select option...</option>
+                            </select>
                         </div>
-                    </div>
 
-                    <!-- Support section at bottom -->
-                    <div class="decision-section" style="border-top: 1px solid rgba(255,255,255,0.15); padding-top: 40px;">
-                        <h2 class="decision-section-title">Support</h2>
-                        <p class="text-dim" style="margin-bottom: 16px;">Need help with this decision?</p>
-                        <button id="request-support-btn" class="btn">Request support</button>
+                        <div class="form-section">
+                            <label class="form-label">Why this move now?</label>
+                            <textarea id="step3-reasoning" class="input" rows="4"></textarea>
+                        </div>
+
+                        <div class="form-section">
+                            <label class="form-label">What would make you change your mind?</label>
+                            <textarea id="step3-change-mind" class="input" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-section">
+                            <label class="form-label">First action you will take (optional)</label>
+                            <input type="text" id="step3-first-action" class="input" />
+                        </div>
+
+                        <button id="step3-save" class="btn btn-primary">Save decision</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Decision Summary View -->
+            <div id="decision-summary-state" class="workspace-state" style="display: none;">
+                <div class="workspace-header">
+                    <h1 class="workspace-header-title" id="summary-title">Decision</h1>
+                    <button id="back-from-summary" class="btn-text">← Back</button>
+                </div>
+                
+                <div class="workspace-content">
+                    <div class="decision-summary">
+                        <div class="summary-meta">
+                            <span id="summary-stage">Committed</span>
+                            <span class="text-dim"> • </span>
+                            <span class="text-dim" id="summary-date">Today</span>
+                        </div>
+
+                        <div class="summary-section">
+                            <h3 class="summary-section-title">Stakes</h3>
+                            <p id="summary-stakes" class="summary-text"></p>
+                        </div>
+
+                        <div class="summary-section">
+                            <h3 class="summary-section-title">Options considered</h3>
+                            <div id="summary-options"></div>
+                        </div>
+
+                        <div class="summary-section">
+                            <h3 class="summary-section-title">Why you chose this</h3>
+                            <p id="summary-reasoning" class="summary-text"></p>
+                        </div>
+
+                        <div class="summary-actions">
+                            <button id="summary-edit" class="btn">Edit details</button>
+                            <button id="summary-support" class="btn">Request a second opinion on this decision</button>
+                        </div>
                     </div>
                 </div>
             </div>

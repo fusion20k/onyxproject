@@ -305,20 +305,29 @@ function renderHub() {
         noActiveDecision.style.display = 'none';
         
         const statusMap = {
-            'in_progress': 'In progress',
+            'in_progress': 'Draft',
             'under_review': 'Under review',
             'responded': 'Responded',
             'resolved': 'Resolved'
         };
         
+        const now = new Date();
+        const updated = new Date(decision.updated_at);
+        const daysDiff = Math.floor((now - updated) / (1000 * 60 * 60 * 24));
+        const lastAction = daysDiff === 0 ? 'today' : daysDiff === 1 ? '1 day ago' : `${daysDiff} days ago`;
+        
         document.getElementById('active-decision-title').textContent = 
             decision.title || decision.situation.substring(0, 80) + '...';
-        document.getElementById('active-decision-stage').textContent = 
-            statusMap[decision.status] || decision.status;
-        document.getElementById('active-decision-next').textContent = 
-            decision.status === 'in_progress' ? 'Complete decision form' : 'Review feedback';
+        document.getElementById('active-decision-stage').innerHTML = 
+            `<strong>Stage:</strong> ${statusMap[decision.status] || decision.status}`;
+        document.getElementById('active-decision-next').innerHTML = 
+            `<strong>Last reviewed:</strong> ${lastAction}`;
         
-        document.getElementById('open-decision-btn').onclick = () => navigateToDecision(decision.id);
+        activeCard.onclick = () => navigateToDecision(decision.id);
+        document.getElementById('open-decision-btn').onclick = (e) => {
+            e.stopPropagation();
+            navigateToDecision(decision.id);
+        };
     } else {
         activeCard.style.display = 'none';
         noActiveDecision.style.display = 'block';
@@ -357,18 +366,24 @@ function renderAllDecisions(filter = 'all') {
         row.style.cursor = 'pointer';
         row.onclick = () => navigateToDecision(decision.id);
         
-        const timestamp = new Date(decision.updated_at).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-        });
+        const statusMap = {
+            'in_progress': 'Draft',
+            'under_review': 'Under review',
+            'responded': 'Responded',
+            'resolved': 'Resolved'
+        };
         
-        const statusText = decision.status === 'resolved' ? 'Resolved' : 'Active';
+        const now = new Date();
+        const updated = new Date(decision.updated_at);
+        const daysDiff = Math.floor((now - updated) / (1000 * 60 * 60 * 24));
+        const lastAction = daysDiff === 0 ? 'today' : daysDiff === 1 ? '1 day ago' : `${daysDiff} days ago`;
+        
+        const stage = statusMap[decision.status] || decision.status;
         
         row.innerHTML = `
             <div>
                 <div class="decision-row-title">${escapeHtml(decision.title || decision.situation.substring(0, 60) + '...')}</div>
-                <div class="decision-row-meta">${statusText} • Updated ${timestamp}</div>
+                <div class="decision-row-meta">${stage} - Last reviewed ${lastAction}</div>
             </div>
         `;
         
@@ -376,145 +391,212 @@ function renderAllDecisions(filter = 'all') {
     });
 }
 
-function renderDecisionForm(decision) {
+let decisionStepData = {
+    title: '',
+    stakes: '',
+    deadline: null,
+    options: [{ label: 'A', prosCons: '' }, { label: 'B', prosCons: '' }],
+    favorite: null,
+    choice: '',
+    reasoning: '',
+    changeMind: '',
+    firstAction: ''
+};
+
+function startDecisionStep1() {
+    decisionStepData = {
+        title: '',
+        stakes: '',
+        deadline: null,
+        options: [{ label: 'A', prosCons: '' }, { label: 'B', prosCons: '' }],
+        favorite: null,
+        choice: '',
+        reasoning: '',
+        changeMind: '',
+        firstAction: ''
+    };
+    
+    document.getElementById('step1-title').value = '';
+    document.getElementById('step1-stakes').value = '';
+    document.getElementById('step1-time-sensitive').checked = false;
+    document.getElementById('step1-deadline').value = '';
+    document.getElementById('step1-deadline').style.display = 'none';
+    
+    showState('decision-step1-state');
+}
+
+function proceedToStep2() {
+    decisionStepData.title = document.getElementById('step1-title').value;
+    decisionStepData.stakes = document.getElementById('step1-stakes').value;
+    
+    if (document.getElementById('step1-time-sensitive').checked) {
+        decisionStepData.deadline = document.getElementById('step1-deadline').value;
+    }
+    
+    if (!decisionStepData.title || !decisionStepData.stakes) {
+        alert('Please fill in all required fields');
+        return;
+    }
+    
+    renderStep2();
+    showState('decision-step2-state');
+}
+
+function renderStep2() {
+    const container = document.getElementById('step2-options-container');
+    container.innerHTML = '';
+    
+    decisionStepData.options.forEach((option, index) => {
+        const optionDiv = document.createElement('div');
+        optionDiv.className = 'step2-option';
+        
+        optionDiv.innerHTML = `
+            <label class="step2-option-label">Option ${option.label}</label>
+            <label class="form-label" style="font-size: 0.875rem; margin-top: 8px;">Pros/Cons</label>
+            <textarea class="input" rows="3" data-option-index="${index}">${option.prosCons}</textarea>
+        `;
+        
+        container.appendChild(optionDiv);
+    });
+    
+    const radiosContainer = document.getElementById('step2-favorite-radios');
+    radiosContainer.innerHTML = '';
+    
+    decisionStepData.options.forEach((option, index) => {
+        const label = document.createElement('label');
+        const radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = 'favorite';
+        radio.value = index;
+        radio.checked = decisionStepData.favorite === index;
+        
+        label.appendChild(radio);
+        label.appendChild(document.createTextNode(`Option ${option.label}`));
+        radiosContainer.appendChild(label);
+    });
+}
+
+function proceedToStep3() {
+    const textareas = document.querySelectorAll('#step2-options-container textarea');
+    textareas.forEach((ta, index) => {
+        decisionStepData.options[index].prosCons = ta.value;
+    });
+    
+    const favoriteRadio = document.querySelector('input[name="favorite"]:checked');
+    if (favoriteRadio) {
+        decisionStepData.favorite = parseInt(favoriteRadio.value);
+    }
+    
+    renderStep3();
+    showState('decision-step3-state');
+}
+
+function renderStep3() {
+    const choiceSelect = document.getElementById('step3-choice');
+    choiceSelect.innerHTML = '<option value="">Select option...</option>';
+    
+    decisionStepData.options.forEach((option, index) => {
+        const optionEl = document.createElement('option');
+        optionEl.value = index;
+        optionEl.textContent = `Option ${option.label}`;
+        choiceSelect.appendChild(optionEl);
+    });
+    
+    if (decisionStepData.favorite !== null) {
+        choiceSelect.value = decisionStepData.favorite;
+    }
+}
+
+async function saveDecisionFromSteps() {
+    const choiceIndex = parseInt(document.getElementById('step3-choice').value);
+    if (isNaN(choiceIndex)) {
+        alert('Please select your choice');
+        return;
+    }
+    
+    decisionStepData.choice = choiceIndex;
+    decisionStepData.reasoning = document.getElementById('step3-reasoning').value;
+    decisionStepData.changeMind = document.getElementById('step3-change-mind').value;
+    decisionStepData.firstAction = document.getElementById('step3-first-action').value;
+    
+    const sessionData = localStorage.getItem('session');
+    const session = sessionData ? JSON.parse(sessionData) : null;
+    const accessToken = session?.access_token;
+    
+    if (!accessToken) {
+        alert('Not authenticated');
+        return;
+    }
+    
+    const chosenOption = decisionStepData.options[choiceIndex];
+    
+    const payload = {
+        situation: decisionStepData.title,
+        title: decisionStepData.title,
+        stakes: decisionStepData.stakes,
+        deadline: decisionStepData.deadline,
+        option_a: decisionStepData.options[0]?.prosCons || null,
+        option_b: decisionStepData.options[1]?.prosCons || null,
+        option_c: decisionStepData.options[2]?.prosCons || null,
+        choice: `Option ${chosenOption.label}`,
+        reasoning: decisionStepData.reasoning,
+        change_mind: decisionStepData.changeMind,
+        first_action: decisionStepData.firstAction
+    };
+    
+    const result = await createDecision(payload.situation);
+    
+    if (result.success) {
+        const updateResult = await updateDecision(result.decision_id, payload);
+        if (updateResult.success) {
+            await loadHubData();
+            if (allDecisions.active) {
+                renderDecisionSummary(allDecisions.active);
+            }
+        }
+    } else {
+        alert(result.error || 'Failed to save decision');
+    }
+}
+
+function renderDecisionSummary(decision) {
     currentDecision = decision;
     
-    const titleInput = document.getElementById('decision-title-input');
-    titleInput.value = decision.title || '';
-    titleInput.addEventListener('input', setupAutosave);
+    document.getElementById('summary-title').textContent = decision.title || 'Decision';
     
     const statusMap = {
-        'in_progress': 'In progress',
+        'in_progress': 'Draft',
         'under_review': 'Under review',
         'responded': 'Responded',
         'resolved': 'Resolved'
     };
-    document.getElementById('decision-stage-text').textContent = `Stage: ${statusMap[decision.status] || decision.status}`;
     
-    const updatedDate = new Date(decision.updated_at).toLocaleDateString('en-US', {
+    document.getElementById('summary-stage').textContent = statusMap[decision.status] || 'Committed';
+    
+    const date = new Date(decision.updated_at).toLocaleDateString('en-US', {
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
+        year: 'numeric'
     });
-    document.getElementById('decision-updated-text').textContent = `Updated ${updatedDate}`;
+    document.getElementById('summary-date').textContent = date;
     
-    const contextEl = document.getElementById('context');
-    contextEl.value = decision.context || '';
-    contextEl.addEventListener('input', setupAutosave);
+    document.getElementById('summary-stakes').textContent = decision.stakes || 'Not specified';
     
-    const choiceEl = document.getElementById('choice');
-    choiceEl.value = decision.choice || '';
-    choiceEl.addEventListener('input', setupAutosave);
+    const optionsContainer = document.getElementById('summary-options');
+    optionsContainer.innerHTML = '';
     
-    const expectationsEl = document.getElementById('expectations');
-    expectationsEl.value = decision.expectations || '';
-    expectationsEl.addEventListener('input', setupAutosave);
-    
-    const feelingsEl = document.getElementById('feelings');
-    feelingsEl.value = decision.feelings || '';
-    feelingsEl.addEventListener('input', setupAutosave);
-    
-    const risksEl = document.getElementById('risks');
-    risksEl.value = decision.risks || '';
-    risksEl.addEventListener('input', setupAutosave);
-    
-    const nextStep1 = document.getElementById('next-step-1');
-    nextStep1.value = decision.next_step_1 || '';
-    nextStep1.addEventListener('input', setupAutosave);
-    
-    const nextStep2 = document.getElementById('next-step-2');
-    nextStep2.value = decision.next_step_2 || '';
-    nextStep2.addEventListener('input', setupAutosave);
-    
-    const nextStep3 = document.getElementById('next-step-3');
-    nextStep3.value = decision.next_step_3 || '';
-    nextStep3.addEventListener('input', setupAutosave);
-    
-    renderOptions(decision);
-    
-    const isResolved = decision.status === 'resolved';
-    if (isResolved) {
-        document.querySelectorAll('#decision-form-state textarea, #decision-form-state input').forEach(el => {
-            el.disabled = true;
-        });
-    }
-    
-    showState('decision-form-state');
-}
-
-function renderOptions(decision) {
-    const optionsList = document.getElementById('options-list');
-    optionsList.innerHTML = '';
-    
-    const options = [
-        { key: 'option_a', value: decision.option_a },
-        { key: 'option_b', value: decision.option_b },
-        { key: 'option_c', value: decision.option_c }
-    ].filter(opt => opt.value);
-    
-    if (options.length === 0) {
-        options.push({ key: 'option_a', value: '' }, { key: 'option_b', value: '' });
-    }
-    
-    options.forEach((opt, index) => {
-        const optionBlock = document.createElement('div');
-        optionBlock.className = 'option-block';
-        
-        const label = document.createElement('label');
-        label.className = 'form-label';
-        label.textContent = `Option ${String.fromCharCode(65 + index)}`;
-        
-        const textarea = document.createElement('textarea');
-        textarea.className = 'input';
-        textarea.rows = 3;
-        textarea.placeholder = 'Describe this option...';
-        textarea.value = opt.value || '';
-        textarea.dataset.optionKey = opt.key;
-        textarea.addEventListener('input', () => setupAutosave());
-        
-        optionBlock.appendChild(label);
-        optionBlock.appendChild(textarea);
-        optionsList.appendChild(optionBlock);
-    });
-}
-
-let autosaveTimeout = null;
-let isSaving = false;
-
-function setupAutosave() {
-    if (isSaving || !currentDecision) return;
-    
-    clearTimeout(autosaveTimeout);
-    autosaveTimeout = setTimeout(async () => {
-        await performAutosave();
-    }, 1000);
-}
-
-async function performAutosave() {
-    if (!currentDecision) return;
-    
-    isSaving = true;
-    
-    const optionTextareas = document.querySelectorAll('#options-list textarea');
-    const updates = {
-        title: document.getElementById('decision-title-input')?.value || null,
-        context: document.getElementById('context')?.value || null,
-        choice: document.getElementById('choice')?.value || null,
-        expectations: document.getElementById('expectations')?.value || null,
-        feelings: document.getElementById('feelings')?.value || null,
-        risks: document.getElementById('risks')?.value || null,
-        next_step_1: document.getElementById('next-step-1')?.value || null,
-        next_step_2: document.getElementById('next-step-2')?.value || null,
-        next_step_3: document.getElementById('next-step-3')?.value || null
-    };
-    
-    optionTextareas.forEach((textarea, index) => {
-        const key = textarea.dataset.optionKey || `option_${String.fromCharCode(97 + index)}`;
-        updates[key] = textarea.value || null;
+    [decision.option_a, decision.option_b, decision.option_c].forEach((opt, index) => {
+        if (opt) {
+            const optDiv = document.createElement('div');
+            optDiv.className = 'summary-option';
+            optDiv.textContent = `Option ${String.fromCharCode(65 + index)}: ${opt}`;
+            optionsContainer.appendChild(optDiv);
+        }
     });
     
-    await updateDecision(currentDecision.id, updates);
+    document.getElementById('summary-reasoning').textContent = decision.reasoning || decision.choice || 'Not specified';
     
-    isSaving = false;
+    showState('decision-summary-state');
 }
 
 function renderFeedback(feedbackList) {
@@ -567,7 +649,7 @@ async function navigateToDecision(decisionId) {
     
     if (result.success && result.decision) {
         currentFeedback = result.feedback || [];
-        renderDecisionForm(result.decision);
+        renderDecisionSummary(result.decision);
     }
 }
 
@@ -618,31 +700,10 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', logout);
     });
 
-    const initialForm = document.getElementById('initial-decision-form');
-    if (initialForm) {
-        initialForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const situation = document.getElementById('situation').value.trim();
-            
-            if (situation.length < 20) {
-                alert('Please provide more detail about your situation (minimum 20 characters).');
-                return;
-            }
-            
-            const submitBtn = initialForm.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Creating...';
-            
-            const result = await createDecision(situation);
-            
-            if (result.success) {
-                await navigateToHub();
-            } else {
-                alert(result.error || 'Failed to create decision');
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Continue';
-            }
+    const initialStartBtn = document.getElementById('initial-start-btn');
+    if (initialStartBtn) {
+        initialStartBtn.addEventListener('click', function() {
+            startDecisionStep1();
         });
     }
 
@@ -679,7 +740,82 @@ document.addEventListener('DOMContentLoaded', function() {
     const startNewBtn = document.getElementById('start-new-decision-btn');
     if (startNewBtn) {
         startNewBtn.addEventListener('click', function() {
-            showState('first-time-state');
+            startDecisionStep1();
+        });
+    }
+    
+    const step1TimeSensitive = document.getElementById('step1-time-sensitive');
+    if (step1TimeSensitive) {
+        step1TimeSensitive.addEventListener('change', function() {
+            const deadlineField = document.getElementById('step1-deadline');
+            if (this.checked) {
+                deadlineField.style.display = 'block';
+            } else {
+                deadlineField.style.display = 'none';
+            }
+        });
+    }
+    
+    const step1NextBtn = document.getElementById('step1-next');
+    if (step1NextBtn) {
+        step1NextBtn.addEventListener('click', proceedToStep2);
+    }
+    
+    const backFromStep1 = document.getElementById('back-from-step1');
+    if (backFromStep1) {
+        backFromStep1.addEventListener('click', async function() {
+            await navigateToHub();
+        });
+    }
+    
+    const step2NextBtn = document.getElementById('step2-next');
+    if (step2NextBtn) {
+        step2NextBtn.addEventListener('click', proceedToStep3);
+    }
+    
+    const backFromStep2 = document.getElementById('back-from-step2');
+    if (backFromStep2) {
+        backFromStep2.addEventListener('click', function() {
+            showState('decision-step1-state');
+        });
+    }
+    
+    const step3SaveBtn = document.getElementById('step3-save');
+    if (step3SaveBtn) {
+        step3SaveBtn.addEventListener('click', saveDecisionFromSteps);
+    }
+    
+    const backFromStep3 = document.getElementById('back-from-step3');
+    if (backFromStep3) {
+        backFromStep3.addEventListener('click', function() {
+            renderStep2();
+            showState('decision-step2-state');
+        });
+    }
+    
+    const backFromSummary = document.getElementById('back-from-summary');
+    if (backFromSummary) {
+        backFromSummary.addEventListener('click', async function() {
+            await navigateToHub();
+        });
+    }
+    
+    const summaryEditBtn = document.getElementById('summary-edit');
+    if (summaryEditBtn) {
+        summaryEditBtn.addEventListener('click', function() {
+            if (currentDecision) {
+                startDecisionStep1();
+            }
+        });
+    }
+    
+    const summarySupportBtn = document.getElementById('summary-support');
+    if (summarySupportBtn) {
+        summarySupportBtn.addEventListener('click', function() {
+            const modal = document.getElementById('support-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
         });
     }
 
