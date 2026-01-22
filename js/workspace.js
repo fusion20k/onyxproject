@@ -270,23 +270,49 @@ async function logout() {
     window.location.href = '/';
 }
 
+function calculateClarityMomentum(allDecisions) {
+    const now = new Date();
+    const last7Days = allDecisions.resolved.filter(d => {
+        const resolved = new Date(d.resolved_at);
+        return (now - resolved) < (7 * 24 * 60 * 60 * 1000);
+    });
+    
+    const last30Days = allDecisions.resolved.filter(d => {
+        const resolved = new Date(d.resolved_at);
+        return (now - resolved) < (30 * 24 * 60 * 60 * 1000);
+    });
+    
+    if (allDecisions.active || last7Days.length > 0) {
+        return "Consistent";
+    }
+    
+    if (last30Days.length > 0) {
+        return "Building";
+    }
+    
+    return "Paused";
+}
+
 function renderHub() {
     const activeCount = allDecisions.active ? 1 : 0;
     const resolvedCount = allDecisions.resolved.length;
+    const momentum = calculateClarityMomentum(allDecisions);
     
     document.getElementById('active-count').textContent = activeCount;
     document.getElementById('resolved-count').textContent = resolvedCount;
     
-    if (resolvedCount > 0) {
-        const totalResolutionTime = allDecisions.resolved.reduce((sum, d) => {
-            const created = new Date(d.created_at);
-            const resolved = new Date(d.resolved_at);
-            return sum + (resolved - created);
-        }, 0);
-        const avgDays = Math.round(totalResolutionTime / resolvedCount / (1000 * 60 * 60 * 24));
-        document.getElementById('avg-time').textContent = `${avgDays}d`;
-    } else {
-        document.getElementById('avg-time').textContent = '—';
+    const momentumElement = document.getElementById('clarity-momentum');
+    if (momentumElement) {
+        momentumElement.textContent = momentum;
+        momentumElement.className = `hub-stat-value hub-stat-value--momentum hub-stat-value--${momentum.toLowerCase()}`;
+    }
+    
+    if (currentUser) {
+        const userDisplay = document.getElementById('user-display');
+        if (userDisplay) {
+            const displayName = currentUser.display_name || currentUser.email?.split('@')[0] || 'User';
+            userDisplay.textContent = displayName;
+        }
     }
     
     const decisionsList = document.getElementById('decisions-list');
@@ -457,11 +483,6 @@ async function initialize() {
         return;
     }
 
-    const sidebar = document.getElementById('workspace-sidebar');
-    if (sidebar) {
-        sidebar.style.display = 'block';
-    }
-
     const result = await getActiveDecision();
     
     if (!result.success) {
@@ -478,7 +499,7 @@ async function initialize() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('[id^="logout-btn"], #sidebar-logout-btn').forEach(btn => {
+    document.querySelectorAll('[id^="logout-btn"]').forEach(btn => {
         btn.addEventListener('click', logout);
     });
 
@@ -582,38 +603,65 @@ document.addEventListener('DOMContentLoaded', function() {
     const requestSupportBtn = document.getElementById('request-support-btn');
     if (requestSupportBtn) {
         requestSupportBtn.addEventListener('click', function() {
-            alert('Support functionality coming soon. Please email support@onyx-project.com for assistance.');
+            const modal = document.getElementById('support-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        });
+    }
+
+    const supportCancel = document.getElementById('support-cancel');
+    if (supportCancel) {
+        supportCancel.addEventListener('click', function() {
+            const modal = document.getElementById('support-modal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.getElementById('support-form').reset();
+            }
+        });
+    }
+
+    const supportForm = document.getElementById('support-form');
+    if (supportForm) {
+        supportForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!currentDecision) {
+                alert('Please create a decision first to request support.');
+                return;
+            }
+            
+            const reason = document.getElementById('support-reason').value;
+            const details = document.getElementById('support-details').value.trim();
+            
+            if (!details) return;
+            
+            const content = `[Support Request - ${reason}]\n\n${details}`;
+            const result = await addFeedback(currentDecision.id, content);
+            
+            if (result.success) {
+                const modal = document.getElementById('support-modal');
+                if (modal) modal.style.display = 'none';
+                supportForm.reset();
+                alert('Support request sent. We\'ll respond shortly.');
+            } else {
+                alert('Failed to send support request. Please try again.');
+            }
         });
     }
 
     const viewInsightsBtn = document.getElementById('view-insights-btn');
     if (viewInsightsBtn) {
         viewInsightsBtn.addEventListener('click', function() {
-            alert('Insights functionality coming soon.');
+            renderInsights();
+            showState('insights-state');
         });
     }
 
-    const navWorkspace = document.getElementById('nav-workspace');
-    if (navWorkspace) {
-        navWorkspace.addEventListener('click', async function(e) {
-            e.preventDefault();
-            document.querySelectorAll('.workspace-nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            navWorkspace.classList.add('active');
+    const backToHubInsights = document.getElementById('back-to-hub-insights');
+    if (backToHubInsights) {
+        backToHubInsights.addEventListener('click', async function() {
             await navigateToHub();
-        });
-    }
-
-    const navArchive = document.getElementById('nav-archive');
-    if (navArchive) {
-        navArchive.addEventListener('click', function(e) {
-            e.preventDefault();
-            document.querySelectorAll('.workspace-nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            navArchive.classList.add('active');
-            alert('Archive view coming soon.');
         });
     }
 
@@ -621,16 +669,62 @@ document.addEventListener('DOMContentLoaded', function() {
     if (backToHubBtn) {
         backToHubBtn.addEventListener('click', async function(e) {
             e.preventDefault();
-            document.querySelectorAll('.workspace-nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            const navWorkspace = document.getElementById('nav-workspace');
-            if (navWorkspace) {
-                navWorkspace.classList.add('active');
-            }
             await navigateToHub();
         });
     }
 
     initialize();
 });
+
+function renderInsights() {
+    const resolvedCount = allDecisions.resolved.length;
+    
+    document.getElementById('insights-resolved').textContent = resolvedCount;
+    
+    if (resolvedCount > 0) {
+        const totalResolutionTime = allDecisions.resolved.reduce((sum, d) => {
+            const created = new Date(d.created_at);
+            const resolved = new Date(d.resolved_at);
+            return sum + (resolved - created);
+        }, 0);
+        const avgDays = Math.round(totalResolutionTime / resolvedCount / (1000 * 60 * 60 * 24));
+        document.getElementById('insights-avg-time').textContent = avgDays > 0 ? `${avgDays} days` : '< 1 day';
+        
+        const lastResolved = new Date(allDecisions.resolved[0].resolved_at);
+        const daysAgo = Math.floor((new Date() - lastResolved) / (1000 * 60 * 60 * 24));
+        const lastResolvedText = daysAgo === 0 ? 'Today' : daysAgo === 1 ? 'Yesterday' : `${daysAgo} days ago`;
+        document.getElementById('insights-last-resolved').textContent = lastResolvedText;
+    } else {
+        document.getElementById('insights-avg-time').textContent = '—';
+        document.getElementById('insights-last-resolved').textContent = '—';
+    }
+    
+    const recentList = document.getElementById('insights-recent-list');
+    if (recentList) {
+        recentList.innerHTML = '';
+        
+        if (allDecisions.resolved.length === 0) {
+            recentList.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">No resolved decisions yet.</p>';
+        } else {
+            const recent = allDecisions.resolved.slice(0, 5);
+            recent.forEach(decision => {
+                const item = document.createElement('div');
+                item.className = 'insights-recent-item';
+                
+                const resolved = new Date(decision.resolved_at);
+                const dateStr = resolved.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                });
+                
+                item.innerHTML = `
+                    <div class="insights-recent-title">${escapeHtml(decision.title || decision.situation?.substring(0, 60) + '...')}</div>
+                    <div class="insights-recent-date">${dateStr}</div>
+                `;
+                
+                recentList.appendChild(item);
+            });
+        }
+    }
+}

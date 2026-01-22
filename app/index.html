@@ -10,18 +10,6 @@
 </head>
 <body class="workspace-page">
     <div class="workspace-container">
-        <!-- Sidebar -->
-        <aside class="workspace-sidebar" id="workspace-sidebar" style="display: none;">
-            <div class="workspace-brand">ONYX</div>
-            <nav class="workspace-nav">
-                <a href="#" class="workspace-nav-item active" id="nav-workspace">Workspace</a>
-                <a href="#" class="workspace-nav-item" id="nav-archive">Archive</a>
-            </nav>
-            <div class="workspace-sidebar-footer">
-                <button id="sidebar-logout-btn" class="workspace-logout">Logout</button>
-            </div>
-        </aside>
-
         <!-- Main Content -->
         <main class="workspace-main">
             <!-- Loading State -->
@@ -74,9 +62,9 @@
             <div id="hub-state" class="workspace-state" style="display: none;">
                 <div class="workspace-header">
                     <div class="workspace-header-left">
-                        <h1 class="workspace-title">Workspace</h1>
+                        <h1 class="workspace-header-brand">Workspace</h1>
                     </div>
-                    <button id="logout-btn-hub" class="workspace-logout">Logout</button>
+                    <div class="workspace-user-display" id="user-display">User</div>
                 </div>
                 
                 <div class="workspace-content">
@@ -88,11 +76,11 @@
                         </div>
                         <div class="hub-stat-card">
                             <div class="hub-stat-value" id="resolved-count">0</div>
-                            <div class="hub-stat-label">Resolved</div>
+                            <div class="hub-stat-label">Decisions Resolved</div>
                         </div>
                         <div class="hub-stat-card">
-                            <div class="hub-stat-value" id="avg-time">—</div>
-                            <div class="hub-stat-label">Avg. Resolution Time</div>
+                            <div class="hub-stat-value hub-stat-value--momentum" id="clarity-momentum">—</div>
+                            <div class="hub-stat-label">Clarity Momentum</div>
                         </div>
                     </div>
 
@@ -262,6 +250,59 @@
 
                 <div class="workspace-content">
                     <div id="archive-detail-content"></div>
+                </div>
+            </div>
+
+            <!-- Insights Page -->
+            <div id="insights-state" class="workspace-state" style="display: none;">
+                <div class="workspace-header">
+                    <div class="workspace-header-left">
+                        <button id="back-to-hub-insights" class="workspace-back-btn">← Back</button>
+                        <h1 class="workspace-title">Insights</h1>
+                    </div>
+                </div>
+                
+                <div class="workspace-content">
+                    <div class="insights-grid">
+                        <div class="insight-card">
+                            <div class="insight-value" id="insights-resolved">0</div>
+                            <div class="insight-label">Decisions Resolved</div>
+                        </div>
+                        <div class="insight-card">
+                            <div class="insight-value" id="insights-avg-time">—</div>
+                            <div class="insight-label">Avg. Time to Resolution</div>
+                        </div>
+                        <div class="insight-card">
+                            <div class="insight-value" id="insights-last-resolved">—</div>
+                            <div class="insight-label">Last Resolved</div>
+                        </div>
+                    </div>
+                    
+                    <div class="insights-section">
+                        <h3>Recent Decisions</h3>
+                        <div id="insights-recent-list" class="insights-recent-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Support Request Modal -->
+            <div id="support-modal" class="support-modal" style="display: none;">
+                <div class="support-modal-content">
+                    <h2>Request Support</h2>
+                    <form id="support-form">
+                        <label>Reason</label>
+                        <select id="support-reason">
+                            <option value="clarification">Clarification</option>
+                            <option value="follow-up">Follow-up</option>
+                            <option value="priority">Priority Concern</option>
+                        </select>
+                        <label>Details</label>
+                        <textarea id="support-details" required placeholder="Describe your support request..."></textarea>
+                        <div class="support-actions">
+                            <button type="button" id="support-cancel">Cancel</button>
+                            <button type="submit">Send Request</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </main>
