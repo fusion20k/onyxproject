@@ -60,19 +60,25 @@
     margin: 0;
 }
 
-.workspace-user-display {
+.workspace-logout-btn {
+    background: transparent;
+    border: 1px solid #333;
+    color: #aaa;
+    padding: 10px 24px;
+    font-family: var(--font-mono);
     font-size: 0.875rem;
-    color: #666;
-    padding: 8px 16px;
-    background: #0a0a0a;
-    border: 1px solid #1a1a1a;
+    cursor: pointer;
+    transition: all 0.2s ease;
     border-radius: 4px;
-    transition: all 0.2s;
+    font-weight: 500;
+    letter-spacing: 0.02em;
 }
 
-.workspace-user-display:hover {
-    border-color: #333;
-    color: #888;
+.workspace-logout-btn:hover {
+    background: #0a0a0a;
+    border-color: #555;
+    color: #fff;
+    transform: translateY(-1px);
 }
 
 .workspace-back-btn {
@@ -753,6 +759,21 @@
 .hub-action-btn--primary:disabled:hover {
     background: #fff;
     border-color: #fff;
+}
+
+/* User Info Footer */
+.hub-user-info {
+    margin-top: 80px;
+    padding-top: 32px;
+    border-top: 1px solid #1a1a1a;
+    text-align: center;
+    font-size: 0.8125rem;
+    color: #555;
+}
+
+.hub-user-info span {
+    color: #888;
+    font-weight: 500;
 }
 
 /* Tooltip */
