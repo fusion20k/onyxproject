@@ -40,77 +40,62 @@
             <!-- First-Time User: Initial Prompt -->
             <div id="first-time-state" class="workspace-state" style="display: none;">
                 <div class="workspace-header">
-                    <div class="workspace-header-left">
-                        <h1 class="workspace-title">New Decision</h1>
-                    </div>
-                    <button id="logout-btn-1" class="workspace-logout-btn">Logout</button>
+                    <h1 class="workspace-header-title">Workspace</h1>
+                    <span class="workspace-header-info">Private session</span>
                 </div>
                 
                 <div class="workspace-content">
-                    <p class="workspace-instruction">This space is private. Use it to work through a decision that matters.<br>Begin by describing the situation you are facing.</p>
-                    
-                    <form id="initial-decision-form" class="workspace-form">
-                        <div class="form-section">
-                            <label for="situation" class="form-label">Situation</label>
-                            <textarea id="situation" name="situation" rows="10" placeholder="Describe the decision you need to make..." required></textarea>
-                        </div>
-                        <button type="submit" class="workspace-submit">Create Decision</button>
-                    </form>
+                    <div class="empty-state">
+                        <p style="margin-bottom: 24px; max-width: 600px; margin-left: auto; margin-right: auto;">This space is private. Use it to work through a decision that matters. Begin by describing the situation you are facing.</p>
+                        
+                        <form id="initial-decision-form" style="max-width: 700px; margin: 0 auto;">
+                            <div class="form-section">
+                                <label for="situation" class="form-label">Situation</label>
+                                <textarea id="situation" name="situation" class="input" rows="10" placeholder="Describe the decision you need to make..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Create Decision</button>
+                        </form>
+                    </div>
                 </div>
             </div>
             <!-- Workspace Hub (Overview) -->
             <div id="hub-state" class="workspace-state" style="display: none;">
                 <div class="workspace-header">
-                    <div class="workspace-header-left">
-                        <h1 class="workspace-header-brand">Workspace</h1>
-                    </div>
-                    <button id="logout-btn-hub" class="workspace-logout-btn">Logout</button>
+                    <h1 class="workspace-header-title">Workspace</h1>
+                    <span class="workspace-header-info">Private session</span>
                 </div>
                 
                 <div class="workspace-content">
-                    <!-- Zone 1: Status Overview -->
-                    <div class="hub-stats">
-                        <div class="hub-stat-card">
-                            <div class="hub-stat-value" id="active-count">0</div>
-                            <div class="hub-stat-label">Active Decisions</div>
+                    <!-- Active Decision Card -->
+                    <div id="active-decision-card" class="active-decision-card" style="display: none;">
+                        <div class="active-decision-content">
+                            <div class="active-decision-title" id="active-decision-title">Decision title</div>
+                            <div class="active-decision-meta"><strong>Stage:</strong> <span id="active-decision-stage">In progress</span></div>
+                            <div class="active-decision-meta"><strong>Next step:</strong> <span id="active-decision-next">Complete decision form</span></div>
                         </div>
-                        <div class="hub-stat-card">
-                            <div class="hub-stat-value" id="resolved-count">0</div>
-                            <div class="hub-stat-label">Decisions Resolved</div>
-                        </div>
-                        <div class="hub-stat-card">
-                            <div class="hub-stat-value hub-stat-value--momentum" id="clarity-momentum">—</div>
-                            <div class="hub-stat-label">Clarity Momentum</div>
+                        <div class="active-decision-actions">
+                            <button id="open-decision-btn" class="btn btn-primary">Open</button>
                         </div>
                     </div>
 
-                    <!-- Zone 2: Active Decisions List -->
-                    <div class="hub-section">
-                        <h2 class="hub-section-title">Active Decisions</h2>
-                        <div id="decisions-list" class="hub-decisions-list">
+                    <!-- Empty State (no active decision) -->
+                    <div id="no-active-decision" class="empty-state" style="display: none;">
+                        <button id="start-new-decision-btn" class="btn btn-primary">Start New Decision</button>
+                    </div>
+
+                    <!-- All Decisions Section -->
+                    <div class="decisions-section">
+                        <div class="decisions-section-header">
+                            <h2 class="text-section-title">All decisions</h2>
+                            <select id="decisions-filter" class="filter-dropdown">
+                                <option value="all">All</option>
+                                <option value="active">Active</option>
+                                <option value="resolved">Resolved</option>
+                            </select>
+                        </div>
+                        <div id="decisions-list" class="decisions-list">
                             <!-- Decisions populated by JS -->
                         </div>
-                        <div id="no-decisions" class="hub-empty" style="display: none;">
-                            No active decisions. Start one below.
-                        </div>
-                    </div>
-
-                    <!-- Zone 3: Actions -->
-                    <div class="hub-actions">
-                        <button id="start-new-decision-btn" class="hub-action-btn hub-action-btn--primary">
-                            Start New Decision
-                        </button>
-                        <button id="request-support-btn" class="hub-action-btn">
-                            Request Support
-                        </button>
-                        <button id="view-insights-btn" class="hub-action-btn">
-                            View Insights
-                        </button>
-                    </div>
-
-                    <!-- User Info Footer -->
-                    <div class="hub-user-info">
-                        Signed in as <span id="user-display">User</span>
                     </div>
                 </div>
             </div>
@@ -118,78 +103,78 @@
 
             <!-- Active Decision: Structured Form -->
             <div id="decision-form-state" class="workspace-state" style="display: none;">
-                <div class="workspace-header">
-                    <div class="workspace-header-left">
-                        <button id="back-to-hub-btn" class="workspace-back-btn">← Back</button>
-                        <h1 class="workspace-title" id="decision-title">Active Decision</h1>
-                        <div class="workspace-status-badge" id="status-badge">In Progress</div>
+                <div class="decision-header">
+                    <div class="decision-header-top">
+                        <button id="back-to-hub-btn" class="btn-text">← Back</button>
                     </div>
-                    <button id="logout-btn-2" class="workspace-logout-btn">Logout</button>
+                    <input type="text" id="decision-title-input" class="decision-title-input" placeholder="Decision title" />
+                    <div class="decision-meta-line">
+                        <span id="decision-stage-text">Stage: In progress</span>
+                        <span class="text-dim"> • </span>
+                        <span class="text-dim" id="decision-updated-text">Updated today</span>
+                    </div>
                 </div>
 
-                <div class="workspace-content">
-                    <div class="decision-thread">
-                        <!-- Situation (locked) -->
-                        <div class="decision-section decision-section--locked decision-section--full">
-                            <h3 class="section-heading">Situation</h3>
-                            <div class="section-content" id="situation-display"></div>
-                        </div>
+                <div class="decision-body">
+                    <!-- 1. Context -->
+                    <div class="decision-section">
+                        <h2 class="decision-section-title">Context</h2>
+                        <p class="text-dim" style="margin-bottom: 16px;">What led to this decision? What constraints or deadlines matter?</p>
+                        <textarea id="context" class="input" rows="6" placeholder="Describe the context..."></textarea>
+                    </div>
 
-                        <!-- Context -->
-                        <div class="decision-section">
-                            <h3 class="section-heading">Context</h3>
-                            <p class="section-prompt">What led to this point? Include constraints, deadlines, and stakes.</p>
-                            <textarea id="context" name="context"></textarea>
+                    <!-- 2. Options -->
+                    <div class="decision-section">
+                        <h2 class="decision-section-title">Options</h2>
+                        <p class="text-dim" style="margin-bottom: 16px;">What are the possible paths forward?</p>
+                        <div id="options-list" class="options-list">
+                            <!-- Options populated by JS -->
                         </div>
+                        <button id="add-option-btn" class="btn" style="margin-top: 16px;">Add option</button>
+                    </div>
 
-                        <!-- Risks -->
-                        <div class="decision-section">
-                            <h3 class="section-heading">Risks</h3>
-                            <p class="section-prompt">What could go wrong? What is irreversible?</p>
-                            <textarea id="risks" name="risks"></textarea>
+                    <!-- 3. Choice & expectations -->
+                    <div class="decision-section">
+                        <h2 class="decision-section-title">Choice & expectations</h2>
+                        <div class="form-section">
+                            <label class="form-label">Which option are you leaning toward?</label>
+                            <textarea id="choice" class="input" rows="3" placeholder="Your current thinking..."></textarea>
                         </div>
-
-                        <!-- Unknowns -->
-                        <div class="decision-section">
-                            <h3 class="section-heading">Unknowns</h3>
-                            <p class="section-prompt">What information is missing or uncertain?</p>
-                            <textarea id="unknowns" name="unknowns"></textarea>
-                        </div>
-
-                        <!-- Options -->
-                        <div class="decision-section decision-section--full">
-                            <h3 class="section-heading">Options</h3>
-                            <p class="section-prompt">List the realistic paths forward.</p>
-                            <div class="options-grid">
-                                <div class="option-field">
-                                    <label>Option A</label>
-                                    <textarea id="option-a" name="option_a"></textarea>
-                                </div>
-                                <div class="option-field">
-                                    <label>Option B</label>
-                                    <textarea id="option-b" name="option_b"></textarea>
-                                </div>
-                                <div class="option-field">
-                                    <label>Option C (optional)</label>
-                                    <textarea id="option-c" name="option_c"></textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="decision-actions">
-                            <button id="save-decision-btn" class="workspace-submit">Save Progress</button>
+                        <div class="form-section">
+                            <label class="form-label">What outcome do you expect?</label>
+                            <textarea id="expectations" class="input" rows="4" placeholder="Expected results..."></textarea>
                         </div>
                     </div>
 
-                    <!-- Feedback Thread (unlocked when under review) -->
-                    <div id="feedback-section" class="feedback-thread" style="display: none;">
-                        <h2 class="feedback-heading">Communication Thread</h2>
-                        <div id="feedback-list" class="feedback-list"></div>
-                        
-                        <form id="feedback-form" class="feedback-form">
-                            <textarea id="feedback-input" placeholder="Add a response or clarification..." required></textarea>
-                            <button type="submit" class="feedback-submit">Send Message</button>
-                        </form>
+                    <!-- 4. Feelings & risks -->
+                    <div class="decision-section">
+                        <h2 class="decision-section-title">Feelings & risks</h2>
+                        <div class="form-section">
+                            <label class="form-label">How do you feel about this decision?</label>
+                            <textarea id="feelings" class="input" rows="3" placeholder="Your emotional response..."></textarea>
+                        </div>
+                        <div class="form-section">
+                            <label class="form-label">What could go wrong?</label>
+                            <textarea id="risks" class="input" rows="4" placeholder="Potential risks..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 5. Follow-up -->
+                    <div class="decision-section">
+                        <h2 class="decision-section-title">Follow-up</h2>
+                        <div class="form-section">
+                            <label class="form-label">What immediate next steps will you take?</label>
+                            <input type="text" id="next-step-1" class="input" placeholder="1. First action" style="margin-bottom: 12px;" />
+                            <input type="text" id="next-step-2" class="input" placeholder="2. Second action" style="margin-bottom: 12px;" />
+                            <input type="text" id="next-step-3" class="input" placeholder="3. Third action (optional)" />
+                        </div>
+                    </div>
+
+                    <!-- Support section at bottom -->
+                    <div class="decision-section" style="border-top: 1px solid rgba(255,255,255,0.15); padding-top: 40px;">
+                        <h2 class="decision-section-title">Support</h2>
+                        <p class="text-dim" style="margin-bottom: 16px;">Need help with this decision?</p>
+                        <button id="request-support-btn" class="btn">Request support</button>
                     </div>
                 </div>
             </div>

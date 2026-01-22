@@ -294,116 +294,227 @@ function calculateClarityMomentum(allDecisions) {
 }
 
 function renderHub() {
-    const activeCount = allDecisions.active ? 1 : 0;
-    const resolvedCount = allDecisions.resolved.length;
-    const momentum = calculateClarityMomentum(allDecisions);
-    
-    document.getElementById('active-count').textContent = activeCount;
-    document.getElementById('resolved-count').textContent = resolvedCount;
-    
-    const momentumElement = document.getElementById('clarity-momentum');
-    if (momentumElement) {
-        momentumElement.textContent = momentum;
-        momentumElement.className = `hub-stat-value hub-stat-value--momentum hub-stat-value--${momentum.toLowerCase()}`;
-    }
-    
-    if (currentUser) {
-        const userDisplay = document.getElementById('user-display');
-        if (userDisplay) {
-            const displayName = currentUser.display_name 
-                || currentUser.user_metadata?.display_name 
-                || currentUser.raw_user_meta_data?.display_name
-                || currentUser.email?.split('@')[0] 
-                || 'User';
-            userDisplay.textContent = displayName;
-        }
-    }
-    
+    const activeCard = document.getElementById('active-decision-card');
+    const noActiveDecision = document.getElementById('no-active-decision');
     const decisionsList = document.getElementById('decisions-list');
-    const noDecisions = document.getElementById('no-decisions');
-    const startBtn = document.getElementById('start-new-decision-btn');
-    
-    decisionsList.innerHTML = '';
+    const decisionsFilter = document.getElementById('decisions-filter');
     
     if (allDecisions.active) {
-        noDecisions.style.display = 'none';
-        decisionsList.style.display = 'flex';
-        
         const decision = allDecisions.active;
-        const card = document.createElement('div');
-        card.className = 'hub-decision-card';
-        card.onclick = () => navigateToDecision(decision.id);
+        activeCard.style.display = 'flex';
+        noActiveDecision.style.display = 'none';
         
         const statusMap = {
-            'in_progress': 'In Progress',
-            'under_review': 'Under Review',
+            'in_progress': 'In progress',
+            'under_review': 'Under review',
             'responded': 'Responded',
             'resolved': 'Resolved'
         };
         
+        document.getElementById('active-decision-title').textContent = 
+            decision.title || decision.situation.substring(0, 80) + '...';
+        document.getElementById('active-decision-stage').textContent = 
+            statusMap[decision.status] || decision.status;
+        document.getElementById('active-decision-next').textContent = 
+            decision.status === 'in_progress' ? 'Complete decision form' : 'Review feedback';
+        
+        document.getElementById('open-decision-btn').onclick = () => navigateToDecision(decision.id);
+    } else {
+        activeCard.style.display = 'none';
+        noActiveDecision.style.display = 'block';
+    }
+    
+    renderAllDecisions(decisionsFilter.value);
+    
+    decisionsFilter.onchange = () => renderAllDecisions(decisionsFilter.value);
+    
+    showState('hub-state');
+}
+
+function renderAllDecisions(filter = 'all') {
+    const decisionsList = document.getElementById('decisions-list');
+    decisionsList.innerHTML = '';
+    
+    let decisions = [];
+    
+    if (filter === 'all') {
+        if (allDecisions.active) decisions.push(allDecisions.active);
+        decisions = decisions.concat(allDecisions.resolved);
+    } else if (filter === 'active') {
+        if (allDecisions.active) decisions.push(allDecisions.active);
+    } else if (filter === 'resolved') {
+        decisions = allDecisions.resolved;
+    }
+    
+    if (decisions.length === 0) {
+        decisionsList.innerHTML = '<div class="empty-state">No decisions found.</div>';
+        return;
+    }
+    
+    decisions.forEach(decision => {
+        const row = document.createElement('div');
+        row.className = 'decision-row';
+        row.style.cursor = 'pointer';
+        row.onclick = () => navigateToDecision(decision.id);
+        
         const timestamp = new Date(decision.updated_at).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit'
+            year: 'numeric'
         });
         
-        card.innerHTML = `
-            <div class="hub-decision-info">
-                <div class="hub-decision-title">${escapeHtml(decision.title || decision.situation.substring(0, 50) + '...')}</div>
-                <div class="hub-decision-meta">Last updated ${timestamp}</div>
-            </div>
-            <div class="hub-decision-badge hub-decision-badge--${decision.status}">
-                ${statusMap[decision.status]}
+        const statusText = decision.status === 'resolved' ? 'Resolved' : 'Active';
+        
+        row.innerHTML = `
+            <div>
+                <div class="decision-row-title">${escapeHtml(decision.title || decision.situation.substring(0, 60) + '...')}</div>
+                <div class="decision-row-meta">${statusText} • Updated ${timestamp}</div>
             </div>
         `;
         
-        decisionsList.appendChild(card);
-        startBtn.disabled = true;
-    } else {
-        decisionsList.style.display = 'none';
-        noDecisions.style.display = 'block';
-        startBtn.disabled = false;
-    }
-    
-    showState('hub-state');
+        decisionsList.appendChild(row);
+    });
 }
 
 function renderDecisionForm(decision) {
     currentDecision = decision;
     
-    document.getElementById('situation-display').textContent = decision.situation;
-    document.getElementById('context').value = decision.context || '';
-    document.getElementById('option-a').value = decision.option_a || '';
-    document.getElementById('option-b').value = decision.option_b || '';
-    document.getElementById('option-c').value = decision.option_c || '';
-    document.getElementById('risks').value = decision.risks || '';
-    document.getElementById('unknowns').value = decision.unknowns || '';
+    const titleInput = document.getElementById('decision-title-input');
+    titleInput.value = decision.title || '';
+    titleInput.addEventListener('input', setupAutosave);
     
-    const statusBadge = document.getElementById('status-badge');
     const statusMap = {
-        'in_progress': 'In Progress',
-        'under_review': 'Under Review',
+        'in_progress': 'In progress',
+        'under_review': 'Under review',
         'responded': 'Responded',
         'resolved': 'Resolved'
     };
-    statusBadge.textContent = statusMap[decision.status] || decision.status;
-    statusBadge.className = `workspace-status-badge workspace-status-badge--${decision.status}`;
+    document.getElementById('decision-stage-text').textContent = `Stage: ${statusMap[decision.status] || decision.status}`;
     
-    if (decision.status !== 'in_progress') {
-        const feedbackSection = document.getElementById('feedback-section');
-        feedbackSection.style.display = 'block';
-        renderFeedback(currentFeedback);
-    }
+    const updatedDate = new Date(decision.updated_at).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
+    });
+    document.getElementById('decision-updated-text').textContent = `Updated ${updatedDate}`;
     
-    if (decision.status === 'resolved') {
-        document.querySelectorAll('#decision-form-state textarea').forEach(el => {
+    const contextEl = document.getElementById('context');
+    contextEl.value = decision.context || '';
+    contextEl.addEventListener('input', setupAutosave);
+    
+    const choiceEl = document.getElementById('choice');
+    choiceEl.value = decision.choice || '';
+    choiceEl.addEventListener('input', setupAutosave);
+    
+    const expectationsEl = document.getElementById('expectations');
+    expectationsEl.value = decision.expectations || '';
+    expectationsEl.addEventListener('input', setupAutosave);
+    
+    const feelingsEl = document.getElementById('feelings');
+    feelingsEl.value = decision.feelings || '';
+    feelingsEl.addEventListener('input', setupAutosave);
+    
+    const risksEl = document.getElementById('risks');
+    risksEl.value = decision.risks || '';
+    risksEl.addEventListener('input', setupAutosave);
+    
+    const nextStep1 = document.getElementById('next-step-1');
+    nextStep1.value = decision.next_step_1 || '';
+    nextStep1.addEventListener('input', setupAutosave);
+    
+    const nextStep2 = document.getElementById('next-step-2');
+    nextStep2.value = decision.next_step_2 || '';
+    nextStep2.addEventListener('input', setupAutosave);
+    
+    const nextStep3 = document.getElementById('next-step-3');
+    nextStep3.value = decision.next_step_3 || '';
+    nextStep3.addEventListener('input', setupAutosave);
+    
+    renderOptions(decision);
+    
+    const isResolved = decision.status === 'resolved';
+    if (isResolved) {
+        document.querySelectorAll('#decision-form-state textarea, #decision-form-state input').forEach(el => {
             el.disabled = true;
         });
-        document.getElementById('save-decision-btn').style.display = 'none';
     }
     
     showState('decision-form-state');
+}
+
+function renderOptions(decision) {
+    const optionsList = document.getElementById('options-list');
+    optionsList.innerHTML = '';
+    
+    const options = [
+        { key: 'option_a', value: decision.option_a },
+        { key: 'option_b', value: decision.option_b },
+        { key: 'option_c', value: decision.option_c }
+    ].filter(opt => opt.value);
+    
+    if (options.length === 0) {
+        options.push({ key: 'option_a', value: '' }, { key: 'option_b', value: '' });
+    }
+    
+    options.forEach((opt, index) => {
+        const optionBlock = document.createElement('div');
+        optionBlock.className = 'option-block';
+        
+        const label = document.createElement('label');
+        label.className = 'form-label';
+        label.textContent = `Option ${String.fromCharCode(65 + index)}`;
+        
+        const textarea = document.createElement('textarea');
+        textarea.className = 'input';
+        textarea.rows = 3;
+        textarea.placeholder = 'Describe this option...';
+        textarea.value = opt.value || '';
+        textarea.dataset.optionKey = opt.key;
+        textarea.addEventListener('input', () => setupAutosave());
+        
+        optionBlock.appendChild(label);
+        optionBlock.appendChild(textarea);
+        optionsList.appendChild(optionBlock);
+    });
+}
+
+let autosaveTimeout = null;
+let isSaving = false;
+
+function setupAutosave() {
+    if (isSaving || !currentDecision) return;
+    
+    clearTimeout(autosaveTimeout);
+    autosaveTimeout = setTimeout(async () => {
+        await performAutosave();
+    }, 1000);
+}
+
+async function performAutosave() {
+    if (!currentDecision) return;
+    
+    isSaving = true;
+    
+    const optionTextareas = document.querySelectorAll('#options-list textarea');
+    const updates = {
+        title: document.getElementById('decision-title-input')?.value || null,
+        context: document.getElementById('context')?.value || null,
+        choice: document.getElementById('choice')?.value || null,
+        expectations: document.getElementById('expectations')?.value || null,
+        feelings: document.getElementById('feelings')?.value || null,
+        risks: document.getElementById('risks')?.value || null,
+        next_step_1: document.getElementById('next-step-1')?.value || null,
+        next_step_2: document.getElementById('next-step-2')?.value || null,
+        next_step_3: document.getElementById('next-step-3')?.value || null
+    };
+    
+    optionTextareas.forEach((textarea, index) => {
+        const key = textarea.dataset.optionKey || `option_${String.fromCharCode(97 + index)}`;
+        updates[key] = textarea.value || null;
+    });
+    
+    await updateDecision(currentDecision.id, updates);
+    
+    isSaving = false;
 }
 
 function renderFeedback(feedbackList) {
@@ -535,39 +646,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    const saveBtn = document.getElementById('save-decision-btn');
-    if (saveBtn) {
-        saveBtn.addEventListener('click', async function() {
-            if (!currentDecision) return;
-            
-            const updates = {
-                context: document.getElementById('context').value,
-                option_a: document.getElementById('option-a').value,
-                option_b: document.getElementById('option-b').value,
-                option_c: document.getElementById('option-c').value,
-                risks: document.getElementById('risks').value,
-                unknowns: document.getElementById('unknowns').value
-            };
-            
-            saveBtn.disabled = true;
-            saveBtn.textContent = 'Saving...';
-            
-            const result = await updateDecision(currentDecision.id, updates);
-            
-            if (result.success) {
-                saveBtn.textContent = 'Saved';
-                setTimeout(async () => {
-                    saveBtn.disabled = false;
-                    saveBtn.textContent = 'Save Progress';
-                    await navigateToDecision(currentDecision.id);
-                }, 1000);
-            } else {
-                alert('Failed to save progress');
-                saveBtn.disabled = false;
-                saveBtn.textContent = 'Save Progress';
-            }
-        });
-    }
+
 
     const feedbackForm = document.getElementById('feedback-form');
     if (feedbackForm) {
