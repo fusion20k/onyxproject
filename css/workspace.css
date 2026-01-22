@@ -1,0 +1,437 @@
+.workspace-page {
+    background-color: #000;
+    color: #fff;
+    font-family: var(--font-mono);
+    line-height: 1.6;
+}
+
+.workspace-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 60px 40px;
+}
+
+.workspace-state {
+    display: none;
+}
+
+.workspace-loading {
+    text-align: center;
+    padding: 120px 20px;
+    color: #888;
+    font-size: 1rem;
+}
+
+.workspace-brand {
+    font-size: 2.5rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.workspace-error-title {
+    font-size: 1.5rem;
+    text-align: center;
+    margin-bottom: 20px;
+    font-weight: normal;
+}
+
+.workspace-error-text {
+    text-align: center;
+    color: #888;
+    margin-bottom: 40px;
+}
+
+.workspace-cta {
+    display: inline-block;
+    background-color: var(--color-text);
+    color: var(--color-bg);
+    padding: 12px 32px;
+    border: 1px solid var(--color-text);
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.workspace-cta:hover {
+    background-color: transparent;
+    color: var(--color-text);
+}
+
+.workspace-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 60px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #333;
+}
+
+.workspace-title {
+    font-size: 1.75rem;
+    font-weight: normal;
+    margin: 0;
+    flex: 1;
+}
+
+.workspace-logout {
+    background: transparent;
+    color: #888;
+    border: 1px solid #333;
+    padding: 8px 16px;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.workspace-logout:hover {
+    background: #1a1a1a;
+    color: #fff;
+    border-color: #666;
+}
+
+.workspace-status-badge {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-radius: 3px;
+}
+
+.workspace-status-badge--in_progress {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+    border: 1px solid #ffc107;
+}
+
+.workspace-status-badge--under_review {
+    background: rgba(33, 150, 243, 0.15);
+    color: #2196f3;
+    border: 1px solid #2196f3;
+}
+
+.workspace-status-badge--responded {
+    background: rgba(156, 39, 176, 0.15);
+    color: #9c27b0;
+    border: 1px solid #9c27b0;
+}
+
+.workspace-status-badge--resolved {
+    background: rgba(76, 175, 80, 0.15);
+    color: #4caf50;
+    border: 1px solid #4caf50;
+}
+
+.workspace-instruction {
+    font-size: 1.125rem;
+    line-height: 1.8;
+    margin-bottom: 60px;
+    color: #ddd;
+}
+
+.workspace-form {
+    max-width: 700px;
+}
+
+.form-section {
+    margin-bottom: 40px;
+}
+
+.form-label {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 12px;
+    color: #ddd;
+}
+
+.workspace-form textarea,
+.workspace-form input[type="text"] {
+    width: 100%;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    color: #fff;
+    padding: 12px 16px;
+    font-family: var(--font-mono);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    resize: vertical;
+    transition: border-color 0.2s;
+}
+
+.workspace-form textarea:focus,
+.workspace-form input[type="text"]:focus {
+    outline: none;
+    border-color: #666;
+}
+
+.workspace-form input[type="text"] {
+    margin-bottom: 12px;
+}
+
+.workspace-submit {
+    background-color: var(--color-text);
+    color: var(--color-bg);
+    padding: 12px 32px;
+    border: 1px solid var(--color-text);
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.workspace-submit:hover:not(:disabled) {
+    background-color: transparent;
+    color: var(--color-text);
+}
+
+.workspace-submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.decision-thread {
+    margin-bottom: 60px;
+}
+
+.decision-section {
+    margin-bottom: 50px;
+    padding-bottom: 50px;
+    border-bottom: 1px solid #1a1a1a;
+}
+
+.decision-section:last-child {
+    border-bottom: none;
+}
+
+.section-heading {
+    font-size: 1.25rem;
+    font-weight: normal;
+    margin-bottom: 12px;
+}
+
+.section-prompt {
+    color: #888;
+    font-size: 0.9375rem;
+    margin-bottom: 16px;
+}
+
+.decision-section textarea {
+    width: 100%;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    color: #fff;
+    padding: 12px 16px;
+    font-family: var(--font-mono);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    resize: vertical;
+    transition: border-color 0.2s;
+}
+
+.decision-section textarea:focus {
+    outline: none;
+    border-color: #666;
+}
+
+.decision-section textarea:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.decision-section--locked .section-content {
+    background: #0a0a0a;
+    border: 1px solid #333;
+    padding: 16px;
+    color: #ddd;
+    line-height: 1.8;
+    white-space: pre-wrap;
+}
+
+.options-grid {
+    display: grid;
+    gap: 20px;
+}
+
+.option-field label {
+    display: block;
+    font-size: 0.875rem;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+.feedback-thread {
+    margin-top: 60px;
+    padding-top: 60px;
+    border-top: 2px solid #333;
+}
+
+.feedback-heading {
+    font-size: 1.5rem;
+    font-weight: normal;
+    margin-bottom: 30px;
+}
+
+.feedback-list {
+    margin-bottom: 30px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.feedback-empty {
+    color: #666;
+    font-style: italic;
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.feedback-item {
+    margin-bottom: 30px;
+    padding: 16px;
+    background: #0a0a0a;
+    border-left: 3px solid #333;
+}
+
+.feedback-item--admin {
+    border-left-color: #4caf50;
+}
+
+.feedback-item--user {
+    border-left-color: #2196f3;
+}
+
+.feedback-meta {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 10px;
+    font-size: 0.8125rem;
+}
+
+.feedback-author {
+    font-weight: bold;
+    color: #fff;
+}
+
+.feedback-time {
+    color: #666;
+}
+
+.feedback-content {
+    color: #ddd;
+    line-height: 1.8;
+    white-space: pre-wrap;
+}
+
+.feedback-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.feedback-form textarea {
+    width: 100%;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    color: #fff;
+    padding: 12px 16px;
+    font-family: var(--font-mono);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    resize: vertical;
+}
+
+.feedback-form textarea:focus {
+    outline: none;
+    border-color: #666;
+}
+
+.feedback-submit {
+    align-self: flex-start;
+    background: transparent;
+    color: #fff;
+    border: 1px solid #666;
+    padding: 10px 24px;
+    font-family: var(--font-mono);
+    font-size: 0.9375rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.feedback-submit:hover:not(:disabled) {
+    background: #1a1a1a;
+    border-color: #fff;
+}
+
+.feedback-submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.workspace-back {
+    background: transparent;
+    color: #888;
+    border: 1px solid #333;
+    padding: 8px 16px;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.workspace-back:hover {
+    background: #1a1a1a;
+    color: #fff;
+    border-color: #666;
+}
+
+.archive-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.archive-item {
+    padding: 20px;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.archive-item:hover {
+    border-color: #666;
+    background: #0f0f0f;
+}
+
+.archive-item-title {
+    font-size: 1.125rem;
+    margin-bottom: 8px;
+}
+
+.archive-item-date {
+    font-size: 0.8125rem;
+    color: #666;
+}
+
+@media (max-width: 768px) {
+    .workspace-container {
+        padding: 40px 20px;
+    }
+
+    .workspace-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .workspace-title {
+        font-size: 1.5rem;
+    }
+
+    .options-grid {
+        grid-template-columns: 1fr;
+    }
+}
