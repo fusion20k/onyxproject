@@ -429,8 +429,8 @@ function renderDecisions(decisions) {
         filteredDecisions = allDecisions.filter(d => d.status === currentDecisionFilter);
     }
 
-    const underReview = allDecisions.filter(d => d.status === 'under_review').length;
-    if (badge) badge.textContent = underReview;
+    const totalDecisions = allDecisions.length;
+    if (badge) badge.textContent = totalDecisions;
 
     if (filteredDecisions.length === 0) {
         listView.style.display = 'none';
