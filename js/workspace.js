@@ -310,7 +310,11 @@ function renderHub() {
     if (currentUser) {
         const userDisplay = document.getElementById('user-display');
         if (userDisplay) {
-            const displayName = currentUser.display_name || currentUser.email?.split('@')[0] || 'User';
+            const displayName = currentUser.display_name 
+                || currentUser.user_metadata?.display_name 
+                || currentUser.raw_user_meta_data?.display_name
+                || currentUser.email?.split('@')[0] 
+                || 'User';
             userDisplay.textContent = displayName;
         }
     }
