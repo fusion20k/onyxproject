@@ -79,7 +79,12 @@
 
 .workspace-content {
     padding: 40px 60px;
-    max-width: 900px;
+    max-width: 1080px;
+    margin: 0 auto;
+}
+
+.workspace-content-column {
+    max-width: 960px;
     margin: 0 auto;
 }
 
@@ -112,8 +117,22 @@
 .workspace-helper-text {
     font-size: 0.875rem;
     color: rgba(255, 255, 255, 0.6);
-    padding: 12px 60px 0;
+    padding: 12px 60px 24px;
     line-height: 1.5;
+}
+
+.section-label {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 16px;
+}
+
+.section-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 48px 0;
 }
 
 /* User account dropdown */
@@ -349,8 +368,8 @@ input[type="checkbox"]:checked::after {
 /* Primary active decision card */
 .active-decision-card {
     border: 2px solid #fff;
-    padding: 28px 32px;
-    margin: 0 auto 48px;
+    padding: 36px 40px;
+    margin: 0 auto 16px;
     max-width: 700px;
     display: flex;
     align-items: center;
@@ -369,10 +388,10 @@ input[type="checkbox"]:checked::after {
 }
 
 .active-decision-title {
-    font-size: 1.125rem;
+    font-size: 1.25rem;
     font-weight: 400;
     color: #fff;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 }
 
 .active-decision-meta {
@@ -383,6 +402,14 @@ input[type="checkbox"]:checked::after {
 
 .active-decision-actions {
     flex-shrink: 0;
+}
+
+.low-state-nudge {
+    font-size: 0.8125rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-align: center;
+    margin-bottom: 24px;
+    line-height: 1.5;
 }
 
 /* All decisions section */
@@ -499,6 +526,21 @@ input[type="checkbox"]:checked::after {
 .empty-state-minimal p {
     margin-bottom: 20px;
     font-size: 0.875rem;
+}
+
+.library-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.library-empty-state p {
+    margin-bottom: 24px;
+    font-size: 0.875rem;
+}
+
+.settings-form {
+    max-width: 600px;
+    margin: 0 auto;
 }
 
 /* ========================================

@@ -244,6 +244,67 @@ async function resolveDecision(decisionId, resolution) {
     }
 }
 
+function openSettings() {
+    if (!currentUser) return;
+    
+    const displayName = currentUser.display_name 
+        || currentUser.user_metadata?.display_name 
+        || currentUser.raw_user_meta_data?.display_name
+        || '';
+    const email = currentUser.email || '';
+    
+    document.getElementById('settings-display-name').value = displayName;
+    document.getElementById('settings-email').value = email;
+    
+    showState('settings-state');
+}
+
+async function saveSettings() {
+    try {
+        const sessionData = localStorage.getItem('session');
+        const session = sessionData ? JSON.parse(sessionData) : null;
+        const accessToken = session?.access_token;
+        
+        if (!accessToken) {
+            alert('Please log in again');
+            return;
+        }
+        
+        const displayName = document.getElementById('settings-display-name').value.trim();
+        
+        const response = await fetch(`${API_BASE_URL}/auth/update-profile`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({ display_name: displayName })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to update profile');
+        }
+        
+        if (currentUser) {
+            currentUser.display_name = displayName;
+        }
+        
+        updateHeaderUsername();
+        
+        const saveMessage = document.getElementById('settings-save-message');
+        if (saveMessage) {
+            saveMessage.style.display = 'block';
+            setTimeout(() => {
+                saveMessage.style.display = 'none';
+            }, 3000);
+        }
+    } catch (error) {
+        console.error('[WORKSPACE] Save settings error:', error);
+        alert('Unable to save settings. Please try again.');
+    }
+}
+
 async function openCustomerPortal() {
     try {
         const sessionData = localStorage.getItem('session');
@@ -328,23 +389,33 @@ function calculateClarityMomentum(allDecisions) {
 }
 
 function renderHub() {
-    const activeCard = document.getElementById('active-decision-card');
+    const activeSection = document.getElementById('active-decision-section');
     const noActiveDecision = document.getElementById('no-active-decision');
+    const activeDivider = document.getElementById('active-divider');
     const decisionsList = document.getElementById('decisions-list');
     const decisionsFilter = document.getElementById('decisions-filter');
+    const singleDecisionNudge = document.getElementById('single-decision-nudge');
     
     updateHeaderUsername();
     
     if (allDecisions.active) {
         const decision = allDecisions.active;
-        activeCard.style.display = 'flex';
+        activeSection.style.display = 'block';
         noActiveDecision.style.display = 'none';
+        activeDivider.style.display = 'block';
+        
+        const totalDecisions = 1 + allDecisions.resolved.length;
+        if (totalDecisions === 1) {
+            singleDecisionNudge.style.display = 'block';
+        } else {
+            singleDecisionNudge.style.display = 'none';
+        }
         
         const statusMap = {
             'in_progress': 'Draft',
-            'under_review': 'Under review',
-            'responded': 'Responded',
-            'resolved': 'Resolved'
+            'under_review': 'In review',
+            'responded': 'Committed',
+            'resolved': 'Committed'
         };
         
         const now = new Date();
@@ -359,14 +430,16 @@ function renderHub() {
         document.getElementById('active-decision-status-line').textContent = 
             `Status: ${stage} - Reviewed: ${lastAction.charAt(0).toUpperCase() + lastAction.slice(1)}`;
         
+        const activeCard = document.getElementById('active-decision-card');
         activeCard.onclick = () => navigateToDecision(decision.id);
         document.getElementById('open-decision-btn').onclick = (e) => {
             e.stopPropagation();
             navigateToDecision(decision.id);
         };
     } else {
-        activeCard.style.display = 'none';
+        activeSection.style.display = 'none';
         noActiveDecision.style.display = 'block';
+        activeDivider.style.display = 'none';
     }
     
     renderAllDecisions(decisionsFilter.value);
@@ -397,24 +470,18 @@ function updateHeaderUsername() {
 
 function renderAllDecisions(filter = 'all') {
     const decisionsList = document.getElementById('decisions-list');
+    const libraryEmptyState = document.getElementById('library-empty-state');
+    const libraryTitle = document.getElementById('library-title');
     decisionsList.innerHTML = '';
     
     let decisions = [];
     
     if (filter === 'all') {
-        if (allDecisions.active) decisions.push(allDecisions.active);
-        decisions = decisions.concat(allDecisions.resolved);
+        decisions = allDecisions.resolved;
     } else if (filter === 'draft') {
-        if (allDecisions.active && allDecisions.active.status === 'in_progress') {
-            decisions.push(allDecisions.active);
-        }
+        decisions = allDecisions.resolved.filter(d => d.status === 'in_progress');
     } else if (filter === 'in_review') {
-        if (allDecisions.active && allDecisions.active.status === 'under_review') {
-            decisions.push(allDecisions.active);
-        }
-        decisions = decisions.concat(
-            allDecisions.resolved.filter(d => d.status === 'under_review')
-        );
+        decisions = allDecisions.resolved.filter(d => d.status === 'under_review');
     } else if (filter === 'committed') {
         decisions = allDecisions.resolved.filter(
             d => d.status === 'resolved' || d.status === 'responded'
@@ -422,6 +489,18 @@ function renderAllDecisions(filter = 'all') {
     } else if (filter === 'archived') {
         decisions = allDecisions.resolved.filter(d => d.status === 'archived');
     }
+    
+    const totalCount = allDecisions.resolved.length;
+    libraryTitle.textContent = `Decision library${totalCount > 0 ? ` (${totalCount})` : ''}`;
+    
+    if (decisions.length === 0 && totalCount === 0) {
+        decisionsList.style.display = 'none';
+        libraryEmptyState.style.display = 'block';
+        return;
+    }
+    
+    decisionsList.style.display = 'flex';
+    libraryEmptyState.style.display = 'none';
     
     if (decisions.length === 0) {
         decisionsList.innerHTML = '<div class="empty-state">No decisions found.</div>';
@@ -805,7 +884,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (action === 'account-logout' || action === 'logout') {
                             await logout();
                         } else if (action === 'account-settings' || action === 'settings') {
-                            alert('Settings page coming soon');
+                            openSettings();
                         } else if (action === 'account-payment' || action === 'payment') {
                             await openCustomerPortal();
                         }
@@ -1005,6 +1084,20 @@ document.addEventListener('DOMContentLoaded', function() {
         backToHubBtn.addEventListener('click', async function(e) {
             e.preventDefault();
             await navigateToHub();
+        });
+    }
+
+    const backFromSettings = document.getElementById('back-from-settings');
+    if (backFromSettings) {
+        backFromSettings.addEventListener('click', async function() {
+            await navigateToHub();
+        });
+    }
+
+    const settingsDisplayName = document.getElementById('settings-display-name');
+    if (settingsDisplayName) {
+        settingsDisplayName.addEventListener('input', function() {
+            saveSettings();
         });
     }
 
