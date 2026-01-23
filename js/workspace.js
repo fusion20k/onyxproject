@@ -546,23 +546,30 @@ function renderAllDecisions(filter = 'all') {
     const libraryTitle = document.getElementById('library-title');
     decisionsList.innerHTML = '';
     
+    let allDecisionsToShow = [];
+    
+    if (allDecisions.active) {
+        allDecisionsToShow.push(allDecisions.active);
+    }
+    allDecisionsToShow = allDecisionsToShow.concat(allDecisions.resolved);
+    
     let decisions = [];
     
     if (filter === 'all') {
-        decisions = allDecisions.resolved;
+        decisions = allDecisionsToShow;
     } else if (filter === 'draft') {
-        decisions = allDecisions.resolved.filter(d => d.status === 'in_progress');
+        decisions = allDecisionsToShow.filter(d => d.status === 'in_progress');
     } else if (filter === 'in_review') {
-        decisions = allDecisions.resolved.filter(d => d.status === 'under_review');
+        decisions = allDecisionsToShow.filter(d => d.status === 'under_review');
     } else if (filter === 'committed') {
-        decisions = allDecisions.resolved.filter(
+        decisions = allDecisionsToShow.filter(
             d => d.status === 'resolved' || d.status === 'responded'
         );
     } else if (filter === 'archived') {
-        decisions = allDecisions.resolved.filter(d => d.status === 'archived');
+        decisions = allDecisionsToShow.filter(d => d.status === 'archived');
     }
     
-    const totalCount = allDecisions.resolved.length;
+    const totalCount = allDecisionsToShow.length;
     libraryTitle.textContent = `Decision library${totalCount > 0 ? ` (${totalCount})` : ''}`;
     
     if (decisions.length === 0 && totalCount === 0) {
@@ -580,8 +587,10 @@ function renderAllDecisions(filter = 'all') {
     }
     
     decisions.forEach(decision => {
+        const isActive = allDecisions.active && decision.id === allDecisions.active.id;
+        
         const row = document.createElement('div');
-        row.className = 'decision-row';
+        row.className = isActive ? 'decision-row decision-row-active' : 'decision-row';
         row.onclick = () => navigateToDecision(decision.id);
         
         const statusMap = {
@@ -597,10 +606,11 @@ function renderAllDecisions(filter = 'all') {
         const lastAction = daysDiff === 0 ? 'today' : daysDiff === 1 ? '1 day ago' : `${daysDiff} days ago`;
         
         const stage = statusMap[decision.status] || decision.status;
+        const activeIndicator = isActive ? '<span class="decision-active-badge">Active</span>' : '';
         
         row.innerHTML = `
             <div class="decision-row-content">
-                <div class="decision-row-title">${escapeHtml(decision.title || decision.situation.substring(0, 60) + '...')}</div>
+                <div class="decision-row-title">${escapeHtml(decision.title || decision.situation.substring(0, 60) + '...')}${activeIndicator}</div>
                 <div class="decision-row-meta">${stage} - Last reviewed ${lastAction}</div>
             </div>
             <span class="decision-row-action">Open</span>
