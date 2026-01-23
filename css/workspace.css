@@ -365,6 +365,61 @@
 }
 
 /* ========================================
+   CUSTOM RADIO BUTTONS
+   ======================================== */
+
+.custom-radio {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 12px 0;
+    position: relative;
+    user-select: none;
+}
+
+.custom-radio input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.custom-radio .radio-mark {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    margin-right: 12px;
+    position: relative;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+}
+
+.custom-radio:hover .radio-mark {
+    border-color: rgba(255, 255, 255, 0.9);
+}
+
+.custom-radio input[type="radio"]:checked ~ .radio-mark {
+    border-color: #fff;
+}
+
+.custom-radio input[type="radio"]:checked ~ .radio-mark::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #fff;
+}
+
+.custom-radio .radio-label {
+    font-size: 0.9375rem;
+    color: #fff;
+}
+
+/* ========================================
    INPUTS & FORMS
    ======================================== */
 

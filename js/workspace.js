@@ -654,7 +654,7 @@ function startDecisionStep1() {
     showState('decision-step1-state');
 }
 
-function proceedToStep2() {
+async function proceedToStep2() {
     decisionStepData.title = document.getElementById('step1-title').value;
     decisionStepData.stakes = document.getElementById('step1-stakes').value;
     
@@ -667,6 +667,7 @@ function proceedToStep2() {
         return;
     }
     
+    await autosaveDecision();
     renderStep2();
     showState('decision-step2-state');
 }
@@ -693,19 +694,29 @@ function renderStep2() {
     
     decisionStepData.options.forEach((option, index) => {
         const label = document.createElement('label');
+        label.className = 'custom-radio';
+        
         const radio = document.createElement('input');
         radio.type = 'radio';
         radio.name = 'favorite';
         radio.value = index;
         radio.checked = decisionStepData.favorite === index;
         
+        const radioMark = document.createElement('span');
+        radioMark.className = 'radio-mark';
+        
+        const radioLabel = document.createElement('span');
+        radioLabel.className = 'radio-label';
+        radioLabel.textContent = `Option ${option.label}`;
+        
         label.appendChild(radio);
-        label.appendChild(document.createTextNode(`Option ${option.label}`));
+        label.appendChild(radioMark);
+        label.appendChild(radioLabel);
         radiosContainer.appendChild(label);
     });
 }
 
-function proceedToStep3() {
+async function proceedToStep3() {
     const textareas = document.querySelectorAll('#step2-options-container textarea');
     textareas.forEach((ta, index) => {
         decisionStepData.options[index].prosCons = ta.value;
@@ -716,6 +727,7 @@ function proceedToStep3() {
         decisionStepData.favorite = parseInt(favoriteRadio.value);
     }
     
+    await autosaveDecision();
     renderStep3();
     showState('decision-step3-state');
 }
@@ -773,18 +785,62 @@ async function saveDecisionFromSteps() {
         first_action: decisionStepData.firstAction
     };
     
-    const result = await createDecision(payload.situation);
+    let decisionId = currentDecision?.id;
     
-    if (result.success) {
-        const updateResult = await updateDecision(result.decision_id, payload);
-        if (updateResult.success) {
-            await loadHubData();
-            if (allDecisions.active) {
-                renderDecisionSummary(allDecisions.active);
-            }
+    if (!decisionId) {
+        const result = await createDecision(payload.situation);
+        if (result.success) {
+            decisionId = result.decision_id;
+        } else {
+            alert(result.error || 'Failed to save decision');
+            return;
+        }
+    }
+    
+    const updateResult = await updateDecision(decisionId, payload);
+    if (updateResult.success) {
+        await loadHubData();
+        if (allDecisions.active) {
+            renderDecisionSummary(allDecisions.active);
         }
     } else {
-        alert(result.error || 'Failed to save decision');
+        alert('Failed to save decision');
+    }
+}
+
+async function autosaveDecision() {
+    const sessionData = localStorage.getItem('session');
+    const session = sessionData ? JSON.parse(sessionData) : null;
+    const accessToken = session?.access_token;
+    
+    if (!accessToken) return;
+    
+    const payload = {
+        situation: decisionStepData.title,
+        title: decisionStepData.title,
+        stakes: decisionStepData.stakes,
+        deadline: decisionStepData.deadline,
+        option_a: decisionStepData.options[0]?.prosCons || null,
+        option_b: decisionStepData.options[1]?.prosCons || null,
+        option_c: decisionStepData.options[2]?.prosCons || null,
+        choice: decisionStepData.choice !== null ? `Option ${decisionStepData.options[decisionStepData.choice]?.label}` : null,
+        reasoning: decisionStepData.reasoning,
+        change_mind: decisionStepData.changeMind,
+        first_action: decisionStepData.firstAction
+    };
+    
+    let decisionId = currentDecision?.id;
+    
+    if (!decisionId && decisionStepData.title) {
+        const result = await createDecision(payload.situation);
+        if (result.success) {
+            decisionId = result.decision_id;
+            await loadHubData();
+        }
+    }
+    
+    if (decisionId) {
+        await updateDecision(decisionId, payload);
     }
 }
 
@@ -1084,65 +1140,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    const summarySupportBtn = document.getElementById('summary-support');
-    if (summarySupportBtn) {
-        summarySupportBtn.addEventListener('click', function() {
-            const modal = document.getElementById('support-modal');
-            if (modal) {
-                modal.style.display = 'flex';
-            }
-        });
-    }
 
-    const requestSupportBtn = document.getElementById('request-support-btn');
-    if (requestSupportBtn) {
-        requestSupportBtn.addEventListener('click', function() {
-            const modal = document.getElementById('support-modal');
-            if (modal) {
-                modal.style.display = 'flex';
-            }
-        });
-    }
-
-    const supportCancel = document.getElementById('support-cancel');
-    if (supportCancel) {
-        supportCancel.addEventListener('click', function() {
-            const modal = document.getElementById('support-modal');
-            if (modal) {
-                modal.style.display = 'none';
-                document.getElementById('support-form').reset();
-            }
-        });
-    }
-
-    const supportForm = document.getElementById('support-form');
-    if (supportForm) {
-        supportForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            if (!currentDecision) {
-                alert('Please create a decision first to request support.');
-                return;
-            }
-            
-            const reason = document.getElementById('support-reason').value;
-            const details = document.getElementById('support-details').value.trim();
-            
-            if (!details) return;
-            
-            const content = `[Support Request - ${reason}]\n\n${details}`;
-            const result = await addFeedback(currentDecision.id, content);
-            
-            if (result.success) {
-                const modal = document.getElementById('support-modal');
-                if (modal) modal.style.display = 'none';
-                supportForm.reset();
-                alert('Support request sent. We\'ll respond shortly.');
-            } else {
-                alert('Failed to send support request. Please try again.');
-            }
-        });
-    }
 
     const viewInsightsBtn = document.getElementById('view-insights-btn');
     if (viewInsightsBtn) {
