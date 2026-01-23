@@ -160,7 +160,6 @@ function renderDecision(decision, options, recommendation, followups) {
 
     document.getElementById('no-decision-state').style.display = 'none';
     document.getElementById('decision-view').style.display = 'block';
-    document.getElementById('new-decision-btn').style.display = 'none';
 
     renderUnderstanding(decision);
     renderStressTests(options);
@@ -281,7 +280,6 @@ function renderFollowups(followups) {
 function showNoDecisionState() {
     document.getElementById('no-decision-state').style.display = 'block';
     document.getElementById('decision-view').style.display = 'none';
-    document.getElementById('new-decision-btn').style.display = 'inline-block';
 }
 
 async function logout() {
