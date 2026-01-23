@@ -6,7 +6,7 @@
     <meta name="robots" content="noindex, nofollow">
     <title>Workspace - Onyx</title>
     <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/workspace.css">
+    <link rel="stylesheet" href="../css/decision-workspace.css">
 </head>
 <body class="workspace-page">
     <div class="workspace-container">
@@ -62,129 +62,170 @@
                 </div>
             </div>
 
-            <!-- Main Workspace (3-tab layout) -->
+            <!-- Main Workspace - Decision Analysis Layout -->
             <div id="workspace-state" class="workspace-state" style="display: none;">
-                <div class="workspace-layout">
+                <div class="decision-workspace">
                     <!-- Header Bar -->
                     <header class="workspace-header">
-                        <h1 class="workspace-header-title">Workspace</h1>
+                        <div class="workspace-header-left">
+                            <h1 class="workspace-title">Decision Workspace</h1>
+                        </div>
                         <div class="workspace-header-right">
+                            <a href="/app/new-decision.html" id="new-decision-btn" class="btn btn-secondary" style="display: none;">New Decision</a>
                             <button class="user-menu-trigger" id="user-menu-main">
                                 <span id="username-main">User</span>
                             </button>
                             <div class="user-menu-dropdown" id="user-dropdown-main" style="display: none;">
+                                <div class="user-menu-item" data-action="library">Library</div>
                                 <div class="user-menu-item" data-action="payment">Payment</div>
                                 <div class="user-menu-item" data-action="logout">Logout</div>
                             </div>
                         </div>
                     </header>
 
-                    <!-- Workspace Body -->
-                    <div class="workspace-body">
-                        <!-- Sidebar -->
-                        <aside class="workspace-sidebar">
-                            <nav class="sidebar-nav">
-                                <button class="sidebar-nav-item active" data-tab="active">Active</button>
-                                <button class="sidebar-nav-item" data-tab="library">Library</button>
-                                <button class="sidebar-nav-item" data-tab="settings">Settings</button>
-                            </nav>
-                        </aside>
+                    <!-- No Active Decision State -->
+                    <div id="no-decision-state" class="empty-decision-state" style="display: none;">
+                        <h2>No active decision</h2>
+                        <p>Start a new decision analysis to get Onyx's recommendation.</p>
+                        <a href="/app/new-decision.html" class="btn btn-primary">Start new decision</a>
+                    </div>
 
-                        <!-- Main Content Area -->
-                        <main class="workspace-content-area">
-                        <!-- Active Tab -->
-                        <div id="active-tab" class="workspace-tab active">
-                            <!-- Summary Card -->
-                            <div class="summary-card" id="summary-card" style="display: none;">
-                                <div class="summary-header">Decision Summary</div>
-                                <div class="summary-field">
-                                    <label>Decision:</label>
-                                    <p id="summary-decision">—</p>
-                                </div>
-                                <div class="summary-field">
-                                    <label>Current Leaning:</label>
-                                    <p id="summary-leaning">—</p>
-                                </div>
-                                <div class="summary-meta">
-                                    <span>Last Update: <span id="summary-updated">Never</span></span>
-                                    <span class="summary-status" id="summary-status">Draft</span>
-                                </div>
-                            </div>
-
-                            <!-- Message Thread -->
-                            <div class="message-thread" id="message-thread">
-                                <!-- Messages populated by JS -->
-                            </div>
-
-                            <!-- Message Input -->
-                            <div class="message-input-container">
-                                <div class="message-input-wrapper">
-                                    <textarea id="message-input" class="message-textarea" placeholder="Type your message..."></textarea>
-                                    <div class="message-input-actions">
-                                        <div class="file-upload-inline">
-                                            <input type="file" id="message-file-input" accept="image/png,image/jpeg,application/pdf" style="display: none;">
-                                            <button type="button" class="btn-attach" id="message-attach-btn">Attach file</button>
-                                            <span class="file-name" id="message-file-name"></span>
+                    <!-- Active Decision View -->
+                    <div id="decision-view" class="decision-view" style="display: none;">
+                        <div class="decision-layout">
+                            <!-- Left Column: Main Content -->
+                            <main class="decision-main">
+                                <!-- Understanding Card -->
+                                <section class="decision-card" id="understanding-card">
+                                    <h2 class="card-title">Onyx's understanding of your situation</h2>
+                                    
+                                    <div id="understanding-display" class="understanding-content">
+                                        <ul class="understanding-list">
+                                            <li><strong>Goal:</strong> <span id="goal-text">—</span></li>
+                                            <li><strong>Time horizon:</strong> <span id="time-horizon-text">—</span></li>
+                                            <li><strong>Constraints:</strong> <span id="constraints-text">—</span></li>
+                                            <li><strong>Options:</strong> <span id="options-text">—</span></li>
+                                        </ul>
+                                        
+                                        <div class="card-actions">
+                                            <button class="btn btn-primary" id="confirm-understanding-btn">This looks right</button>
+                                            <button class="btn btn-ghost" id="edit-understanding-btn">Edit details</button>
                                         </div>
-                                        <button id="send-message-btn" class="btn btn-primary">Send</button>
+                                    </div>
+
+                                    <div id="understanding-edit" class="understanding-edit" style="display: none;">
+                                        <div class="form-group">
+                                            <label>Goal</label>
+                                            <input type="text" id="edit-goal" class="input">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Time Horizon</label>
+                                            <input type="text" id="edit-time-horizon" class="input" placeholder="e.g., 6 months, 1 year">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Constraints</label>
+                                            <textarea id="edit-constraints" class="input" rows="3" placeholder="One per line"></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Risk Tolerance</label>
+                                            <select id="edit-risk-tolerance" class="input">
+                                                <option value="conservative">Conservative</option>
+                                                <option value="balanced">Balanced</option>
+                                                <option value="aggressive">Aggressive</option>
+                                            </select>
+                                        </div>
+                                        <div class="card-actions">
+                                            <button class="btn btn-primary" id="save-understanding-btn">Save changes</button>
+                                            <button class="btn btn-ghost" id="cancel-edit-btn">Cancel</button>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <!-- Stress Tests Card -->
+                                <section class="decision-card" id="stress-tests-card">
+                                    <h2 class="card-title">How your options behave under stress</h2>
+                                    
+                                    <div id="options-container" class="options-grid">
+                                        <!-- Options populated by JS -->
+                                    </div>
+
+                                    <p class="stress-test-note">Onyx perturbed your assumptions (±30–50%) to see how quickly each option fails.</p>
+                                </section>
+
+                                <!-- Recommendation Card -->
+                                <section class="decision-card" id="recommendation-card">
+                                    <h2 class="card-title">Onyx's recommendation</h2>
+                                    
+                                    <div class="recommendation-content">
+                                        <div class="recommended-option">
+                                            <span class="recommendation-label">Most robust move:</span>
+                                            <h3 id="recommended-option-name">—</h3>
+                                        </div>
+                                        
+                                        <p id="recommendation-reasoning" class="recommendation-text">—</p>
+                                        
+                                        <div class="card-actions">
+                                            <button class="btn btn-primary" id="commit-decision-btn">Commit to this plan</button>
+                                            <button class="btn btn-ghost" id="show-alternatives-btn">Show me why not the others</button>
+                                        </div>
+
+                                        <div id="alternatives-section" class="alternatives-section" style="display: none;">
+                                            <h4>Why not the alternatives?</h4>
+                                            <p id="alternatives-text">—</p>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <!-- Optional Followup Thread -->
+                                <section class="decision-card followup-card" id="followup-card" style="display: none;">
+                                    <h2 class="card-title">Ask Onyx a follow-up</h2>
+                                    
+                                    <div id="followup-thread" class="followup-thread">
+                                        <!-- Messages populated by JS -->
+                                    </div>
+
+                                    <div class="followup-input-container">
+                                        <textarea id="followup-input" class="input" placeholder="What else do you want to know?" rows="3"></textarea>
+                                        <button class="btn btn-primary" id="send-followup-btn">Send</button>
+                                    </div>
+                                </section>
+                            </main>
+
+                            <!-- Right Sidebar: Summary -->
+                            <aside class="decision-sidebar">
+                                <div class="summary-card">
+                                    <h3 class="summary-title">Decision summary</h3>
+                                    
+                                    <div class="summary-field">
+                                        <label>Goal</label>
+                                        <p id="sidebar-goal">—</p>
+                                    </div>
+                                    
+                                    <div class="summary-field">
+                                        <label>Time horizon</label>
+                                        <p id="sidebar-time-horizon">—</p>
+                                    </div>
+                                    
+                                    <div class="summary-field">
+                                        <label>Primary metric</label>
+                                        <p id="sidebar-metric">—</p>
+                                    </div>
+                                    
+                                    <div class="summary-field">
+                                        <label>Risk tolerance</label>
+                                        <p id="sidebar-risk">—</p>
+                                    </div>
+
+                                    <div class="outcome-tracker">
+                                        <h4>Outcome tracker</h4>
+                                        <p id="committed-date" class="outcome-empty">Not committed yet</p>
                                     </div>
                                 </div>
-                            </div>
-
-                            <!-- Commit Section (shows when final recommendation exists) -->
-                            <div id="commit-section" class="commit-section" style="display: none;">
-                                <div class="commit-prompt">
-                                    <p>Ready to commit to this direction?</p>
-                                    <button id="commit-btn" class="btn btn-commit">Commit to this direction</button>
-                                </div>
-                            </div>
+                            </aside>
                         </div>
-
-                        <!-- Library Tab -->
-                        <div id="library-tab" class="workspace-tab" style="display: none;">
-                            <div class="tab-header">
-                                <h1>Library</h1>
-                                <p class="tab-subtitle">All decisions you've worked through in Onyx.</p>
-                            </div>
-                            <div class="library-list" id="library-list">
-                                <!-- Populated by JS -->
-                            </div>
-                            <div id="library-empty" class="empty-state-minimal" style="display: none;">
-                                <p>No resolved conversations yet.</p>
-                            </div>
-                        </div>
-
-                        <!-- Settings Tab -->
-                        <div id="settings-tab" class="workspace-tab" style="display: none;">
-                            <div class="tab-header">
-                                <h1>Settings</h1>
-                                <p class="tab-subtitle">Manage your account and preferences.</p>
-                            </div>
-                            <div class="settings-form">
-                                <div class="form-group">
-                                    <label>Display Name</label>
-                                    <input type="text" id="settings-name" class="input" placeholder="Your name">
-                                </div>
-                                <div class="form-group">
-                                    <label>Email</label>
-                                    <input type="email" id="settings-email" class="input" disabled>
-                                    <p class="form-hint">Email cannot be changed</p>
-                                </div>
-                                <div class="form-group">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" id="settings-email-notifications" checked>
-                                        <span>Email me when admin responds</span>
-                                    </label>
-                                </div>
-                                <div id="settings-saved-message" class="settings-message" style="display: none;">
-                                    Settings saved
-                                </div>
-                            </div>
-                        </div>
-                    </main>
-                </div> <!-- closes workspace-body -->
-            </div> <!-- closes workspace-layout -->
-        </div> <!-- closes workspace-state -->
+                    </div>
+                </div>
+            </div>
 
         <!-- Edit Message Modal -->
         <div id="edit-modal" class="confirm-modal">
@@ -240,6 +281,6 @@
         </main>
     </div>
 
-    <script src="../js/workspace.js"></script>
+    <script src="../js/decision-workspace.js"></script>
 </body>
 </html>

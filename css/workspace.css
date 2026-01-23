@@ -989,7 +989,11 @@
     }
     
     .first-time-container {
-        padding: 60px 24px;
+        padding: 40px 20px 180px;
+    }
+    
+    .first-time-input-container {
+        padding: 20px;
     }
     
     .message-thread {
