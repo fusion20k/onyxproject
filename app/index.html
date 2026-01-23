@@ -94,9 +94,12 @@
                     <!-- Active Decision View -->
                     <div id="active-view" class="workspace-view">
                         <div class="workspace-view-header">
-                            <h1 class="workspace-view-title">Active Decision</h1>
+                            <div class="workspace-view-header-content">
+                                <h1 class="workspace-view-title">Active decision</h1>
+                                <p class="workspace-view-subtitle">Only one active decision at a time.</p>
+                            </div>
                         </div>
-                        <div class="workspace-content">
+                        <div class="workspace-content workspace-content-tight">
                             <div class="workspace-content-column">
                                 <!-- Active Decision Card -->
                                 <div id="active-decision-section" style="display: none;">
@@ -110,7 +113,7 @@
                                         </div>
                                     </div>
                                     <div id="single-decision-nudge" class="low-state-nudge" style="display: none;">
-                                        Onyx works best when every serious decision lives here. Start another when you're ready.
+                                        Onyx works best when every serious decision lives here.
                                     </div>
                                 </div>
 
@@ -126,7 +129,10 @@
                     <!-- Library View -->
                     <div id="library-view" class="workspace-view" style="display: none;">
                         <div class="workspace-view-header">
-                            <h1 class="workspace-view-title" id="library-title">Decision Library</h1>
+                            <div class="workspace-view-header-content">
+                                <h1 class="workspace-view-title" id="library-title">Decision library</h1>
+                                <p class="workspace-view-subtitle">All decisions you've worked through in Onyx.</p>
+                            </div>
                             <div class="filter-label-group">
                                 <span class="filter-label-text">Stage:</span>
                                 <select id="decisions-filter" class="filter-dropdown">
@@ -144,8 +150,8 @@
                                     <!-- Decisions populated by JS -->
                                 </div>
                                 <div id="library-empty-state" class="library-empty-state" style="display: none;">
-                                    <p class="text-dim">No decisions in your library yet.</p>
-                                    <button id="library-start-btn" class="btn btn-primary">Start your first decision</button>
+                                    <p class="text-dim">No decisions match these filters yet.</p>
+                                    <button id="library-start-btn" class="btn btn-primary">Start a new decision</button>
                                 </div>
                             </div>
                         </div>
@@ -154,23 +160,28 @@
                     <!-- Settings View -->
                     <div id="settings-view" class="workspace-view" style="display: none;">
                         <div class="workspace-view-header">
-                            <h1 class="workspace-view-title">Settings</h1>
+                            <div class="workspace-view-header-content">
+                                <h1 class="workspace-view-title">Settings</h1>
+                                <p class="workspace-view-subtitle">Manage your personal details and account.</p>
+                            </div>
                         </div>
                         <div class="workspace-content">
-                            <div class="settings-form">
-                                <div class="form-section">
-                                    <label class="form-label">Display Name</label>
-                                    <input type="text" id="settings-display-name-hub" class="input" placeholder="Your name" />
-                                </div>
+                            <div class="workspace-content-column">
+                                <div class="settings-form-card">
+                                    <div class="form-section">
+                                        <label class="form-label">Display Name</label>
+                                        <input type="text" id="settings-display-name-hub" class="input" placeholder="Your name" />
+                                    </div>
 
-                                <div class="form-section">
-                                    <label class="form-label">Email</label>
-                                    <input type="email" id="settings-email-hub" class="input" disabled />
-                                    <p class="text-dim" style="font-size: 0.8125rem; margin-top: 8px;">Email cannot be changed</p>
-                                </div>
+                                    <div class="form-section">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" id="settings-email-hub" class="input" disabled />
+                                        <p class="text-dim" style="font-size: 0.8125rem; margin-top: 8px;">Email cannot be changed</p>
+                                    </div>
 
-                                <div class="settings-save-message" id="settings-save-message-hub" style="display: none; color: rgba(255, 255, 255, 0.6); font-size: 0.875rem; margin-top: 12px;">
-                                    Settings saved
+                                    <div class="settings-save-message" id="settings-save-message-hub" style="display: none; color: rgba(255, 255, 255, 0.6); font-size: 0.875rem; margin-top: 12px;">
+                                        Settings saved
+                                    </div>
                                 </div>
                             </div>
                         </div>
