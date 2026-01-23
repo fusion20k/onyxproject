@@ -1188,6 +1188,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    const viewLibraryLink = document.getElementById('view-library-link');
+    if (viewLibraryLink) {
+        viewLibraryLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            switchView('library');
+        });
+    }
+
     document.querySelectorAll('.sidebar-nav-item').forEach(item => {
         item.addEventListener('click', function() {
             const viewName = this.getAttribute('data-view');

@@ -93,7 +93,7 @@
 }
 
 .workspace-content-tight {
-    padding-top: 32px;
+    padding-top: 24px;
 }
 
 .workspace-content-column {
@@ -184,7 +184,7 @@
 
 .sidebar-nav-item.active {
     color: #fff;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.08);
     border-left-color: #fff;
 }
 
@@ -198,14 +198,25 @@
 .workspace-view {
     display: none;
     flex: 1;
+    position: relative;
 }
 
 .workspace-view-header {
-    padding: 32px 60px 24px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 32px 60px 20px;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
+    position: relative;
+}
+
+.workspace-view-header::after {
+    content: '';
+    position: absolute;
+    left: 60px;
+    right: 60px;
+    bottom: 0;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .workspace-view-header-content {
@@ -458,9 +469,17 @@ input[type="checkbox"]:checked::after {
    ======================================== */
 
 /* Primary active decision card */
+.active-decision-card-label {
+    font-size: 0.6875rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+}
+
 .active-decision-card {
     border: 2px solid #fff;
-    padding: 44px 48px;
+    padding: 52px 48px;
     margin: 0 0 16px;
     max-width: 700px;
     display: flex;
@@ -480,10 +499,11 @@ input[type="checkbox"]:checked::after {
 }
 
 .active-decision-title {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     font-weight: 400;
     color: #fff;
     margin-bottom: 10px;
+    letter-spacing: -0.01em;
 }
 
 .active-decision-meta {
@@ -500,8 +520,22 @@ input[type="checkbox"]:checked::after {
     font-size: 0.8125rem;
     color: rgba(255, 255, 255, 0.5);
     text-align: center;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
     line-height: 1.5;
+}
+
+.view-library-link {
+    display: block;
+    text-align: center;
+    font-size: 0.8125rem;
+    color: rgba(255, 255, 255, 0.4);
+    text-decoration: none;
+    margin-top: 8px;
+    transition: color 0.15s ease;
+}
+
+.view-library-link:hover {
+    color: rgba(255, 255, 255, 0.7);
 }
 
 /* All decisions section */
