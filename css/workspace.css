@@ -233,7 +233,35 @@
 
 .workspace-layout {
     display: flex;
+    flex-direction: column;
     min-height: 100vh;
+}
+
+.workspace-header {
+    height: 60px;
+    background: #000;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+}
+
+.workspace-header-title {
+    font-size: 1.25rem;
+    font-weight: 400;
+    color: #fff;
+    margin: 0;
+}
+
+.workspace-header-right {
+    position: relative;
+}
+
+.workspace-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
 }
 
 .workspace-sidebar {
@@ -646,9 +674,37 @@
 }
 
 .checkbox-label input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
     width: 18px;
     height: 18px;
     cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: transparent;
+    border-radius: 3px;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.checkbox-label input[type="checkbox"]:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.checkbox-label input[type="checkbox"]:checked {
+    background: #fff;
+    border-color: #fff;
+}
+
+.checkbox-label input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 2px;
+    width: 4px;
+    height: 8px;
+    border: solid #000;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
 }
 
 .settings-message {
@@ -741,11 +797,134 @@
 }
 
 /* ========================================
+   CUSTOM CONFIRMATION MODALS
+   ======================================== */
+
+.confirm-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+}
+
+.confirm-modal.active {
+    display: flex;
+}
+
+.confirm-modal-content {
+    background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    max-width: 480px;
+    width: 100%;
+}
+
+.confirm-modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.confirm-modal-title {
+    font-size: 1.125rem;
+    font-weight: 400;
+    margin: 0;
+    color: #fff;
+}
+
+.confirm-modal-body {
+    padding: 24px;
+}
+
+.confirm-modal-body label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.confirm-modal-input {
+    width: 100%;
+    min-height: 100px;
+    background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    padding: 12px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    resize: vertical;
+}
+
+.confirm-modal-input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.confirm-modal-text {
+    font-size: 0.9375rem;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.confirm-modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding: 20px 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.confirm-modal-btn {
+    padding: 10px 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: transparent;
+    color: #fff;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.confirm-modal-btn:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.confirm-modal-btn-primary {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+}
+
+.confirm-modal-btn-primary:hover {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.confirm-modal-btn-danger {
+    background: #dc2626;
+    color: #fff;
+    border-color: #dc2626;
+}
+
+.confirm-modal-btn-danger:hover {
+    background: #b91c1c;
+    border-color: #b91c1c;
+}
+
+/* ========================================
    RESPONSIVE
    ======================================== */
 
 @media (max-width: 768px) {
-    .workspace-layout {
+    .workspace-body {
         flex-direction: column;
     }
     
@@ -763,6 +942,10 @@
     
     .sidebar-footer {
         display: none;
+    }
+    
+    .workspace-header {
+        padding: 0 20px;
     }
     
     .workspace-tab {

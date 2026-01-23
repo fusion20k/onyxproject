@@ -541,26 +541,113 @@ function formatTime(date) {
 }
 
 async function handleEditMessage(messageId, currentContent) {
-    const newContent = prompt('Edit message:', currentContent);
-    if (!newContent || newContent === currentContent) return;
+    const modal = document.getElementById('edit-modal');
+    const input = document.getElementById('edit-modal-input');
+    const okBtn = document.getElementById('edit-modal-ok');
+    const cancelBtn = document.getElementById('edit-modal-cancel');
     
-    const result = await editMessage(messageId, newContent);
-    if (result.success) {
-        await refreshMessages();
-    } else {
-        alert('Could not edit message. The 10-minute window may have expired.');
-    }
+    input.value = currentContent;
+    modal.classList.add('active');
+    input.focus();
+    
+    return new Promise((resolve) => {
+        const handleOk = async () => {
+            const newContent = input.value.trim();
+            if (!newContent || newContent === currentContent) {
+                cleanup();
+                return;
+            }
+            
+            const result = await editMessage(messageId, newContent);
+            if (result.success) {
+                await refreshMessages();
+            } else {
+                showErrorMessage('Could not edit message. The 10-minute window may have expired.');
+            }
+            cleanup();
+        };
+        
+        const handleCancel = () => {
+            cleanup();
+        };
+        
+        const cleanup = () => {
+            modal.classList.remove('active');
+            okBtn.removeEventListener('click', handleOk);
+            cancelBtn.removeEventListener('click', handleCancel);
+            modal.removeEventListener('click', handleBackdropClick);
+            resolve();
+        };
+        
+        const handleBackdropClick = (e) => {
+            if (e.target === modal) {
+                handleCancel();
+            }
+        };
+        
+        okBtn.addEventListener('click', handleOk);
+        cancelBtn.addEventListener('click', handleCancel);
+        modal.addEventListener('click', handleBackdropClick);
+    });
 }
 
 async function handleDeleteMessage(messageId) {
-    if (!confirm('Delete this message?')) return;
+    const modal = document.getElementById('delete-modal');
+    const okBtn = document.getElementById('delete-modal-ok');
+    const cancelBtn = document.getElementById('delete-modal-cancel');
     
-    const result = await deleteMessage(messageId);
-    if (result.success) {
-        await refreshMessages();
-    } else {
-        alert('Could not delete message. The 10-minute window may have expired.');
-    }
+    modal.classList.add('active');
+    
+    return new Promise((resolve) => {
+        const handleOk = async () => {
+            const result = await deleteMessage(messageId);
+            if (result.success) {
+                await refreshMessages();
+            } else {
+                showErrorMessage('Could not delete message. The 10-minute window may have expired.');
+            }
+            cleanup();
+        };
+        
+        const handleCancel = () => {
+            cleanup();
+        };
+        
+        const cleanup = () => {
+            modal.classList.remove('active');
+            okBtn.removeEventListener('click', handleOk);
+            cancelBtn.removeEventListener('click', handleCancel);
+            modal.removeEventListener('click', handleBackdropClick);
+            resolve();
+        };
+        
+        const handleBackdropClick = (e) => {
+            if (e.target === modal) {
+                handleCancel();
+            }
+        };
+        
+        okBtn.addEventListener('click', handleOk);
+        cancelBtn.addEventListener('click', handleCancel);
+        modal.addEventListener('click', handleBackdropClick);
+    });
+}
+
+function showErrorMessage(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'settings-message';
+    errorDiv.style.position = 'fixed';
+    errorDiv.style.top = '20px';
+    errorDiv.style.right = '20px';
+    errorDiv.style.zIndex = '1001';
+    errorDiv.style.background = 'rgba(220, 38, 38, 0.1)';
+    errorDiv.style.borderColor = 'rgba(220, 38, 38, 0.3)';
+    errorDiv.textContent = message;
+    document.body.appendChild(errorDiv);
+    
+    setTimeout(() => {
+        errorDiv.remove();
+    }, 3000);
 }
 
 async function refreshMessages() {
