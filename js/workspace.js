@@ -422,12 +422,11 @@ function calculateClarityMomentum(allDecisions) {
 }
 
 function renderHub(viewName = 'active') {
+    showState('hub-state');
     updateHeaderUsername();
     renderActiveView();
     renderLibraryView();
     renderSettingsView();
-    
-    showState('hub-state');
     switchView(viewName);
 }
 
@@ -442,7 +441,8 @@ function switchView(viewName) {
     
     const targetView = document.getElementById(`${viewName}-view`);
     if (targetView) {
-        targetView.style.display = 'block';
+        targetView.style.display = 'flex';
+        targetView.style.flexDirection = 'column';
     }
     
     const targetNavItem = document.querySelector(`.sidebar-nav-item[data-view="${viewName}"]`);

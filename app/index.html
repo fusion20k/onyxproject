@@ -64,34 +64,35 @@
             </div>
             <!-- Workspace Hub (Overview) -->
             <div id="hub-state" class="workspace-state" style="display: none;">
-                <!-- Sidebar -->
-                <div class="workspace-sidebar">
-                    <div class="workspace-sidebar-header">
-                        <div class="workspace-sidebar-title">Workspace</div>
-                    </div>
-                    <nav class="workspace-sidebar-nav">
-                        <button class="sidebar-nav-item active" data-view="active">Active</button>
-                        <button class="sidebar-nav-item" data-view="library">Library</button>
-                        <button class="sidebar-nav-item" data-view="settings">Settings</button>
-                    </nav>
-                    <div class="workspace-sidebar-footer">
-                        <div class="user-account-menu">
-                            <button class="user-account-trigger" id="user-account-trigger">
-                                <span id="header-username">User</span>
-                            </button>
-                            <div class="user-account-dropdown" id="user-account-dropdown">
-                                <div class="user-account-dropdown-label">Account</div>
-                                <div class="user-account-dropdown-item" id="account-payment">Payment</div>
-                                <div class="user-account-dropdown-item" id="account-logout">Logout</div>
-                            </div>
+                <!-- Header -->
+                <div class="workspace-header">
+                    <h1 class="workspace-header-title">Workspace</h1>
+                    <div class="user-account-menu">
+                        <button class="user-account-trigger" id="user-account-trigger">
+                            <span id="header-username">User</span>
+                        </button>
+                        <div class="user-account-dropdown" id="user-account-dropdown">
+                            <div class="user-account-dropdown-label">Account</div>
+                            <div class="user-account-dropdown-item" id="account-payment">Payment details</div>
+                            <div class="user-account-dropdown-item" id="account-logout">Logout</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Main Content Area -->
-                <div class="workspace-main-area">
+                <div class="hub-content-wrapper">
+                    <!-- Sidebar -->
+                    <div class="workspace-sidebar">
+                        <nav class="workspace-sidebar-nav">
+                            <button class="sidebar-nav-item active" data-view="active">Active</button>
+                            <button class="sidebar-nav-item" data-view="library">Library</button>
+                            <button class="sidebar-nav-item" data-view="settings">Settings</button>
+                        </nav>
+                    </div>
+
+                    <!-- Main Content Area -->
+                    <div class="workspace-main-area">
                     <!-- Active Decision View -->
-                    <div id="active-view" class="workspace-view" style="display: block;">
+                    <div id="active-view" class="workspace-view">
                         <div class="workspace-view-header">
                             <h1 class="workspace-view-title">Active Decision</h1>
                         </div>
@@ -173,6 +174,7 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
                     </div>
                 </div>
             </div>

@@ -38,7 +38,13 @@
 
 #hub-state {
     display: flex;
+    flex-direction: column;
     width: 100%;
+}
+
+.hub-content-wrapper {
+    display: flex;
+    flex: 1;
 }
 
 /* ========================================
@@ -150,22 +156,9 @@
     border-right: 1px solid rgba(255, 255, 255, 0.15);
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
-}
-
-.workspace-sidebar-header {
-    padding: 24px 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.workspace-sidebar-title {
-    font-size: 1.125rem;
-    font-weight: 400;
-    color: #fff;
 }
 
 .workspace-sidebar-nav {
-    flex: 1;
     padding: 20px 0;
 }
 
@@ -192,11 +185,6 @@
     color: #fff;
     background: rgba(255, 255, 255, 0.05);
     border-left-color: #fff;
-}
-
-.workspace-sidebar-footer {
-    padding: 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .workspace-main-area {
