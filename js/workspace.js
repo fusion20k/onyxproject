@@ -124,9 +124,9 @@ async function startConversation(content, attachment) {
         }
         
         const formData = new FormData();
-        formData.append('content', content);
+        formData.append('message', content);
         if (attachment) {
-            formData.append('attachment', attachment);
+            formData.append('file', attachment);
         }
         
         const response = await fetch(`${API_BASE_URL}/workspace/start-conversation`, {
@@ -140,7 +140,7 @@ async function startConversation(content, attachment) {
 
         if (!response.ok) {
             const error = await response.json();
-            return { success: false, error: error.message || 'Failed to start conversation' };
+            return { success: false, error: error.error || error.message || 'Failed to start conversation' };
         }
 
         const data = await response.json();
