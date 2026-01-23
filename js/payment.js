@@ -179,7 +179,7 @@ async function initialize() {
     }
 
     if (currentUser && currentUser.paid) {
-        showState('already-paid-state');
+        window.location.href = '/app';
         return;
     }
 

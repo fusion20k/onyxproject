@@ -91,7 +91,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 24px 60px;
+    padding: 24px 60px 12px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
     background: #000;
 }
@@ -107,6 +107,13 @@
 .workspace-header-info {
     font-size: 0.875rem;
     color: rgba(255, 255, 255, 0.6);
+}
+
+.workspace-helper-text {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.6);
+    padding: 12px 60px 0;
+    line-height: 1.5;
 }
 
 /* User account dropdown */
@@ -341,10 +348,10 @@ input[type="checkbox"]:checked::after {
 
 /* Primary active decision card */
 .active-decision-card {
-    width: 100%;
-    border: 1px solid #fff;
-    padding: 24px;
-    margin-bottom: 40px;
+    border: 2px solid #fff;
+    padding: 28px 32px;
+    margin: 0 auto 48px;
+    max-width: 700px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -362,20 +369,16 @@ input[type="checkbox"]:checked::after {
 }
 
 .active-decision-title {
-    font-size: 1rem;
+    font-size: 1.125rem;
     font-weight: 400;
     color: #fff;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 }
 
 .active-decision-meta {
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     color: rgba(255, 255, 255, 0.6);
     margin-bottom: 0;
-}
-
-.active-decision-meta strong {
-    font-weight: 400;
 }
 
 .active-decision-actions {
@@ -384,7 +387,7 @@ input[type="checkbox"]:checked::after {
 
 /* All decisions section */
 .decisions-section {
-    margin-top: 48px;
+    margin-top: 60px;
 }
 
 .decisions-section-header {
@@ -392,6 +395,25 @@ input[type="checkbox"]:checked::after {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 20px;
+}
+
+.text-section-title {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.filter-label-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-label-text {
+    font-size: 0.8125rem;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .decisions-list {
@@ -405,26 +427,43 @@ input[type="checkbox"]:checked::after {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 0;
+    padding: 14px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     transition: background 0.15s ease;
+    cursor: pointer;
 }
 
 .decision-row:hover {
     background: rgba(255, 255, 255, 0.02);
 }
 
+.decision-row-content {
+    flex: 1;
+}
+
 .decision-row-title {
-    font-size: 0.9375rem;
-    color: #fff;
-    margin-bottom: 2px;
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 4px;
     font-weight: 400;
 }
 
 .decision-row-meta {
-    font-size: 0.8125rem;
-    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
     line-height: 1.3;
+}
+
+.decision-row-action {
+    font-size: 0.8125rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    padding: 4px 0;
+    transition: color 0.15s ease;
+}
+
+.decision-row-action:hover {
+    color: #fff;
 }
 
 /* Filter dropdown */
@@ -449,6 +488,17 @@ input[type="checkbox"]:checked::after {
     padding: 60px 20px;
     color: rgba(255, 255, 255, 0.6);
     font-size: 0.9375rem;
+}
+
+.empty-state-minimal {
+    text-align: center;
+    padding: 40px 20px;
+    margin-bottom: 48px;
+}
+
+.empty-state-minimal p {
+    margin-bottom: 20px;
+    font-size: 0.875rem;
 }
 
 /* ========================================

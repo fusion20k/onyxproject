@@ -244,6 +244,40 @@ async function resolveDecision(decisionId, resolution) {
     }
 }
 
+async function openCustomerPortal() {
+    try {
+        const sessionData = localStorage.getItem('session');
+        const session = sessionData ? JSON.parse(sessionData) : null;
+        const accessToken = session?.access_token;
+        
+        if (!accessToken) {
+            alert('Please log in again');
+            return;
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/payment/customer-portal`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to create portal session');
+        }
+        
+        const data = await response.json();
+        if (data.url) {
+            window.location.href = data.url;
+        }
+    } catch (error) {
+        console.error('[WORKSPACE] Customer portal error:', error);
+        alert('Unable to open payment portal. Please try again.');
+    }
+}
+
 async function logout() {
     try {
         const sessionData = localStorage.getItem('session');
@@ -318,12 +352,12 @@ function renderHub() {
         const daysDiff = Math.floor((now - updated) / (1000 * 60 * 60 * 24));
         const lastAction = daysDiff === 0 ? 'today' : daysDiff === 1 ? '1 day ago' : `${daysDiff} days ago`;
         
+        const stage = statusMap[decision.status] || decision.status;
+        
         document.getElementById('active-decision-title').textContent = 
             decision.title || decision.situation.substring(0, 80) + '...';
-        document.getElementById('active-decision-stage').innerHTML = 
-            `<strong>Stage:</strong> ${statusMap[decision.status] || decision.status}`;
-        document.getElementById('active-decision-next').innerHTML = 
-            `<strong>Last reviewed:</strong> ${lastAction}`;
+        document.getElementById('active-decision-status-line').textContent = 
+            `Status: ${stage} - Reviewed: ${lastAction.charAt(0).toUpperCase() + lastAction.slice(1)}`;
         
         activeCard.onclick = () => navigateToDecision(decision.id);
         document.getElementById('open-decision-btn').onclick = (e) => {
@@ -370,10 +404,23 @@ function renderAllDecisions(filter = 'all') {
     if (filter === 'all') {
         if (allDecisions.active) decisions.push(allDecisions.active);
         decisions = decisions.concat(allDecisions.resolved);
-    } else if (filter === 'active') {
-        if (allDecisions.active) decisions.push(allDecisions.active);
-    } else if (filter === 'resolved') {
-        decisions = allDecisions.resolved;
+    } else if (filter === 'draft') {
+        if (allDecisions.active && allDecisions.active.status === 'in_progress') {
+            decisions.push(allDecisions.active);
+        }
+    } else if (filter === 'in_review') {
+        if (allDecisions.active && allDecisions.active.status === 'under_review') {
+            decisions.push(allDecisions.active);
+        }
+        decisions = decisions.concat(
+            allDecisions.resolved.filter(d => d.status === 'under_review')
+        );
+    } else if (filter === 'committed') {
+        decisions = allDecisions.resolved.filter(
+            d => d.status === 'resolved' || d.status === 'responded'
+        );
+    } else if (filter === 'archived') {
+        decisions = allDecisions.resolved.filter(d => d.status === 'archived');
     }
     
     if (decisions.length === 0) {
@@ -384,14 +431,13 @@ function renderAllDecisions(filter = 'all') {
     decisions.forEach(decision => {
         const row = document.createElement('div');
         row.className = 'decision-row';
-        row.style.cursor = 'pointer';
         row.onclick = () => navigateToDecision(decision.id);
         
         const statusMap = {
             'in_progress': 'Draft',
-            'under_review': 'Under review',
-            'responded': 'Responded',
-            'resolved': 'Resolved'
+            'under_review': 'In review',
+            'responded': 'Committed',
+            'resolved': 'Committed'
         };
         
         const now = new Date();
@@ -402,10 +448,11 @@ function renderAllDecisions(filter = 'all') {
         const stage = statusMap[decision.status] || decision.status;
         
         row.innerHTML = `
-            <div>
+            <div class="decision-row-content">
                 <div class="decision-row-title">${escapeHtml(decision.title || decision.situation.substring(0, 60) + '...')}</div>
                 <div class="decision-row-meta">${stage} - Last reviewed ${lastAction}</div>
             </div>
+            <span class="decision-row-action">Open</span>
         `;
         
         decisionsList.appendChild(row);
@@ -760,7 +807,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         } else if (action === 'account-settings' || action === 'settings') {
                             alert('Settings page coming soon');
                         } else if (action === 'account-payment' || action === 'payment') {
-                            alert('Payment details page coming soon');
+                            await openCustomerPortal();
                         }
                         
                         dropdownEl.classList.remove('active');

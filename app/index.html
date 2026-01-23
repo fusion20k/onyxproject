@@ -78,34 +78,40 @@
                         </div>
                     </div>
                 </div>
+                <div class="workspace-helper-text">Bring one serious decision into focus. Everything else waits.</div>
                 
                 <div class="workspace-content">
                     <!-- Active Decision Card -->
                     <div id="active-decision-card" class="active-decision-card" style="display: none;">
                         <div class="active-decision-content">
                             <div class="active-decision-title" id="active-decision-title">Decision title</div>
-                            <div class="active-decision-meta"><strong>Stage:</strong> <span id="active-decision-stage">In progress</span></div>
-                            <div class="active-decision-meta"><strong>Next step:</strong> <span id="active-decision-next">Complete decision form</span></div>
+                            <div class="active-decision-meta" id="active-decision-status-line">Status: Draft - Reviewed: Today</div>
                         </div>
                         <div class="active-decision-actions">
-                            <button id="open-decision-btn" class="btn btn-primary">Open</button>
+                            <button id="open-decision-btn" class="btn btn-primary">Resume decision</button>
                         </div>
                     </div>
 
                     <!-- Empty State (no active decision) -->
-                    <div id="no-active-decision" class="empty-state" style="display: none;">
-                        <button id="start-new-decision-btn" class="btn btn-primary">Start New Decision</button>
+                    <div id="no-active-decision" class="empty-state-minimal" style="display: none;">
+                        <p class="text-dim">You don't have an active decision.</p>
+                        <button id="start-new-decision-btn" class="btn btn-primary">Start a decision</button>
                     </div>
 
                     <!-- All Decisions Section -->
                     <div class="decisions-section">
                         <div class="decisions-section-header">
-                            <h2 class="text-section-title">All decisions</h2>
-                            <select id="decisions-filter" class="filter-dropdown">
-                                <option value="all">All</option>
-                                <option value="active">Active</option>
-                                <option value="resolved">Resolved</option>
-                            </select>
+                            <h2 class="text-section-title">Decision library</h2>
+                            <div class="filter-label-group">
+                                <span class="filter-label-text">Stage:</span>
+                                <select id="decisions-filter" class="filter-dropdown">
+                                    <option value="all">All</option>
+                                    <option value="draft">Draft</option>
+                                    <option value="in_review">In review</option>
+                                    <option value="committed">Committed</option>
+                                    <option value="archived">Archived</option>
+                                </select>
+                            </div>
                         </div>
                         <div id="decisions-list" class="decisions-list">
                             <!-- Decisions populated by JS -->
