@@ -14,7 +14,7 @@ Do not make assumptions on important decisions — get clarification first.
 
 ## Workflow Steps
 
-### [x] Step: Technical Specification
+### ✅ Step: Technical Specification
 
 **Complexity Assessment: HARD**
 
