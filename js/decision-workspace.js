@@ -362,7 +362,7 @@ function setupEventListeners() {
         if (action === 'logout') {
             await logout();
         } else if (action === 'payment') {
-            window.location.href = '/payment';
+            window.location.href = 'https://billing.stripe.com/p/login/7sYaEQaRD57SghT5hSbMQ00';
         } else if (action === 'library') {
             window.location.href = '/app/library.html';
         }

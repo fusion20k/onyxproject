@@ -205,9 +205,9 @@ async function openDecisionModal(decisionId) {
         const recommendedOption = options?.find(opt => opt.id === recommendation.recommended_option_id);
         html += `
             <div class="modal-section">
-                <h3 class="modal-section-title">Recommendation</h3>
+                <h3 class="modal-section-title">Analysis</h3>
                 <div class="modal-recommendation">
-                    <span class="modal-recommendation-label">Most robust move:</span>
+                    <span class="modal-recommendation-label">Most robust option:</span>
                     <h3>${recommendedOption?.name || 'Unknown'}</h3>
                     <p>${recommendation.reasoning || '—'}</p>
                 </div>
@@ -293,7 +293,7 @@ function setupEventListeners() {
         if (action === 'logout') {
             await logout();
         } else if (action === 'payment') {
-            window.location.href = '/payment';
+            window.location.href = 'https://billing.stripe.com/p/login/7sYaEQaRD57SghT5hSbMQ00';
         } else if (action === 'workspace') {
             window.location.href = '/app';
         }
