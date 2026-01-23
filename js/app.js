@@ -108,13 +108,6 @@ async function initialize() {
         return;
     }
 
-    console.log('[APP] Checking paid status:', currentUser.paid);
-    if (!currentUser.paid) {
-        console.warn('[APP] User not paid - showing unpaid state');
-        showState('unpaid-state');
-        return;
-    }
-
     const userName = currentUser.display_name || currentUser.email;
     console.log('[APP] Showing workspace for user:', userName);
     document.getElementById('user-name').textContent = userName;

@@ -744,11 +744,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     currentUser = authStatus.user;
     
-    if (!currentUser.has_paid) {
-        showState('unpaid-state');
-        return;
-    }
-    
     document.querySelectorAll('[id^="username-"]').forEach(el => {
         el.textContent = currentUser.display_name || currentUser.email;
     });
