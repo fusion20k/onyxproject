@@ -712,10 +712,21 @@ function setupFileUpload(fileInputId, attachBtnId, fileNameId) {
 
 async function loadLibrary() {
     const result = await getLibrary();
+    const activeResult = await getActiveConversation();
     const libraryList = document.getElementById('library-list');
     const libraryEmpty = document.getElementById('library-empty');
     
-    if (!result.success || result.conversations.length === 0) {
+    const allConversations = [...(result.conversations || [])];
+    
+    if (activeResult.success && activeResult.conversation) {
+        allConversations.unshift({
+            ...activeResult.conversation,
+            status: 'active',
+            is_active: true
+        });
+    }
+    
+    if (allConversations.length === 0) {
         libraryList.innerHTML = '';
         libraryEmpty.style.display = 'block';
         return;
@@ -724,26 +735,56 @@ async function loadLibrary() {
     libraryEmpty.style.display = 'none';
     libraryList.innerHTML = '';
     
-    result.conversations.forEach(conv => {
+    allConversations.forEach(conv => {
         const item = document.createElement('div');
         item.className = 'library-item';
+        if (conv.is_active) {
+            item.classList.add('library-item-active');
+        }
+        
+        const header = document.createElement('div');
+        header.className = 'library-item-header';
         
         const title = document.createElement('div');
         title.className = 'library-item-title';
-        title.textContent = conv.summary_decision || 'Untitled conversation';
+        title.textContent = conv.summary?.decision || conv.summary_decision || 'Untitled conversation';
+        
+        const status = document.createElement('span');
+        status.className = 'library-item-status';
+        status.textContent = conv.is_active ? 'Active' : 'Resolved';
+        status.style.color = conv.is_active ? '#4ade80' : 'rgba(255, 255, 255, 0.5)';
+        status.style.fontSize = '0.75rem';
+        status.style.fontWeight = '500';
+        status.style.textTransform = 'uppercase';
+        status.style.letterSpacing = '0.05em';
+        
+        header.appendChild(title);
+        header.appendChild(status);
         
         const meta = document.createElement('div');
         meta.className = 'library-item-meta';
-        meta.innerHTML = `
-            <span>${conv.message_count || 0} messages</span>
-            <span>Resolved ${formatDate(new Date(conv.resolved_at))}</span>
-        `;
         
-        item.appendChild(title);
+        if (conv.is_active) {
+            meta.innerHTML = `
+                <span>${conv.message_count || activeResult.messages?.length || 0} messages</span>
+                <span>Last update ${formatDate(new Date(conv.updated_at || conv.created_at))}</span>
+            `;
+        } else {
+            meta.innerHTML = `
+                <span>${conv.message_count || 0} messages</span>
+                <span>Resolved ${formatDate(new Date(conv.resolved_at))}</span>
+            `;
+        }
+        
+        item.appendChild(header);
         item.appendChild(meta);
         
         item.addEventListener('click', () => {
-            openConversationModal(conv.id);
+            if (conv.is_active) {
+                switchTab('active');
+            } else {
+                openConversationModal(conv.id);
+            }
         });
         
         libraryList.appendChild(item);

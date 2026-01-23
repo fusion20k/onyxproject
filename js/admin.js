@@ -450,24 +450,29 @@ function renderDecisions(decisions) {
         card.dataset.id = decision.id;
         
         const statusMap = {
+            'active': 'Active',
             'in_progress': 'In Progress',
             'under_review': 'Under Review',
             'responded': 'Responded',
             'resolved': 'Resolved'
         };
         
+        const displayStatus = decision.status || 'active';
+        const decisionTitle = decision.summary?.decision || decision.title || decision.situation || 'Untitled conversation';
+        const messageCount = decision.message_count || decision.feedback_count || 0;
+        
         card.innerHTML = `
             <div class="decision-card-header">
                 <div>
-                    <div class="decision-card-user">${escapeHtml(decision.user_name || decision.user_email)}</div>
-                    <div class="decision-card-email">${escapeHtml(decision.user_email)}</div>
+                    <div class="decision-card-user">${escapeHtml(decision.user_name || decision.user_email || 'Unknown User')}</div>
+                    <div class="decision-card-email">${escapeHtml(decision.user_email || '')}</div>
                 </div>
-                <span class="decision-card-status decision-card-status--${decision.status}">${statusMap[decision.status] || decision.status}</span>
+                <span class="decision-card-status decision-card-status--${displayStatus}">${statusMap[displayStatus] || displayStatus}</span>
             </div>
-            <div class="decision-card-situation">${escapeHtml(decision.title || decision.situation || 'No situation provided')}</div>
+            <div class="decision-card-situation">${escapeHtml(decisionTitle)}</div>
             <div class="decision-card-meta">
                 <span>Created ${formatDate(decision.created_at)}</span>
-                <span>${decision.feedback_count || 0} messages</span>
+                <span>${messageCount} messages</span>
             </div>
         `;
         

@@ -486,6 +486,11 @@
     font-weight: 600;
 }
 
+.decision-card-status--active {
+    background: rgba(74, 222, 128, 0.15);
+    color: #4ade80;
+}
+
 .decision-card-status--in_progress {
     background: rgba(255, 193, 7, 0.15);
     color: #ffc107;
