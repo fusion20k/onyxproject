@@ -2,9 +2,10 @@ console.log('[WORKSPACE] Script loaded');
 const API_BASE_URL = '/api';
 
 let currentUser = null;
-let currentDecision = null;
-let currentFeedback = [];
-let allDecisions = { active: null, resolved: [] };
+let currentConversation = null;
+let currentMessages = [];
+let pollingInterval = null;
+let lastMessageId = null;
 
 function showState(stateId) {
     document.querySelectorAll('.workspace-state').forEach(state => {
@@ -16,11 +17,31 @@ function showState(stateId) {
     }
 }
 
+function switchTab(tabName) {
+    document.querySelectorAll('.sidebar-nav-item').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelectorAll('.workspace-tab').forEach(tab => {
+        tab.style.display = 'none';
+    });
+    
+    document.querySelector(`[data-tab="${tabName}"]`)?.classList.add('active');
+    document.getElementById(`${tabName}-tab`).style.display = 'block';
+    
+    if (tabName === 'active') {
+        startPolling();
+    } else {
+        stopPolling();
+    }
+    
+    if (tabName === 'library') {
+        loadLibrary();
+    }
+}
+
 async function checkAuthStatus() {
     try {
         const sessionData = localStorage.getItem('session');
-        console.log('[WORKSPACE] Session data:', sessionData ? 'found' : 'not found');
-        
         if (!sessionData) {
             return { authenticated: false };
         }
@@ -54,7 +75,7 @@ async function checkAuthStatus() {
     }
 }
 
-async function getActiveDecision() {
+async function getActiveConversation() {
     try {
         const sessionData = localStorage.getItem('session');
         const session = sessionData ? JSON.parse(sessionData) : null;
@@ -65,7 +86,7 @@ async function getActiveDecision() {
             return { success: false };
         }
         
-        const response = await fetch(`${API_BASE_URL}/workspace/active-decision`, {
+        const response = await fetch(`${API_BASE_URL}/workspace/active-conversation`, {
             headers: {
                 'Authorization': `Bearer ${accessToken}`
             },
@@ -73,7 +94,7 @@ async function getActiveDecision() {
         });
 
         if (response.status === 404) {
-            return { success: true, decision: null };
+            return { success: true, conversation: null, messages: [] };
         }
 
         if (!response.ok) {
@@ -81,43 +102,18 @@ async function getActiveDecision() {
         }
 
         const data = await response.json();
-        return { success: true, decision: data.decision, feedback: data.feedback || [] };
+        return { 
+            success: true, 
+            conversation: data.conversation, 
+            messages: data.messages || [] 
+        };
     } catch (error) {
-        console.error('[WORKSPACE] Error getting active decision:', error);
+        console.error('[WORKSPACE] Error getting active conversation:', error);
         return { success: false };
     }
 }
 
-async function getArchive() {
-    try {
-        const sessionData = localStorage.getItem('session');
-        const session = sessionData ? JSON.parse(sessionData) : null;
-        const accessToken = session?.access_token;
-        
-        if (!accessToken) {
-            return { success: false };
-        }
-        
-        const response = await fetch(`${API_BASE_URL}/workspace/archive`, {
-            headers: {
-                'Authorization': `Bearer ${accessToken}`
-            },
-            credentials: 'include'
-        });
-
-        if (!response.ok) {
-            return { success: false };
-        }
-
-        const data = await response.json();
-        return { success: true, decisions: data.decisions || [] };
-    } catch (error) {
-        console.error('[WORKSPACE] Error getting archive:', error);
-        return { success: false };
-    }
-}
-
-async function createDecision(situation) {
+async function startConversation(content, attachment) {
     try {
         const sessionData = localStorage.getItem('session');
         const session = sessionData ? JSON.parse(sessionData) : null;
@@ -127,30 +123,35 @@ async function createDecision(situation) {
             return { success: false, error: 'Not authenticated' };
         }
         
-        const response = await fetch(`${API_BASE_URL}/workspace/create-decision`, {
+        const formData = new FormData();
+        formData.append('content', content);
+        if (attachment) {
+            formData.append('attachment', attachment);
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/workspace/start-conversation`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
+                'Authorization': `Bearer ${accessToken}`
             },
             credentials: 'include',
-            body: JSON.stringify({ situation })
+            body: formData
         });
 
         if (!response.ok) {
             const error = await response.json();
-            return { success: false, error: error.message || 'Failed to create decision' };
+            return { success: false, error: error.message || 'Failed to start conversation' };
         }
 
         const data = await response.json();
-        return { success: true, decision_id: data.decision_id };
+        return { success: true, conversation_id: data.conversation_id };
     } catch (error) {
-        console.error('[WORKSPACE] Create decision error:', error);
-        return { success: false, error: 'Failed to create decision' };
+        console.error('[WORKSPACE] Start conversation error:', error);
+        return { success: false, error: 'Failed to start conversation' };
     }
 }
 
-async function updateDecision(decisionId, updates) {
+async function sendMessage(conversationId, content, attachment) {
     try {
         const sessionData = localStorage.getItem('session');
         const session = sessionData ? JSON.parse(sessionData) : null;
@@ -160,29 +161,35 @@ async function updateDecision(decisionId, updates) {
             return { success: false, error: 'Not authenticated' };
         }
         
-        const response = await fetch(`${API_BASE_URL}/workspace/update-decision/${decisionId}`, {
-            method: 'PATCH',
+        const formData = new FormData();
+        formData.append('content', content);
+        if (attachment) {
+            formData.append('attachment', attachment);
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/workspace/send-message/${conversationId}`, {
+            method: 'POST',
             headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
+                'Authorization': `Bearer ${accessToken}`
             },
             credentials: 'include',
-            body: JSON.stringify(updates)
+            body: formData
         });
 
         if (!response.ok) {
-            return { success: false };
+            const error = await response.json();
+            return { success: false, error: error.message || 'Failed to send message' };
         }
 
         const data = await response.json();
-        return { success: true, status: data.status };
+        return { success: true, message_id: data.message_id };
     } catch (error) {
-        console.error('[WORKSPACE] Update decision error:', error);
-        return { success: false };
+        console.error('[WORKSPACE] Send message error:', error);
+        return { success: false, error: 'Failed to send message' };
     }
 }
 
-async function addFeedback(decisionId, content) {
+async function editMessage(messageId, content) {
     try {
         const sessionData = localStorage.getItem('session');
         const session = sessionData ? JSON.parse(sessionData) : null;
@@ -192,8 +199,8 @@ async function addFeedback(decisionId, content) {
             return { success: false };
         }
         
-        const response = await fetch(`${API_BASE_URL}/workspace/add-feedback/${decisionId}`, {
-            method: 'POST',
+        const response = await fetch(`${API_BASE_URL}/workspace/edit-message/${messageId}`, {
+            method: 'PATCH',
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json'
@@ -206,1060 +213,735 @@ async function addFeedback(decisionId, content) {
             return { success: false };
         }
 
-        return { success: true };
-    } catch (error) {
-        console.error('[WORKSPACE] Add feedback error:', error);
-        return { success: false };
-    }
-}
-
-async function resolveDecision(decisionId, resolution) {
-    try {
-        const sessionData = localStorage.getItem('session');
-        const session = sessionData ? JSON.parse(sessionData) : null;
-        const accessToken = session?.access_token;
-        
-        if (!accessToken) {
-            return { success: false };
-        }
-        
-        const response = await fetch(`${API_BASE_URL}/workspace/resolve-decision/${decisionId}`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify(resolution)
-        });
-
-        if (!response.ok) {
-            return { success: false };
-        }
-
-        return { success: true };
-    } catch (error) {
-        console.error('[WORKSPACE] Resolve decision error:', error);
-        return { success: false };
-    }
-}
-
-function openSettings() {
-    renderHub('settings');
-}
-
-async function saveSettings() {
-    try {
-        const sessionData = localStorage.getItem('session');
-        const session = sessionData ? JSON.parse(sessionData) : null;
-        const accessToken = session?.access_token;
-        
-        if (!accessToken) {
-            alert('Please log in again');
-            return;
-        }
-        
-        const displayName = document.getElementById('settings-display-name').value.trim();
-        
-        const response = await fetch(`${API_BASE_URL}/auth/update-profile`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify({ display_name: displayName })
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to update profile');
-        }
-        
-        if (currentUser) {
-            currentUser.display_name = displayName;
-        }
-        
-        updateHeaderUsername();
-        
-        const saveMessage = document.getElementById('settings-save-message');
-        if (saveMessage) {
-            saveMessage.style.display = 'block';
-            setTimeout(() => {
-                saveMessage.style.display = 'none';
-            }, 3000);
-        }
-    } catch (error) {
-        console.error('[WORKSPACE] Save settings error:', error);
-        alert('Unable to save settings. Please try again.');
-    }
-}
-
-async function saveSettingsHub() {
-    try {
-        const sessionData = localStorage.getItem('session');
-        const session = sessionData ? JSON.parse(sessionData) : null;
-        const accessToken = session?.access_token;
-        
-        if (!accessToken) {
-            return;
-        }
-        
-        const displayName = document.getElementById('settings-display-name-hub').value.trim();
-        
-        const response = await fetch(`${API_BASE_URL}/auth/update-profile`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify({ display_name: displayName })
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to update profile');
-        }
-        
-        if (currentUser) {
-            currentUser.display_name = displayName;
-        }
-        
-        updateHeaderUsername();
-        
-        const saveMessage = document.getElementById('settings-save-message-hub');
-        if (saveMessage) {
-            saveMessage.style.display = 'block';
-            setTimeout(() => {
-                saveMessage.style.display = 'none';
-            }, 3000);
-        }
-    } catch (error) {
-        console.error('[WORKSPACE] Save settings error:', error);
-    }
-}
-
-async function openCustomerPortal() {
-    try {
-        const sessionData = localStorage.getItem('session');
-        const session = sessionData ? JSON.parse(sessionData) : null;
-        const accessToken = session?.access_token;
-        
-        if (!accessToken) {
-            alert('Please log in again');
-            return;
-        }
-        
-        const response = await fetch(`${API_BASE_URL}/payment/customer-portal`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to create portal session');
-        }
-        
         const data = await response.json();
-        if (data.url) {
-            window.location.href = data.url;
-        }
+        return { success: true, edited_at: data.edited_at };
     } catch (error) {
-        console.error('[WORKSPACE] Customer portal error:', error);
-        alert('Unable to open payment portal. Please try again.');
+        console.error('[WORKSPACE] Edit message error:', error);
+        return { success: false };
     }
 }
 
-async function logout() {
+async function deleteMessage(messageId) {
     try {
         const sessionData = localStorage.getItem('session');
         const session = sessionData ? JSON.parse(sessionData) : null;
         const accessToken = session?.access_token;
         
-        const headers = {};
-        if (accessToken) {
-            headers['Authorization'] = `Bearer ${accessToken}`;
+        if (!accessToken) {
+            return { success: false };
         }
         
-        await fetch(`${API_BASE_URL}/auth/logout`, {
-            method: 'POST',
-            headers,
+        const response = await fetch(`${API_BASE_URL}/workspace/delete-message/${messageId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            },
             credentials: 'include'
         });
+
+        if (!response.ok) {
+            return { success: false };
+        }
+
+        return { success: true };
     } catch (error) {
-        console.error('[WORKSPACE] Logout error:', error);
+        console.error('[WORKSPACE] Delete message error:', error);
+        return { success: false };
     }
-    
-    localStorage.removeItem('session');
-    localStorage.removeItem('user');
-    
-    window.location.href = '/';
 }
 
-function calculateClarityMomentum(allDecisions) {
+async function commitToRecommendation(conversationId) {
+    try {
+        const sessionData = localStorage.getItem('session');
+        const session = sessionData ? JSON.parse(sessionData) : null;
+        const accessToken = session?.access_token;
+        
+        if (!accessToken) {
+            return { success: false };
+        }
+        
+        const finalRecommendationMessage = currentMessages.find(m => m.tag === 'final_recommendation');
+        if (!finalRecommendationMessage) {
+            return { success: false, error: 'No final recommendation found' };
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/workspace/commit/${conversationId}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                final_recommendation_id: finalRecommendationMessage.id
+            })
+        });
+
+        if (!response.ok) {
+            return { success: false };
+        }
+
+        const data = await response.json();
+        return { success: true, resolved_at: data.resolved_at };
+    } catch (error) {
+        console.error('[WORKSPACE] Commit error:', error);
+        return { success: false };
+    }
+}
+
+async function getLibrary() {
+    try {
+        const sessionData = localStorage.getItem('session');
+        const session = sessionData ? JSON.parse(sessionData) : null;
+        const accessToken = session?.access_token;
+        
+        if (!accessToken) {
+            return { success: false };
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/workspace/library`, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            return { success: false };
+        }
+
+        const data = await response.json();
+        return { success: true, conversations: data.conversations || [] };
+    } catch (error) {
+        console.error('[WORKSPACE] Get library error:', error);
+        return { success: false };
+    }
+}
+
+async function getConversationById(conversationId) {
+    try {
+        const sessionData = localStorage.getItem('session');
+        const session = sessionData ? JSON.parse(sessionData) : null;
+        const accessToken = session?.access_token;
+        
+        if (!accessToken) {
+            return { success: false };
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/workspace/library/${conversationId}`, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            return { success: false };
+        }
+
+        const data = await response.json();
+        return { 
+            success: true, 
+            conversation: data.conversation, 
+            messages: data.messages || [] 
+        };
+    } catch (error) {
+        console.error('[WORKSPACE] Get conversation error:', error);
+        return { success: false };
+    }
+}
+
+async function updateSettings(displayName, emailNotifications) {
+    try {
+        const sessionData = localStorage.getItem('session');
+        const session = sessionData ? JSON.parse(sessionData) : null;
+        const accessToken = session?.access_token;
+        
+        if (!accessToken) {
+            return { success: false };
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/workspace/update-settings`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                display_name: displayName,
+                email_notifications_enabled: emailNotifications
+            })
+        });
+
+        if (!response.ok) {
+            return { success: false };
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error('[WORKSPACE] Update settings error:', error);
+        return { success: false };
+    }
+}
+
+function renderSummaryCard(summary) {
+    const summaryCard = document.getElementById('summary-card');
+    if (!summary || !summary.decision) {
+        summaryCard.style.display = 'none';
+        return;
+    }
+    
+    summaryCard.style.display = 'block';
+    document.getElementById('summary-decision').textContent = summary.decision || '—';
+    document.getElementById('summary-leaning').textContent = summary.current_leaning || '—';
+    document.getElementById('summary-status').textContent = summary.status || 'draft';
+    
+    if (summary.last_update) {
+        const date = new Date(summary.last_update);
+        document.getElementById('summary-updated').textContent = formatDate(date);
+    } else {
+        document.getElementById('summary-updated').textContent = 'Never';
+    }
+}
+
+function renderMessageThread(messages) {
+    const thread = document.getElementById('message-thread');
+    thread.innerHTML = '';
+    
+    messages.forEach(msg => {
+        if (msg.deleted_at) return;
+        
+        const messageEl = createMessageElement(msg);
+        thread.appendChild(messageEl);
+    });
+    
+    thread.scrollTop = thread.scrollHeight;
+    
+    const hasFinalRecommendation = messages.some(m => m.tag === 'final_recommendation' && !m.deleted_at);
+    const commitSection = document.getElementById('commit-section');
+    if (hasFinalRecommendation && currentConversation?.status === 'active') {
+        commitSection.style.display = 'block';
+    } else {
+        commitSection.style.display = 'none';
+    }
+}
+
+function createMessageElement(msg) {
+    const messageEl = document.createElement('div');
+    messageEl.className = `message message-${msg.author_type}`;
+    messageEl.dataset.messageId = msg.id;
+    
+    const authorEl = document.createElement('div');
+    authorEl.className = 'message-author';
+    authorEl.textContent = msg.author_type === 'user' ? 'You' : (msg.author_name || 'Onyx');
+    
+    const contentEl = document.createElement('div');
+    contentEl.className = 'message-content';
+    contentEl.textContent = msg.content;
+    
+    if (msg.attachment_url) {
+        const attachmentEl = document.createElement('div');
+        attachmentEl.className = 'message-attachment';
+        const link = document.createElement('a');
+        link.href = msg.attachment_url;
+        link.target = '_blank';
+        link.textContent = `📎 ${msg.attachment_name || 'View attachment'}`;
+        attachmentEl.appendChild(link);
+        contentEl.appendChild(attachmentEl);
+    }
+    
+    const metaEl = document.createElement('div');
+    metaEl.className = 'message-meta';
+    
+    const timeEl = document.createElement('span');
+    timeEl.className = 'message-time';
+    timeEl.textContent = formatTime(new Date(msg.created_at));
+    metaEl.appendChild(timeEl);
+    
+    if (msg.edited_at) {
+        const editedEl = document.createElement('span');
+        editedEl.className = 'message-edited';
+        editedEl.textContent = '(edited)';
+        metaEl.appendChild(editedEl);
+    }
+    
+    if (msg.tag) {
+        const tagEl = document.createElement('span');
+        tagEl.className = 'message-tag';
+        tagEl.textContent = formatTag(msg.tag);
+        metaEl.appendChild(tagEl);
+    }
+    
+    if (msg.author_type === 'user' && canEditMessage(msg.created_at)) {
+        const actionsEl = document.createElement('div');
+        actionsEl.className = 'message-actions';
+        
+        const editBtn = document.createElement('button');
+        editBtn.className = 'message-action-btn';
+        editBtn.textContent = 'Edit';
+        editBtn.onclick = () => handleEditMessage(msg.id, msg.content);
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'message-action-btn';
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.onclick = () => handleDeleteMessage(msg.id);
+        
+        actionsEl.appendChild(editBtn);
+        actionsEl.appendChild(deleteBtn);
+        metaEl.appendChild(actionsEl);
+    }
+    
+    messageEl.appendChild(authorEl);
+    messageEl.appendChild(contentEl);
+    messageEl.appendChild(metaEl);
+    
+    return messageEl;
+}
+
+function canEditMessage(createdAt) {
+    const created = new Date(createdAt);
     const now = new Date();
-    const last7Days = allDecisions.resolved.filter(d => {
-        const resolved = new Date(d.resolved_at);
-        return (now - resolved) < (7 * 24 * 60 * 60 * 1000);
-    });
-    
-    const last30Days = allDecisions.resolved.filter(d => {
-        const resolved = new Date(d.resolved_at);
-        return (now - resolved) < (30 * 24 * 60 * 60 * 1000);
-    });
-    
-    if (allDecisions.active || last7Days.length > 0) {
-        return "Consistent";
-    }
-    
-    if (last30Days.length > 0) {
-        return "Building";
-    }
-    
-    return "Paused";
+    const diffMinutes = (now - created) / 1000 / 60;
+    return diffMinutes < 10;
 }
 
-function renderHub(viewName = 'active') {
-    showState('hub-state');
-    updateHeaderUsername();
-    renderActiveView();
-    renderLibraryView();
-    renderSettingsView();
-    switchView(viewName);
+function formatTag(tag) {
+    const tagMap = {
+        'proposed_direction': 'Proposed Direction',
+        'key_question': 'Key Question',
+        'action_required': 'Action Required',
+        'final_recommendation': 'Final Recommendation'
+    };
+    return tagMap[tag] || tag;
 }
 
-function switchView(viewName) {
-    document.querySelectorAll('.workspace-view').forEach(view => {
-        view.style.display = 'none';
-    });
+function formatDate(date) {
+    const now = new Date();
+    const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
     
-    document.querySelectorAll('.sidebar-nav-item').forEach(item => {
-        item.classList.remove('active');
-    });
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
     
-    const targetView = document.getElementById(`${viewName}-view`);
-    if (targetView) {
-        targetView.style.display = 'flex';
-        targetView.style.flexDirection = 'column';
-    }
-    
-    const targetNavItem = document.querySelector(`.sidebar-nav-item[data-view="${viewName}"]`);
-    if (targetNavItem) {
-        targetNavItem.classList.add('active');
-    }
+    return date.toLocaleDateString();
 }
 
-function renderActiveView() {
-    const activeSection = document.getElementById('active-decision-section');
-    const noActiveDecision = document.getElementById('no-active-decision');
-    const singleDecisionNudge = document.getElementById('single-decision-nudge');
+function formatTime(date) {
+    const now = new Date();
+    const diffMinutes = Math.floor((now - date) / (1000 * 60));
     
-    if (allDecisions.active) {
-        const decision = allDecisions.active;
-        activeSection.style.display = 'block';
-        noActiveDecision.style.display = 'none';
-        
-        const totalDecisions = 1 + allDecisions.resolved.length;
-        if (totalDecisions === 1) {
-            singleDecisionNudge.style.display = 'block';
-        } else {
-            singleDecisionNudge.style.display = 'none';
-        }
-        
-        const statusMap = {
-            'in_progress': 'Draft',
-            'under_review': 'In review',
-            'responded': 'Committed',
-            'resolved': 'Committed'
-        };
-        
-        const now = new Date();
-        const updated = new Date(decision.updated_at);
-        const daysDiff = Math.floor((now - updated) / (1000 * 60 * 60 * 24));
-        const lastAction = daysDiff === 0 ? 'today' : daysDiff === 1 ? '1 day ago' : `${daysDiff} days ago`;
-        
-        const stage = statusMap[decision.status] || decision.status;
-        
-        document.getElementById('active-decision-title').textContent = 
-            decision.title || decision.situation.substring(0, 80) + '...';
-        document.getElementById('active-decision-status-line').textContent = 
-            `Status: ${stage} - Reviewed: ${lastAction.charAt(0).toUpperCase() + lastAction.slice(1)}`;
-        
-        const activeCard = document.getElementById('active-decision-card');
-        activeCard.onclick = () => navigateToDecision(decision.id);
-        document.getElementById('open-decision-btn').onclick = (e) => {
-            e.stopPropagation();
-            navigateToDecision(decision.id);
-        };
+    if (diffMinutes < 1) return 'Just now';
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+    
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    
+    return formatDate(date);
+}
+
+async function handleEditMessage(messageId, currentContent) {
+    const newContent = prompt('Edit message:', currentContent);
+    if (!newContent || newContent === currentContent) return;
+    
+    const result = await editMessage(messageId, newContent);
+    if (result.success) {
+        await refreshMessages();
     } else {
-        activeSection.style.display = 'none';
-        noActiveDecision.style.display = 'block';
+        alert('Could not edit message. The 10-minute window may have expired.');
     }
 }
 
-function renderLibraryView() {
-    const decisionsFilter = document.getElementById('decisions-filter');
-    renderAllDecisions(decisionsFilter.value);
-    decisionsFilter.onchange = () => renderAllDecisions(decisionsFilter.value);
+async function handleDeleteMessage(messageId) {
+    if (!confirm('Delete this message?')) return;
+    
+    const result = await deleteMessage(messageId);
+    if (result.success) {
+        await refreshMessages();
+    } else {
+        alert('Could not delete message. The 10-minute window may have expired.');
+    }
 }
 
-function renderSettingsView() {
-    if (!currentUser) return;
-    
-    const displayName = currentUser.display_name 
-        || currentUser.user_metadata?.display_name 
-        || currentUser.raw_user_meta_data?.display_name
-        || '';
-    const email = currentUser.email || '';
-    
-    const displayNameInput = document.getElementById('settings-display-name-hub');
-    const emailInput = document.getElementById('settings-email-hub');
-    
-    if (displayNameInput) displayNameInput.value = displayName;
-    if (emailInput) emailInput.value = email;
+async function refreshMessages() {
+    const result = await getActiveConversation();
+    if (result.success && result.conversation) {
+        currentConversation = result.conversation;
+        currentMessages = result.messages;
+        renderMessageThread(currentMessages);
+        renderSummaryCard(currentConversation.summary);
+    }
 }
 
-function updateHeaderUsername() {
-    if (!currentUser) return;
+function startPolling() {
+    if (pollingInterval) return;
     
-    const displayName = currentUser.display_name 
-        || currentUser.user_metadata?.display_name 
-        || currentUser.raw_user_meta_data?.display_name
-        || currentUser.email?.split('@')[0] 
-        || 'User';
+    pollingInterval = setInterval(async () => {
+        await refreshMessages();
+    }, 7000);
+}
+
+function stopPolling() {
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+    }
+}
+
+function setupFileUpload(fileInputId, attachBtnId, fileNameId) {
+    const fileInput = document.getElementById(fileInputId);
+    const attachBtn = document.getElementById(attachBtnId);
+    const fileName = document.getElementById(fileNameId);
     
-    const usernameElements = [
-        document.getElementById('header-username'),
-        document.getElementById('header-username-first')
-    ];
+    attachBtn.addEventListener('click', () => {
+        fileInput.click();
+    });
     
-    usernameElements.forEach(el => {
-        if (el) el.textContent = displayName;
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const maxSize = 5 * 1024 * 1024;
+            if (file.size > maxSize) {
+                alert('File too large. Maximum size is 5MB.');
+                fileInput.value = '';
+                fileName.textContent = '';
+                return;
+            }
+            
+            const allowedTypes = ['image/png', 'image/jpeg', 'application/pdf'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('Invalid file type. Only PNG, JPG, and PDF are allowed.');
+                fileInput.value = '';
+                fileName.textContent = '';
+                return;
+            }
+            
+            fileName.textContent = file.name;
+        } else {
+            fileName.textContent = '';
+        }
     });
 }
 
-function renderAllDecisions(filter = 'all') {
-    const decisionsList = document.getElementById('decisions-list');
-    const libraryEmptyState = document.getElementById('library-empty-state');
-    const libraryTitle = document.getElementById('library-title');
-    decisionsList.innerHTML = '';
+async function loadLibrary() {
+    const result = await getLibrary();
+    const libraryList = document.getElementById('library-list');
+    const libraryEmpty = document.getElementById('library-empty');
     
-    let allDecisionsToShow = [];
-    
-    if (allDecisions.active) {
-        allDecisionsToShow.push(allDecisions.active);
-    }
-    allDecisionsToShow = allDecisionsToShow.concat(allDecisions.resolved);
-    
-    let decisions = [];
-    
-    if (filter === 'all') {
-        decisions = allDecisionsToShow;
-    } else if (filter === 'draft') {
-        decisions = allDecisionsToShow.filter(d => d.status === 'in_progress');
-    } else if (filter === 'in_review') {
-        decisions = allDecisionsToShow.filter(d => d.status === 'under_review');
-    } else if (filter === 'committed') {
-        decisions = allDecisionsToShow.filter(
-            d => d.status === 'resolved' || d.status === 'responded'
-        );
-    } else if (filter === 'archived') {
-        decisions = allDecisionsToShow.filter(d => d.status === 'archived');
-    }
-    
-    const totalCount = allDecisionsToShow.length;
-    libraryTitle.textContent = `Decision library${totalCount > 0 ? ` (${totalCount})` : ''}`;
-    
-    if (decisions.length === 0 && totalCount === 0) {
-        decisionsList.style.display = 'none';
-        libraryEmptyState.style.display = 'block';
+    if (!result.success || result.conversations.length === 0) {
+        libraryList.innerHTML = '';
+        libraryEmpty.style.display = 'block';
         return;
     }
     
-    decisionsList.style.display = 'flex';
-    libraryEmptyState.style.display = 'none';
+    libraryEmpty.style.display = 'none';
+    libraryList.innerHTML = '';
     
-    if (decisions.length === 0) {
-        decisionsList.innerHTML = '<div class="empty-state">No decisions found.</div>';
-        return;
-    }
-    
-    decisions.forEach(decision => {
-        const isActive = allDecisions.active && decision.id === allDecisions.active.id;
+    result.conversations.forEach(conv => {
+        const item = document.createElement('div');
+        item.className = 'library-item';
         
-        const row = document.createElement('div');
-        row.className = isActive ? 'decision-row decision-row-active' : 'decision-row';
-        row.onclick = () => navigateToDecision(decision.id);
+        const title = document.createElement('div');
+        title.className = 'library-item-title';
+        title.textContent = conv.summary_decision || 'Untitled conversation';
         
-        const statusMap = {
-            'in_progress': 'Draft',
-            'under_review': 'In review',
-            'responded': 'Committed',
-            'resolved': 'Committed'
-        };
-        
-        const now = new Date();
-        const updated = new Date(decision.updated_at);
-        const daysDiff = Math.floor((now - updated) / (1000 * 60 * 60 * 24));
-        const lastAction = daysDiff === 0 ? 'today' : daysDiff === 1 ? '1 day ago' : `${daysDiff} days ago`;
-        
-        const stage = statusMap[decision.status] || decision.status;
-        const activeIndicator = isActive ? '<span class="decision-active-badge">Active</span>' : '';
-        
-        row.innerHTML = `
-            <div class="decision-row-content">
-                <div class="decision-row-title">${escapeHtml(decision.title || decision.situation.substring(0, 60) + '...')}${activeIndicator}</div>
-                <div class="decision-row-meta">${stage} - Last reviewed ${lastAction}</div>
-            </div>
-            <span class="decision-row-action">Open</span>
+        const meta = document.createElement('div');
+        meta.className = 'library-item-meta';
+        meta.innerHTML = `
+            <span>${conv.message_count || 0} messages</span>
+            <span>Resolved ${formatDate(new Date(conv.resolved_at))}</span>
         `;
         
-        decisionsList.appendChild(row);
-    });
-}
-
-let decisionStepData = {
-    title: '',
-    stakes: '',
-    deadline: null,
-    options: [{ label: 'A', prosCons: '' }, { label: 'B', prosCons: '' }],
-    favorite: null,
-    choice: '',
-    reasoning: '',
-    changeMind: '',
-    firstAction: ''
-};
-
-function startDecisionStep1() {
-    decisionStepData = {
-        title: '',
-        stakes: '',
-        deadline: null,
-        options: [{ label: 'A', prosCons: '' }, { label: 'B', prosCons: '' }],
-        favorite: null,
-        choice: '',
-        reasoning: '',
-        changeMind: '',
-        firstAction: ''
-    };
-    
-    document.getElementById('step1-title').value = '';
-    document.getElementById('step1-stakes').value = '';
-    document.getElementById('step1-time-sensitive').checked = false;
-    document.getElementById('step1-deadline').value = '';
-    document.getElementById('step1-deadline').style.display = 'none';
-    
-    showState('decision-step1-state');
-}
-
-async function proceedToStep2() {
-    decisionStepData.title = document.getElementById('step1-title').value;
-    decisionStepData.stakes = document.getElementById('step1-stakes').value;
-    
-    if (document.getElementById('step1-time-sensitive').checked) {
-        decisionStepData.deadline = document.getElementById('step1-deadline').value;
-    }
-    
-    if (!decisionStepData.title || !decisionStepData.stakes) {
-        alert('Please fill in all required fields');
-        return;
-    }
-    
-    await autosaveDecision();
-    renderStep2();
-    showState('decision-step2-state');
-}
-
-function renderStep2() {
-    const container = document.getElementById('step2-options-container');
-    container.innerHTML = '';
-    
-    decisionStepData.options.forEach((option, index) => {
-        const optionDiv = document.createElement('div');
-        optionDiv.className = 'step2-option';
+        item.appendChild(title);
+        item.appendChild(meta);
         
-        optionDiv.innerHTML = `
-            <label class="step2-option-label">Option ${option.label}</label>
-            <label class="form-label" style="font-size: 0.875rem; margin-top: 8px;">Pros/Cons</label>
-            <textarea class="input" rows="3" data-option-index="${index}">${option.prosCons}</textarea>
-        `;
-        
-        container.appendChild(optionDiv);
-    });
-    
-    const radiosContainer = document.getElementById('step2-favorite-radios');
-    radiosContainer.innerHTML = '';
-    
-    decisionStepData.options.forEach((option, index) => {
-        const label = document.createElement('label');
-        label.className = 'custom-radio';
-        
-        const radio = document.createElement('input');
-        radio.type = 'radio';
-        radio.name = 'favorite';
-        radio.value = index;
-        radio.checked = decisionStepData.favorite === index;
-        
-        const radioMark = document.createElement('span');
-        radioMark.className = 'radio-mark';
-        
-        const radioLabel = document.createElement('span');
-        radioLabel.className = 'radio-label';
-        radioLabel.textContent = `Option ${option.label}`;
-        
-        label.appendChild(radio);
-        label.appendChild(radioMark);
-        label.appendChild(radioLabel);
-        radiosContainer.appendChild(label);
-    });
-}
-
-async function proceedToStep3() {
-    const textareas = document.querySelectorAll('#step2-options-container textarea');
-    textareas.forEach((ta, index) => {
-        decisionStepData.options[index].prosCons = ta.value;
-    });
-    
-    const favoriteRadio = document.querySelector('input[name="favorite"]:checked');
-    if (favoriteRadio) {
-        decisionStepData.favorite = parseInt(favoriteRadio.value);
-    }
-    
-    await autosaveDecision();
-    renderStep3();
-    showState('decision-step3-state');
-}
-
-function renderStep3() {
-    const choiceSelect = document.getElementById('step3-choice');
-    choiceSelect.innerHTML = '<option value="">Select option...</option>';
-    
-    decisionStepData.options.forEach((option, index) => {
-        const optionEl = document.createElement('option');
-        optionEl.value = index;
-        optionEl.textContent = `Option ${option.label}`;
-        choiceSelect.appendChild(optionEl);
-    });
-    
-    if (decisionStepData.favorite !== null) {
-        choiceSelect.value = decisionStepData.favorite;
-    }
-}
-
-async function saveDecisionFromSteps() {
-    const choiceIndex = parseInt(document.getElementById('step3-choice').value);
-    if (isNaN(choiceIndex)) {
-        alert('Please select your choice');
-        return;
-    }
-    
-    decisionStepData.choice = choiceIndex;
-    decisionStepData.reasoning = document.getElementById('step3-reasoning').value;
-    decisionStepData.changeMind = document.getElementById('step3-change-mind').value;
-    decisionStepData.firstAction = document.getElementById('step3-first-action').value;
-    
-    const sessionData = localStorage.getItem('session');
-    const session = sessionData ? JSON.parse(sessionData) : null;
-    const accessToken = session?.access_token;
-    
-    if (!accessToken) {
-        alert('Not authenticated');
-        return;
-    }
-    
-    const chosenOption = decisionStepData.options[choiceIndex];
-    
-    const payload = {
-        situation: decisionStepData.title,
-        title: decisionStepData.title,
-        stakes: decisionStepData.stakes,
-        deadline: decisionStepData.deadline,
-        option_a: decisionStepData.options[0]?.prosCons || null,
-        option_b: decisionStepData.options[1]?.prosCons || null,
-        option_c: decisionStepData.options[2]?.prosCons || null,
-        choice: `Option ${chosenOption.label}`,
-        reasoning: decisionStepData.reasoning,
-        change_mind: decisionStepData.changeMind,
-        first_action: decisionStepData.firstAction
-    };
-    
-    let decisionId = currentDecision?.id;
-    
-    if (!decisionId) {
-        const result = await createDecision(payload.situation);
-        if (result.success) {
-            decisionId = result.decision_id;
-        } else {
-            alert(result.error || 'Failed to save decision');
-            return;
-        }
-    }
-    
-    const updateResult = await updateDecision(decisionId, payload);
-    if (updateResult.success) {
-        await loadHubData();
-        if (allDecisions.active) {
-            renderDecisionSummary(allDecisions.active);
-        }
-    } else {
-        alert('Failed to save decision');
-    }
-}
-
-async function autosaveDecision() {
-    const sessionData = localStorage.getItem('session');
-    const session = sessionData ? JSON.parse(sessionData) : null;
-    const accessToken = session?.access_token;
-    
-    if (!accessToken) return;
-    
-    const payload = {
-        situation: decisionStepData.title,
-        title: decisionStepData.title,
-        stakes: decisionStepData.stakes,
-        deadline: decisionStepData.deadline,
-        option_a: decisionStepData.options[0]?.prosCons || null,
-        option_b: decisionStepData.options[1]?.prosCons || null,
-        option_c: decisionStepData.options[2]?.prosCons || null,
-        choice: decisionStepData.choice !== null ? `Option ${decisionStepData.options[decisionStepData.choice]?.label}` : null,
-        reasoning: decisionStepData.reasoning,
-        change_mind: decisionStepData.changeMind,
-        first_action: decisionStepData.firstAction
-    };
-    
-    let decisionId = currentDecision?.id;
-    
-    if (!decisionId && decisionStepData.title) {
-        const result = await createDecision(payload.situation);
-        if (result.success) {
-            decisionId = result.decision_id;
-            await loadHubData();
-        }
-    }
-    
-    if (decisionId) {
-        await updateDecision(decisionId, payload);
-    }
-}
-
-function renderDecisionSummary(decision) {
-    currentDecision = decision;
-    
-    document.getElementById('summary-title').textContent = decision.title || 'Decision';
-    
-    const statusMap = {
-        'in_progress': 'Draft',
-        'under_review': 'Under review',
-        'responded': 'Responded',
-        'resolved': 'Resolved'
-    };
-    
-    document.getElementById('summary-stage').textContent = statusMap[decision.status] || 'Committed';
-    
-    const date = new Date(decision.updated_at).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-    });
-    document.getElementById('summary-date').textContent = date;
-    
-    document.getElementById('summary-stakes').textContent = decision.stakes || 'Not specified';
-    
-    const optionsContainer = document.getElementById('summary-options');
-    optionsContainer.innerHTML = '';
-    
-    [decision.option_a, decision.option_b, decision.option_c].forEach((opt, index) => {
-        if (opt) {
-            const optDiv = document.createElement('div');
-            optDiv.className = 'summary-option';
-            optDiv.textContent = `Option ${String.fromCharCode(65 + index)}: ${opt}`;
-            optionsContainer.appendChild(optDiv);
-        }
-    });
-    
-    document.getElementById('summary-reasoning').textContent = decision.reasoning || decision.choice || 'Not specified';
-    
-    showState('decision-summary-state');
-}
-
-function renderFeedback(feedbackList) {
-    const container = document.getElementById('feedback-list');
-    container.innerHTML = '';
-    
-    if (feedbackList.length === 0) {
-        container.innerHTML = '<p class="feedback-empty">No feedback yet. Admin will respond when your decision is under review.</p>';
-        return;
-    }
-    
-    feedbackList.forEach(item => {
-        const feedbackItem = document.createElement('div');
-        feedbackItem.className = `feedback-item feedback-item--${item.author_type}`;
-        
-        const timestamp = new Date(item.created_at).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit'
+        item.addEventListener('click', () => {
+            openConversationModal(conv.id);
         });
         
-        feedbackItem.innerHTML = `
-            <div class="feedback-meta">
-                <span class="feedback-author">${item.author_type === 'admin' ? 'Admin' : 'You'}</span>
-                <span class="feedback-time">${timestamp}</span>
+        libraryList.appendChild(item);
+    });
+}
+
+async function openConversationModal(conversationId) {
+    const modal = document.getElementById('conversation-modal');
+    const result = await getConversationById(conversationId);
+    
+    if (!result.success) {
+        alert('Could not load conversation');
+        return;
+    }
+    
+    document.getElementById('modal-title').textContent = result.conversation.summary?.decision || 'Conversation';
+    
+    const modalSummary = document.getElementById('modal-summary');
+    if (result.conversation.summary) {
+        modalSummary.innerHTML = `
+            <div class="summary-field">
+                <label>Decision:</label>
+                <p>${result.conversation.summary.decision || '—'}</p>
             </div>
-            <div class="feedback-content">${escapeHtml(item.content)}</div>
+            <div class="summary-field">
+                <label>Current Leaning:</label>
+                <p>${result.conversation.summary.current_leaning || '—'}</p>
+            </div>
+            <div class="summary-meta">
+                <span>Status: ${result.conversation.summary.status || 'resolved'}</span>
+            </div>
         `;
+    }
+    
+    const modalMessages = document.getElementById('modal-messages');
+    modalMessages.innerHTML = '';
+    result.messages.forEach(msg => {
+        if (msg.deleted_at) return;
         
-        container.appendChild(feedbackItem);
+        const messageEl = document.createElement('div');
+        messageEl.className = `message message-${msg.author_type}`;
+        
+        const authorEl = document.createElement('div');
+        authorEl.className = 'message-author';
+        authorEl.textContent = msg.author_type === 'user' ? 'You' : (msg.author_name || 'Onyx');
+        
+        const contentEl = document.createElement('div');
+        contentEl.className = 'message-content';
+        contentEl.textContent = msg.content;
+        
+        if (msg.attachment_url) {
+            const attachmentEl = document.createElement('div');
+            attachmentEl.className = 'message-attachment';
+            const link = document.createElement('a');
+            link.href = msg.attachment_url;
+            link.target = '_blank';
+            link.textContent = `📎 ${msg.attachment_name || 'View attachment'}`;
+            attachmentEl.appendChild(link);
+            contentEl.appendChild(attachmentEl);
+        }
+        
+        const metaEl = document.createElement('div');
+        metaEl.className = 'message-meta';
+        metaEl.textContent = formatDate(new Date(msg.created_at));
+        
+        messageEl.appendChild(authorEl);
+        messageEl.appendChild(contentEl);
+        messageEl.appendChild(metaEl);
+        
+        modalMessages.appendChild(messageEl);
     });
     
-    container.scrollTop = container.scrollHeight;
+    modal.style.display = 'flex';
 }
 
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-async function navigateToHub() {
-    await loadHubData();
-    renderHub();
-}
-
-async function navigateToDecision(decisionId) {
-    const result = await getActiveDecision();
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('[WORKSPACE] DOM loaded');
     
-    if (result.success && result.decision) {
-        currentFeedback = result.feedback || [];
-        renderDecisionSummary(result.decision);
-    }
-}
-
-async function loadHubData() {
-    const activeResult = await getActiveDecision();
-    const archiveResult = await getArchive();
-    
-    allDecisions.active = activeResult.success ? activeResult.decision : null;
-    allDecisions.resolved = archiveResult.success ? archiveResult.decisions : [];
-}
-
-async function initialize() {
-    console.log('[WORKSPACE] Initializing workspace...');
     const authStatus = await checkAuthStatus();
-
-    if (!authStatus.authenticated || !authStatus.user) {
-        console.warn('[WORKSPACE] Not authenticated');
+    
+    if (!authStatus.authenticated) {
         showState('unauthorized-state');
         return;
     }
-
+    
     currentUser = authStatus.user;
-    console.log('[WORKSPACE] User authenticated:', currentUser.email);
-
-    if (!currentUser.paid) {
-        console.warn('[WORKSPACE] User not paid');
+    
+    if (!currentUser.has_paid) {
         showState('unpaid-state');
         return;
     }
-
-    const result = await getActiveDecision();
     
-    if (!result.success) {
-        console.error('[WORKSPACE] Failed to get active decision');
-        showState('unauthorized-state');
+    document.querySelectorAll('[id^="username-"]').forEach(el => {
+        el.textContent = currentUser.display_name || currentUser.email;
+    });
+    
+    const activeConvResult = await getActiveConversation();
+    
+    if (!activeConvResult.success) {
+        alert('Failed to load workspace');
         return;
     }
-
-    if (result.decision || (await getArchive()).success) {
-        await navigateToHub();
-    } else {
-        updateHeaderUsername();
+    
+    if (!activeConvResult.conversation) {
         showState('first-time-state');
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('[id^="logout-btn"]').forEach(btn => {
-        btn.addEventListener('click', logout);
-    });
-
-    setupUserAccountDropdowns();
-
-    const initialStartBtn = document.getElementById('initial-start-btn');
-    if (initialStartBtn) {
-        initialStartBtn.addEventListener('click', function() {
-            startDecisionStep1();
-        });
-    }
-    
-    function setupUserAccountDropdowns() {
-        const dropdowns = [
-            { trigger: 'user-account-trigger', dropdown: 'user-account-dropdown' },
-            { trigger: 'user-account-trigger-first', dropdown: 'user-account-dropdown-first' }
-        ];
+        setupFirstTimeExperience();
+    } else {
+        currentConversation = activeConvResult.conversation;
+        currentMessages = activeConvResult.messages;
         
-        dropdowns.forEach(({ trigger, dropdown }) => {
-            const triggerEl = document.getElementById(trigger);
-            const dropdownEl = document.getElementById(dropdown);
-            
-            if (triggerEl && dropdownEl) {
-                triggerEl.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    dropdownEl.classList.toggle('active');
-                    
-                    document.querySelectorAll('.user-account-dropdown').forEach(dd => {
-                        if (dd !== dropdownEl) dd.classList.remove('active');
-                    });
-                });
-                
-                dropdownEl.querySelectorAll('.user-account-dropdown-item').forEach(item => {
-                    item.addEventListener('click', async function() {
-                        const action = this.id || this.dataset.action;
-                        
-                        if (action === 'account-logout' || action === 'logout') {
-                            await logout();
-                        } else if (action === 'account-payment' || action === 'payment') {
-                            await openCustomerPortal();
-                        }
-                        
-                        dropdownEl.classList.remove('active');
-                    });
-                });
-            }
-        });
+        showState('workspace-state');
+        renderSummaryCard(currentConversation.summary);
+        renderMessageThread(currentMessages);
         
-        document.addEventListener('click', function() {
-            document.querySelectorAll('.user-account-dropdown').forEach(dd => {
-                dd.classList.remove('active');
-            });
-        });
+        setupWorkspace();
+        startPolling();
     }
-
-
-
-    const feedbackForm = document.getElementById('feedback-form');
-    if (feedbackForm) {
-        feedbackForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            if (!currentDecision) return;
-            
-            const input = document.getElementById('feedback-input');
-            const content = input.value.trim();
-            
-            if (!content) return;
-            
-            const submitBtn = feedbackForm.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            
-            const result = await addFeedback(currentDecision.id, content);
-            
-            if (result.success) {
-                input.value = '';
-                await navigateToDecision(currentDecision.id);
-            } else {
-                alert('Failed to send feedback');
-            }
-            
-            submitBtn.disabled = false;
-        });
-    }
-
-    const startNewBtn = document.getElementById('start-new-decision-btn');
-    if (startNewBtn) {
-        startNewBtn.addEventListener('click', function() {
-            startDecisionStep1();
-        });
-    }
-    
-    const step1TimeSensitive = document.getElementById('step1-time-sensitive');
-    if (step1TimeSensitive) {
-        step1TimeSensitive.addEventListener('change', function() {
-            const deadlineField = document.getElementById('step1-deadline');
-            if (this.checked) {
-                deadlineField.style.display = 'block';
-            } else {
-                deadlineField.style.display = 'none';
-            }
-        });
-    }
-    
-    const step1NextBtn = document.getElementById('step1-next');
-    if (step1NextBtn) {
-        step1NextBtn.addEventListener('click', proceedToStep2);
-    }
-    
-    const backFromStep1 = document.getElementById('back-from-step1');
-    if (backFromStep1) {
-        backFromStep1.addEventListener('click', async function() {
-            await navigateToHub();
-        });
-    }
-    
-    const step2NextBtn = document.getElementById('step2-next');
-    if (step2NextBtn) {
-        step2NextBtn.addEventListener('click', proceedToStep3);
-    }
-    
-    const backFromStep2 = document.getElementById('back-from-step2');
-    if (backFromStep2) {
-        backFromStep2.addEventListener('click', function() {
-            showState('decision-step1-state');
-        });
-    }
-    
-    const step3SaveBtn = document.getElementById('step3-save');
-    if (step3SaveBtn) {
-        step3SaveBtn.addEventListener('click', saveDecisionFromSteps);
-    }
-    
-    const backFromStep3 = document.getElementById('back-from-step3');
-    if (backFromStep3) {
-        backFromStep3.addEventListener('click', function() {
-            renderStep2();
-            showState('decision-step2-state');
-        });
-    }
-    
-    const backFromSummary = document.getElementById('back-from-summary');
-    if (backFromSummary) {
-        backFromSummary.addEventListener('click', async function() {
-            await navigateToHub();
-        });
-    }
-    
-    const summaryEditBtn = document.getElementById('summary-edit');
-    if (summaryEditBtn) {
-        summaryEditBtn.addEventListener('click', function() {
-            if (currentDecision) {
-                startDecisionStep1();
-            }
-        });
-    }
-    
-
-
-    const viewInsightsBtn = document.getElementById('view-insights-btn');
-    if (viewInsightsBtn) {
-        viewInsightsBtn.addEventListener('click', function() {
-            renderInsights();
-            showState('insights-state');
-        });
-    }
-
-    const backToHubInsights = document.getElementById('back-to-hub-insights');
-    if (backToHubInsights) {
-        backToHubInsights.addEventListener('click', async function() {
-            await navigateToHub();
-        });
-    }
-
-    const backToHubBtn = document.getElementById('back-to-hub-btn');
-    if (backToHubBtn) {
-        backToHubBtn.addEventListener('click', async function(e) {
-            e.preventDefault();
-            await navigateToHub();
-        });
-    }
-
-    const backFromSettings = document.getElementById('back-from-settings');
-    if (backFromSettings) {
-        backFromSettings.addEventListener('click', async function() {
-            await navigateToHub();
-        });
-    }
-
-    const settingsDisplayName = document.getElementById('settings-display-name');
-    if (settingsDisplayName) {
-        settingsDisplayName.addEventListener('input', function() {
-            saveSettings();
-        });
-    }
-
-    const libraryStartBtn = document.getElementById('library-start-btn');
-    if (libraryStartBtn) {
-        libraryStartBtn.addEventListener('click', function() {
-            startDecisionStep1();
-        });
-    }
-
-    const viewLibraryLink = document.getElementById('view-library-link');
-    if (viewLibraryLink) {
-        viewLibraryLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            switchView('library');
-        });
-    }
-
-    document.querySelectorAll('.sidebar-nav-item').forEach(item => {
-        item.addEventListener('click', function() {
-            const viewName = this.getAttribute('data-view');
-            switchView(viewName);
-        });
-    });
-
-    const settingsDisplayNameHub = document.getElementById('settings-display-name-hub');
-    if (settingsDisplayNameHub) {
-        settingsDisplayNameHub.addEventListener('input', function() {
-            saveSettingsHub();
-        });
-    }
-
-    initialize();
 });
 
-function renderInsights() {
-    const resolvedCount = allDecisions.resolved.length;
+function setupFirstTimeExperience() {
+    setupFileUpload('first-file-input', 'first-attach-btn', 'first-file-name');
     
-    document.getElementById('insights-resolved').textContent = resolvedCount;
-    
-    if (resolvedCount > 0) {
-        const totalResolutionTime = allDecisions.resolved.reduce((sum, d) => {
-            const created = new Date(d.created_at);
-            const resolved = new Date(d.resolved_at);
-            return sum + (resolved - created);
-        }, 0);
-        const avgDays = Math.round(totalResolutionTime / resolvedCount / (1000 * 60 * 60 * 24));
-        document.getElementById('insights-avg-time').textContent = avgDays > 0 ? `${avgDays} days` : '< 1 day';
+    document.getElementById('send-first-message').addEventListener('click', async () => {
+        const content = document.getElementById('first-message-input').value.trim();
+        const fileInput = document.getElementById('first-file-input');
+        const attachment = fileInput.files[0] || null;
         
-        const lastResolved = new Date(allDecisions.resolved[0].resolved_at);
-        const daysAgo = Math.floor((new Date() - lastResolved) / (1000 * 60 * 60 * 24));
-        const lastResolvedText = daysAgo === 0 ? 'Today' : daysAgo === 1 ? 'Yesterday' : `${daysAgo} days ago`;
-        document.getElementById('insights-last-resolved').textContent = lastResolvedText;
-    } else {
-        document.getElementById('insights-avg-time').textContent = '—';
-        document.getElementById('insights-last-resolved').textContent = '—';
-    }
-    
-    const recentList = document.getElementById('insights-recent-list');
-    if (recentList) {
-        recentList.innerHTML = '';
-        
-        if (allDecisions.resolved.length === 0) {
-            recentList.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">No resolved decisions yet.</p>';
-        } else {
-            const recent = allDecisions.resolved.slice(0, 5);
-            recent.forEach(decision => {
-                const item = document.createElement('div');
-                item.className = 'insights-recent-item';
-                
-                const resolved = new Date(decision.resolved_at);
-                const dateStr = resolved.toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric', 
-                    year: 'numeric' 
-                });
-                
-                item.innerHTML = `
-                    <div class="insights-recent-title">${escapeHtml(decision.title || decision.situation?.substring(0, 60) + '...')}</div>
-                    <div class="insights-recent-date">${dateStr}</div>
-                `;
-                
-                recentList.appendChild(item);
-            });
+        if (!content) {
+            alert('Please enter a message');
+            return;
         }
+        
+        if (content.length < 20) {
+            alert('Please provide more context (at least 20 characters)');
+            return;
+        }
+        
+        const btn = document.getElementById('send-first-message');
+        btn.disabled = true;
+        btn.textContent = 'Sending...';
+        
+        const result = await startConversation(content, attachment);
+        
+        if (!result.success) {
+            alert(result.error || 'Failed to start conversation');
+            btn.disabled = false;
+            btn.textContent = 'Send to Onyx';
+            return;
+        }
+        
+        window.location.reload();
+    });
+    
+    setupUserMenus();
+}
+
+function setupWorkspace() {
+    document.querySelectorAll('.sidebar-nav-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+            switchTab(btn.dataset.tab);
+        });
+    });
+    
+    setupFileUpload('message-file-input', 'message-attach-btn', 'message-file-name');
+    
+    document.getElementById('send-message-btn').addEventListener('click', async () => {
+        const content = document.getElementById('message-input').value.trim();
+        const fileInput = document.getElementById('message-file-input');
+        const attachment = fileInput.files[0] || null;
+        
+        if (!content) {
+            alert('Please enter a message');
+            return;
+        }
+        
+        const result = await sendMessage(currentConversation.id, content, attachment);
+        
+        if (!result.success) {
+            alert(result.error || 'Failed to send message');
+            return;
+        }
+        
+        document.getElementById('message-input').value = '';
+        fileInput.value = '';
+        document.getElementById('message-file-name').textContent = '';
+        
+        await refreshMessages();
+    });
+    
+    document.getElementById('message-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            document.getElementById('send-message-btn').click();
+        }
+    });
+    
+    document.getElementById('commit-btn').addEventListener('click', async () => {
+        if (!confirm('Commit to this direction? This will resolve the conversation.')) {
+            return;
+        }
+        
+        const result = await commitToRecommendation(currentConversation.id);
+        
+        if (!result.success) {
+            alert('Failed to commit');
+            return;
+        }
+        
+        alert('Conversation resolved!');
+        window.location.reload();
+    });
+    
+    document.getElementById('modal-close').addEventListener('click', () => {
+        document.getElementById('conversation-modal').style.display = 'none';
+    });
+    
+    document.getElementById('settings-name').addEventListener('change', async (e) => {
+        const emailNotifications = document.getElementById('settings-email-notifications').checked;
+        const result = await updateSettings(e.target.value, emailNotifications);
+        
+        if (result.success) {
+            const msg = document.getElementById('settings-saved-message');
+            msg.style.display = 'block';
+            setTimeout(() => {
+                msg.style.display = 'none';
+            }, 2000);
+        }
+    });
+    
+    document.getElementById('settings-email-notifications').addEventListener('change', async (e) => {
+        const displayName = document.getElementById('settings-name').value;
+        const result = await updateSettings(displayName, e.target.checked);
+        
+        if (result.success) {
+            const msg = document.getElementById('settings-saved-message');
+            msg.style.display = 'block';
+            setTimeout(() => {
+                msg.style.display = 'none';
+            }, 2000);
+        }
+    });
+    
+    document.getElementById('settings-name').value = currentUser.display_name || '';
+    document.getElementById('settings-email').value = currentUser.email || '';
+    
+    if (currentConversation.email_notifications_enabled !== undefined) {
+        document.getElementById('settings-email-notifications').checked = currentConversation.email_notifications_enabled;
     }
+    
+    setupUserMenus();
+}
+
+function setupUserMenus() {
+    document.querySelectorAll('.user-menu-trigger').forEach(trigger => {
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const dropdownId = trigger.id.replace('user-menu', 'user-dropdown');
+            const dropdown = document.getElementById(dropdownId);
+            
+            document.querySelectorAll('.user-menu-dropdown').forEach(d => {
+                if (d.id !== dropdownId) d.style.display = 'none';
+            });
+            
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        });
+    });
+    
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.user-menu-dropdown').forEach(d => {
+            d.style.display = 'none';
+        });
+    });
+    
+    document.querySelectorAll('.user-menu-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const action = item.dataset.action;
+            
+            if (action === 'logout') {
+                localStorage.removeItem('session');
+                window.location.href = '/';
+            } else if (action === 'payment') {
+                window.location.href = '/payment';
+            } else if (action === 'settings') {
+                switchTab('settings');
+            }
+        });
+    });
 }
