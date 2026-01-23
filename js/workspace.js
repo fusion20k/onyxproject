@@ -245,18 +245,7 @@ async function resolveDecision(decisionId, resolution) {
 }
 
 function openSettings() {
-    if (!currentUser) return;
-    
-    const displayName = currentUser.display_name 
-        || currentUser.user_metadata?.display_name 
-        || currentUser.raw_user_meta_data?.display_name
-        || '';
-    const email = currentUser.email || '';
-    
-    document.getElementById('settings-display-name').value = displayName;
-    document.getElementById('settings-email').value = email;
-    
-    showState('settings-state');
+    renderHub('settings');
 }
 
 async function saveSettings() {
@@ -302,6 +291,50 @@ async function saveSettings() {
     } catch (error) {
         console.error('[WORKSPACE] Save settings error:', error);
         alert('Unable to save settings. Please try again.');
+    }
+}
+
+async function saveSettingsHub() {
+    try {
+        const sessionData = localStorage.getItem('session');
+        const session = sessionData ? JSON.parse(sessionData) : null;
+        const accessToken = session?.access_token;
+        
+        if (!accessToken) {
+            return;
+        }
+        
+        const displayName = document.getElementById('settings-display-name-hub').value.trim();
+        
+        const response = await fetch(`${API_BASE_URL}/auth/update-profile`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({ display_name: displayName })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to update profile');
+        }
+        
+        if (currentUser) {
+            currentUser.display_name = displayName;
+        }
+        
+        updateHeaderUsername();
+        
+        const saveMessage = document.getElementById('settings-save-message-hub');
+        if (saveMessage) {
+            saveMessage.style.display = 'block';
+            setTimeout(() => {
+                saveMessage.style.display = 'none';
+            }, 3000);
+        }
+    } catch (error) {
+        console.error('[WORKSPACE] Save settings error:', error);
     }
 }
 
@@ -388,21 +421,45 @@ function calculateClarityMomentum(allDecisions) {
     return "Paused";
 }
 
-function renderHub() {
+function renderHub(viewName = 'active') {
+    updateHeaderUsername();
+    renderActiveView();
+    renderLibraryView();
+    renderSettingsView();
+    
+    showState('hub-state');
+    switchView(viewName);
+}
+
+function switchView(viewName) {
+    document.querySelectorAll('.workspace-view').forEach(view => {
+        view.style.display = 'none';
+    });
+    
+    document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    const targetView = document.getElementById(`${viewName}-view`);
+    if (targetView) {
+        targetView.style.display = 'block';
+    }
+    
+    const targetNavItem = document.querySelector(`.sidebar-nav-item[data-view="${viewName}"]`);
+    if (targetNavItem) {
+        targetNavItem.classList.add('active');
+    }
+}
+
+function renderActiveView() {
     const activeSection = document.getElementById('active-decision-section');
     const noActiveDecision = document.getElementById('no-active-decision');
-    const activeDivider = document.getElementById('active-divider');
-    const decisionsList = document.getElementById('decisions-list');
-    const decisionsFilter = document.getElementById('decisions-filter');
     const singleDecisionNudge = document.getElementById('single-decision-nudge');
-    
-    updateHeaderUsername();
     
     if (allDecisions.active) {
         const decision = allDecisions.active;
         activeSection.style.display = 'block';
         noActiveDecision.style.display = 'none';
-        activeDivider.style.display = 'block';
         
         const totalDecisions = 1 + allDecisions.resolved.length;
         if (totalDecisions === 1) {
@@ -439,14 +496,29 @@ function renderHub() {
     } else {
         activeSection.style.display = 'none';
         noActiveDecision.style.display = 'block';
-        activeDivider.style.display = 'none';
     }
-    
+}
+
+function renderLibraryView() {
+    const decisionsFilter = document.getElementById('decisions-filter');
     renderAllDecisions(decisionsFilter.value);
-    
     decisionsFilter.onchange = () => renderAllDecisions(decisionsFilter.value);
+}
+
+function renderSettingsView() {
+    if (!currentUser) return;
     
-    showState('hub-state');
+    const displayName = currentUser.display_name 
+        || currentUser.user_metadata?.display_name 
+        || currentUser.raw_user_meta_data?.display_name
+        || '';
+    const email = currentUser.email || '';
+    
+    const displayNameInput = document.getElementById('settings-display-name-hub');
+    const emailInput = document.getElementById('settings-email-hub');
+    
+    if (displayNameInput) displayNameInput.value = displayName;
+    if (emailInput) emailInput.value = email;
 }
 
 function updateHeaderUsername() {
@@ -883,8 +955,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         if (action === 'account-logout' || action === 'logout') {
                             await logout();
-                        } else if (action === 'account-settings' || action === 'settings') {
-                            openSettings();
                         } else if (action === 'account-payment' || action === 'payment') {
                             await openCustomerPortal();
                         }
@@ -1098,6 +1168,27 @@ document.addEventListener('DOMContentLoaded', function() {
     if (settingsDisplayName) {
         settingsDisplayName.addEventListener('input', function() {
             saveSettings();
+        });
+    }
+
+    const libraryStartBtn = document.getElementById('library-start-btn');
+    if (libraryStartBtn) {
+        libraryStartBtn.addEventListener('click', function() {
+            startDecisionStep1();
+        });
+    }
+
+    document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const viewName = this.getAttribute('data-view');
+            switchView(viewName);
+        });
+    });
+
+    const settingsDisplayNameHub = document.getElementById('settings-display-name-hub');
+    if (settingsDisplayNameHub) {
+        settingsDisplayNameHub.addEventListener('input', function() {
+            saveSettingsHub();
         });
     }
 

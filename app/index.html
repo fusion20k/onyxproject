@@ -64,71 +64,113 @@
             </div>
             <!-- Workspace Hub (Overview) -->
             <div id="hub-state" class="workspace-state" style="display: none;">
-                <div class="workspace-header">
-                    <h1 class="workspace-header-title">Workspace</h1>
-                    <div class="user-account-menu">
-                        <button class="user-account-trigger" id="user-account-trigger">
-                            <span id="header-username">User</span>
-                        </button>
-                        <div class="user-account-dropdown" id="user-account-dropdown">
-                            <div class="user-account-dropdown-label">Account</div>
-                            <div class="user-account-dropdown-item" id="account-settings">Settings</div>
-                            <div class="user-account-dropdown-item" id="account-payment">Payment details</div>
-                            <div class="user-account-dropdown-item" id="account-logout">Logout</div>
+                <!-- Sidebar -->
+                <div class="workspace-sidebar">
+                    <div class="workspace-sidebar-header">
+                        <div class="workspace-sidebar-title">Workspace</div>
+                    </div>
+                    <nav class="workspace-sidebar-nav">
+                        <button class="sidebar-nav-item active" data-view="active">Active</button>
+                        <button class="sidebar-nav-item" data-view="library">Library</button>
+                        <button class="sidebar-nav-item" data-view="settings">Settings</button>
+                    </nav>
+                    <div class="workspace-sidebar-footer">
+                        <div class="user-account-menu">
+                            <button class="user-account-trigger" id="user-account-trigger">
+                                <span id="header-username">User</span>
+                            </button>
+                            <div class="user-account-dropdown" id="user-account-dropdown">
+                                <div class="user-account-dropdown-label">Account</div>
+                                <div class="user-account-dropdown-item" id="account-payment">Payment</div>
+                                <div class="user-account-dropdown-item" id="account-logout">Logout</div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="workspace-helper-text">Bring one serious decision into focus. Everything else waits.</div>
-                
-                <div class="workspace-content">
-                    <div class="workspace-content-column">
-                        <!-- Active Decision Section -->
-                        <div id="active-decision-section" style="display: none;">
-                            <div class="section-label">Active decision</div>
-                            <div id="active-decision-card" class="active-decision-card">
-                                <div class="active-decision-content">
-                                    <div class="active-decision-title" id="active-decision-title">Decision title</div>
-                                    <div class="active-decision-meta" id="active-decision-status-line">Status: Draft - Reviewed: Today</div>
+
+                <!-- Main Content Area -->
+                <div class="workspace-main-area">
+                    <!-- Active Decision View -->
+                    <div id="active-view" class="workspace-view" style="display: block;">
+                        <div class="workspace-view-header">
+                            <h1 class="workspace-view-title">Active Decision</h1>
+                        </div>
+                        <div class="workspace-content">
+                            <div class="workspace-content-column">
+                                <!-- Active Decision Card -->
+                                <div id="active-decision-section" style="display: none;">
+                                    <div id="active-decision-card" class="active-decision-card">
+                                        <div class="active-decision-content">
+                                            <div class="active-decision-title" id="active-decision-title">Decision title</div>
+                                            <div class="active-decision-meta" id="active-decision-status-line">Status: Draft - Reviewed: Today</div>
+                                        </div>
+                                        <div class="active-decision-actions">
+                                            <button id="open-decision-btn" class="btn btn-primary">Resume decision</button>
+                                        </div>
+                                    </div>
+                                    <div id="single-decision-nudge" class="low-state-nudge" style="display: none;">
+                                        Onyx works best when every serious decision lives here. Start another when you're ready.
+                                    </div>
                                 </div>
-                                <div class="active-decision-actions">
-                                    <button id="open-decision-btn" class="btn btn-primary">Resume decision</button>
+
+                                <!-- Empty State (no active decision) -->
+                                <div id="no-active-decision" class="empty-state-minimal" style="display: none;">
+                                    <p class="text-dim">You don't have an active decision.</p>
+                                    <button id="start-new-decision-btn" class="btn btn-primary">Start a decision</button>
                                 </div>
-                            </div>
-                            <div id="single-decision-nudge" class="low-state-nudge" style="display: none;">
-                                Onyx works best when every serious decision lives here. Start another when you're ready.
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Empty State (no active decision) -->
-                        <div id="no-active-decision" class="empty-state-minimal" style="display: none;">
-                            <p class="text-dim">You don't have an active decision.</p>
-                            <button id="start-new-decision-btn" class="btn btn-primary">Start a decision</button>
+                    <!-- Library View -->
+                    <div id="library-view" class="workspace-view" style="display: none;">
+                        <div class="workspace-view-header">
+                            <h1 class="workspace-view-title" id="library-title">Decision Library</h1>
+                            <div class="filter-label-group">
+                                <span class="filter-label-text">Stage:</span>
+                                <select id="decisions-filter" class="filter-dropdown">
+                                    <option value="all">All</option>
+                                    <option value="draft">Draft</option>
+                                    <option value="in_review">In review</option>
+                                    <option value="committed">Committed</option>
+                                    <option value="archived">Archived</option>
+                                </select>
+                            </div>
                         </div>
-
-                        <!-- Divider -->
-                        <div id="active-divider" class="section-divider" style="display: none;"></div>
-
-                        <!-- All Decisions Section -->
-                        <div class="decisions-section">
-                            <div class="decisions-section-header">
-                                <h2 class="text-section-title" id="library-title">Decision library</h2>
-                                <div class="filter-label-group">
-                                    <span class="filter-label-text">Stage:</span>
-                                    <select id="decisions-filter" class="filter-dropdown">
-                                        <option value="all">All</option>
-                                        <option value="draft">Draft</option>
-                                        <option value="in_review">In review</option>
-                                        <option value="committed">Committed</option>
-                                        <option value="archived">Archived</option>
-                                    </select>
+                        <div class="workspace-content">
+                            <div class="workspace-content-column">
+                                <div id="decisions-list" class="decisions-list">
+                                    <!-- Decisions populated by JS -->
+                                </div>
+                                <div id="library-empty-state" class="library-empty-state" style="display: none;">
+                                    <p class="text-dim">No decisions in your library yet.</p>
+                                    <button id="library-start-btn" class="btn btn-primary">Start your first decision</button>
                                 </div>
                             </div>
-                            <div id="decisions-list" class="decisions-list">
-                                <!-- Decisions populated by JS -->
-                            </div>
-                            <div id="library-empty-state" class="library-empty-state" style="display: none;">
-                                <p class="text-dim">No decisions in your library yet.</p>
-                                <button id="library-start-btn" class="btn btn-primary">Start your first decision</button>
+                        </div>
+                    </div>
+
+                    <!-- Settings View -->
+                    <div id="settings-view" class="workspace-view" style="display: none;">
+                        <div class="workspace-view-header">
+                            <h1 class="workspace-view-title">Settings</h1>
+                        </div>
+                        <div class="workspace-content">
+                            <div class="settings-form">
+                                <div class="form-section">
+                                    <label class="form-label">Display Name</label>
+                                    <input type="text" id="settings-display-name-hub" class="input" placeholder="Your name" />
+                                </div>
+
+                                <div class="form-section">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" id="settings-email-hub" class="input" disabled />
+                                    <p class="text-dim" style="font-size: 0.8125rem; margin-top: 8px;">Email cannot be changed</p>
+                                </div>
+
+                                <div class="settings-save-message" id="settings-save-message-hub" style="display: none; color: rgba(255, 255, 255, 0.6); font-size: 0.875rem; margin-top: 12px;">
+                                    Settings saved
+                                </div>
                             </div>
                         </div>
                     </div>
