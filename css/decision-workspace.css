@@ -636,6 +636,211 @@ select.input {
     }
 }
 
+/* Action Directives */
+.action-directives-card {
+    margin-top: 20px;
+}
+
+.action-directives-subtitle {
+    font-size: 13px;
+    color: #888;
+    margin: -8px 0 16px 0;
+}
+
+.action-directives-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.action-directive-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    background: #0a0a0a;
+    border: 1px solid #222;
+    border-radius: 6px;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.action-directive-item:hover {
+    border-color: #333;
+    background: #111;
+}
+
+.action-directive-item.completed {
+    opacity: 0.6;
+}
+
+.action-directive-item.completed .action-directive-content {
+    text-decoration: line-through;
+}
+
+.action-directive-checkbox {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #444;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.action-directive-checkbox:hover {
+    border-color: #00cc66;
+}
+
+.action-directive-item.completed .action-directive-checkbox {
+    background: #00cc66;
+    border-color: #00cc66;
+}
+
+.action-directive-checkbox .check-icon {
+    color: #000;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.action-directive-item.completed .check-icon {
+    opacity: 1;
+}
+
+.action-directive-content {
+    flex: 1;
+}
+
+.action-directive-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.action-directive-header strong {
+    font-size: 14px;
+    color: #e8e8e8;
+}
+
+.action-directive-timeline {
+    font-size: 12px;
+    color: #00cc66;
+    font-weight: 600;
+}
+
+.action-directive-action {
+    font-size: 13px;
+    color: #aaa;
+    line-height: 1.5;
+}
+
+.action-directive-success {
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+.action-directives-progress {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #222;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #aaa;
+    margin-bottom: 8px;
+}
+
+.progress-label span:last-child {
+    color: #00cc66;
+    font-weight: 600;
+}
+
+.progress-bar {
+    height: 6px;
+    background: #1a1a1a;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00cc66, #00ff7f);
+    transition: width 0.3s ease;
+    border-radius: 3px;
+}
+
+/* Execution Steps Styling */
+.execution-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.execution-step {
+    background: #0a0a0a;
+    border: 1px solid #222;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.execution-step-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.execution-step-number {
+    background: #00cc66;
+    color: #000;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 4px;
+}
+
+.execution-step-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #e8e8e8;
+}
+
+.execution-step-timeline {
+    margin-left: auto;
+    font-size: 13px;
+    color: #00cc66;
+    font-weight: 600;
+    background: #0d1a14;
+    padding: 4px 10px;
+    border-radius: 4px;
+}
+
+.execution-step-detail {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #ccc;
+    margin-bottom: 8px;
+}
+
+.execution-step-detail:last-child {
+    margin-bottom: 0;
+}
+
+.execution-step-detail strong {
+    color: #aaa;
+    font-weight: 600;
+}
+
 @media (max-width: 1024px) {
     .decision-layout {
         grid-template-columns: 1fr;

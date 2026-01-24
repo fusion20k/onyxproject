@@ -4,11 +4,16 @@
 
 **File**: Your backend AI analyzer service (where OpenAI GPT-4 calls are made)
 
+### Required Model:
+- **Use GPT-4 Turbo** or the most advanced model available
+- This ensures highest quality analysis and reasoning
+
 ### Changes:
 - Replace the system prompt with the content from `AI_PROMPT.md`
 - Update extraction logic to **extract 3 options** instead of 2
   - If user only mentions 1-2 options, the AI should infer a third (variation, hybrid, or "do nothing" baseline)
 - Add extraction for the new **Execution Plan** section from AI response
+- **CRITICAL**: The execution plan MUST be returned as a **JSON array** (not plain text)
 
 ### Example structure after AI analysis:
 ```javascript
@@ -42,7 +47,27 @@
     "recommended_option_id": "uuid",
     "reasoning": "...",
     "alternatives_reasoning": "why not the other options",
-    "execution_plan": "step-by-step guide" // NEW FIELD
+    "execution_plan": JSON.stringify([  // NEW FIELD - MUST BE JSON STRING
+      {
+        "step": "Identify Relevant Platforms",
+        "action": "Research and list online communities and forums where the target audience is active.",
+        "timeline": "Week 1",
+        "dependencies": "Access to market research tools",
+        "validation_point": "List of at least 5 active communities",
+        "metrics": "Number of active users in each community",
+        "success_criteria": "5+ platforms identified with 10k+ active users each"
+      },
+      {
+        "step": "Develop Engagement Strategy",
+        "action": "Create content and engagement plans tailored to each platform",
+        "timeline": "Week 2",
+        "dependencies": "Completed platform research",
+        "validation_point": "Draft engagement plan for each platform",
+        "metrics": "Engagement rate projections",
+        "success_criteria": "Strategy approved by team with clear KPIs"
+      }
+      // ... more steps
+    ])
   }
 }
 ```
@@ -139,9 +164,19 @@ To provide execution plans for all options:
 
 ## Implementation Priority
 
-1. **High**: Update AI prompt and extraction logic for 3 options
-2. **High**: Add `execution_plan` column to `decision_recommendations` table
-3. **High**: Add `selected_option_id` column to `decisions` table
-4. **High**: Update `/decisions/:id/commit` endpoint to accept and store selected_option_id
-5. **Medium**: Update API to store/return execution_plan
-6. **Low**: Generate execution plans for all options (not just recommended)
+1. **CRITICAL**: Use GPT-4 Turbo or most advanced model available
+2. **CRITICAL**: Update AI prompt to return execution_plan as JSON array (not plain text)
+3. **High**: Update extraction logic for 3 options
+4. **High**: Add `execution_plan` column to `decision_recommendations` table (store as TEXT, containing JSON string)
+5. **High**: Add `selected_option_id` column to `decisions` table
+6. **High**: Update `/decisions/:id/commit` endpoint to accept and store selected_option_id
+7. **Medium**: Allow AI to add custom sections when helpful (parse and store)
+8. **Low**: Generate execution plans for all options (not just recommended)
+
+## Frontend Features (COMPLETED)
+
+The frontend now includes:
+- ✅ **Action Directive Checklist**: Interactive task list in sidebar with progress tracking
+- ✅ **Structured Execution Steps**: Formatted display with timeline, dependencies, metrics
+- ✅ **Progress Tracking**: Visual progress bar and localStorage persistence
+- ✅ **Enhanced Selection UI**: All 3 options displayed with detailed breakdown

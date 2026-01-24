@@ -440,9 +440,10 @@ function updateExecutionPlan() {
     }
     
     // Show execution plan if available
-    // For now, generate a placeholder until backend provides execution plans for all options
     if (currentRecommendation && selectedOptionId === currentRecommendation.recommended_option_id && currentRecommendation.execution_plan) {
-        executionPlanText.textContent = currentRecommendation.execution_plan;
+        // Parse and format execution plan
+        const formattedPlan = formatExecutionPlan(currentRecommendation.execution_plan);
+        executionPlanText.innerHTML = formattedPlan;
         executionPlanCard.style.display = 'block';
     } else {
         // Generate basic guidance for non-recommended options
@@ -459,6 +460,126 @@ function updateExecutionPlan() {
         `;
         executionPlanCard.style.display = 'block';
     }
+}
+
+function formatExecutionPlan(executionPlan) {
+    if (!executionPlan) return '<p>No execution plan available.</p>';
+    
+    // Try to parse as JSON (in case backend sends structured data)
+    try {
+        const parsed = JSON.parse(executionPlan);
+        
+        // If it's a structured plan with steps
+        if (Array.isArray(parsed)) {
+            // Also populate the action directives sidebar
+            populateActionDirectives(parsed);
+            
+            let html = '<div class="execution-steps">';
+            parsed.forEach((step, index) => {
+                html += `
+                    <div class="execution-step">
+                        <div class="execution-step-header">
+                            <span class="execution-step-number">Step ${index + 1}</span>
+                            ${step.step ? `<span class="execution-step-title">${step.step}</span>` : ''}
+                            ${step.timeline ? `<span class="execution-step-timeline">${step.timeline}</span>` : ''}
+                        </div>
+                        ${step.action ? `<div class="execution-step-detail"><strong>Action:</strong> ${step.action}</div>` : ''}
+                        ${step.dependencies ? `<div class="execution-step-detail"><strong>Dependencies:</strong> ${step.dependencies}</div>` : ''}
+                        ${step.validation_point ? `<div class="execution-step-detail"><strong>Validation:</strong> ${step.validation_point}</div>` : ''}
+                        ${step.metrics ? `<div class="execution-step-detail"><strong>Metrics:</strong> ${step.metrics}</div>` : ''}
+                        ${step.success_criteria ? `<div class="execution-step-detail"><strong>Success:</strong> ${step.success_criteria}</div>` : ''}
+                    </div>
+                `;
+            });
+            html += '</div>';
+            return html;
+        }
+    } catch (e) {
+        // Not JSON, treat as plain text
+    }
+    
+    // Format plain text with better readability
+    const formatted = executionPlan
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>')
+        .replace(/(\d+)\.\s+/g, '<br><strong>$1.</strong> ')
+        .replace(/^/, '<p>')
+        .replace(/$/, '</p>');
+    
+    return formatted;
+}
+
+function populateActionDirectives(steps) {
+    const card = document.getElementById('action-directives-card');
+    const list = document.getElementById('action-directives-list');
+    
+    if (!steps || steps.length === 0) {
+        card.style.display = 'none';
+        return;
+    }
+    
+    // Load saved progress from localStorage
+    const progressKey = `action_progress_${currentDecision?.id}`;
+    const savedProgress = JSON.parse(localStorage.getItem(progressKey) || '{}');
+    
+    list.innerHTML = '';
+    let completedCount = 0;
+    
+    steps.forEach((step, index) => {
+        const stepId = `step_${index}`;
+        const isCompleted = savedProgress[stepId] || false;
+        if (isCompleted) completedCount++;
+        
+        const item = document.createElement('div');
+        item.className = `action-directive-item ${isCompleted ? 'completed' : ''}`;
+        item.innerHTML = `
+            <div class="action-directive-checkbox" data-step-id="${stepId}">
+                <svg class="check-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M2 7L5.5 10.5L12 3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="action-directive-content">
+                <div class="action-directive-header">
+                    <strong>${step.step || `Step ${index + 1}`}</strong>
+                    ${step.timeline ? `<span class="action-directive-timeline">${step.timeline}</span>` : ''}
+                </div>
+                <div class="action-directive-action">${step.action}</div>
+                ${step.success_criteria ? `<div class="action-directive-success">✓ ${step.success_criteria}</div>` : ''}
+            </div>
+        `;
+        
+        // Add click handler to toggle completion
+        const checkbox = item.querySelector('.action-directive-checkbox');
+        checkbox.addEventListener('click', () => toggleActionComplete(stepId, item));
+        
+        list.appendChild(item);
+    });
+    
+    // Update progress bar
+    updateProgressBar(completedCount, steps.length);
+    
+    card.style.display = 'block';
+}
+
+function toggleActionComplete(stepId, itemElement) {
+    const progressKey = `action_progress_${currentDecision?.id}`;
+    const savedProgress = JSON.parse(localStorage.getItem(progressKey) || '{}');
+    
+    savedProgress[stepId] = !savedProgress[stepId];
+    localStorage.setItem(progressKey, JSON.stringify(savedProgress));
+    
+    itemElement.classList.toggle('completed');
+    
+    // Recalculate progress
+    const completedCount = Object.values(savedProgress).filter(v => v).length;
+    const totalSteps = document.querySelectorAll('.action-directive-item').length;
+    updateProgressBar(completedCount, totalSteps);
+}
+
+function updateProgressBar(completed, total) {
+    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+    document.getElementById('progress-percentage').textContent = `${percentage}%`;
+    document.getElementById('progress-fill').style.width = `${percentage}%`;
 }
 
 function renderSidebar(decision) {
