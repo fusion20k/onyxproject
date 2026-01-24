@@ -69,7 +69,7 @@
                     <!-- Header Bar -->
                     <header class="workspace-header">
                         <div class="workspace-header-left">
-                            <h1 class="workspace-title">Workspace</h1>
+                            <h1 class="workspace-title"><a href="/app" class="workspace-title-link">Workspace</a></h1>
                         </div>
                         <div class="workspace-header-right">
                             <button class="user-menu-trigger" id="user-menu-main">
@@ -181,6 +181,15 @@
                                     </div>
                                 </section>
 
+                                <!-- Execution Plan Card -->
+                                <section class="decision-card" id="execution-plan-card" style="display: none;">
+                                    <h2 class="card-title">How to execute this decision</h2>
+                                    
+                                    <div class="execution-plan-content" id="execution-plan-content">
+                                        <p id="execution-plan-text">—</p>
+                                    </div>
+                                </section>
+
                                 <!-- Optional Followup Thread -->
                                 <section class="decision-card followup-card" id="followup-card" style="display: none;">
                                     <h2 class="card-title">Ask Onyx a follow-up</h2>
@@ -233,6 +242,20 @@
             </div>
 
         </main>
+    </div>
+
+    <!-- Custom Dialog Modal -->
+    <div id="custom-dialog" class="custom-dialog" style="display: none;">
+        <div class="custom-dialog-overlay"></div>
+        <div class="custom-dialog-content">
+            <div class="custom-dialog-body">
+                <p id="custom-dialog-message"></p>
+            </div>
+            <div class="custom-dialog-actions">
+                <button class="btn btn-primary" id="custom-dialog-confirm">OK</button>
+                <button class="btn btn-ghost" id="custom-dialog-cancel" style="display: none;">Cancel</button>
+            </div>
+        </div>
     </div>
 
     <script src="../js/decision-workspace.js"></script>

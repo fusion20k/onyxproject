@@ -5,6 +5,52 @@ let currentDecision = null;
 let currentOptions = [];
 let currentRecommendation = null;
 
+function showDialog(message, isConfirm = false) {
+    return new Promise((resolve) => {
+        const dialog = document.getElementById('custom-dialog');
+        const messageEl = document.getElementById('custom-dialog-message');
+        const confirmBtn = document.getElementById('custom-dialog-confirm');
+        const cancelBtn = document.getElementById('custom-dialog-cancel');
+        
+        messageEl.textContent = message;
+        
+        if (isConfirm) {
+            cancelBtn.style.display = 'inline-block';
+            confirmBtn.textContent = 'OK';
+        } else {
+            cancelBtn.style.display = 'none';
+            confirmBtn.textContent = 'OK';
+        }
+        
+        dialog.style.display = 'flex';
+        
+        const handleConfirm = () => {
+            dialog.style.display = 'none';
+            confirmBtn.removeEventListener('click', handleConfirm);
+            cancelBtn.removeEventListener('click', handleCancel);
+            resolve(true);
+        };
+        
+        const handleCancel = () => {
+            dialog.style.display = 'none';
+            confirmBtn.removeEventListener('click', handleConfirm);
+            cancelBtn.removeEventListener('click', handleCancel);
+            resolve(false);
+        };
+        
+        confirmBtn.addEventListener('click', handleConfirm);
+        cancelBtn.addEventListener('click', handleCancel);
+    });
+}
+
+function customAlert(message) {
+    return showDialog(message, false);
+}
+
+function customConfirm(message) {
+    return showDialog(message, true);
+}
+
 async function checkAuthStatus() {
     try {
         const sessionData = localStorage.getItem('session');
@@ -453,7 +499,7 @@ function setupEventListeners() {
         } else {
             btn.disabled = false;
             btn.textContent = 'This looks right';
-            alert('Failed to run stress test. Please try again.');
+            await customAlert('Failed to run stress test. Please try again.');
         }
     });
 
@@ -485,12 +531,10 @@ function setupEventListeners() {
     });
 
     document.getElementById('commit-decision-btn')?.addEventListener('click', async () => {
-        const note = prompt('Add a note about this decision (optional):');
-        
-        const result = await commitDecision(currentDecision.id, note || '');
+        const result = await commitDecision(currentDecision.id, '');
         
         if (result.success) {
-            alert('Decision committed! Moving to library.');
+            await customAlert('Decision committed! Moving to library.');
             window.location.reload();
         }
     });
@@ -500,17 +544,17 @@ function setupEventListeners() {
     });
 
     document.getElementById('delete-decision-btn')?.addEventListener('click', async () => {
-        const confirmed = confirm('Are you sure you want to delete this decision? This cannot be undone.');
+        const confirmed = await customConfirm('Are you sure you want to delete this decision? This cannot be undone.');
         
         if (!confirmed) return;
         
         const result = await deleteDecision(currentDecision.id);
         
         if (result.success) {
-            alert('Decision deleted.');
+            await customAlert('Decision deleted.');
             window.location.href = '/app/library.html';
         } else {
-            alert('Failed to delete decision. Please try again.');
+            await customAlert('Failed to delete decision. Please try again.');
         }
     });
 
