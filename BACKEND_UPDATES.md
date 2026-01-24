@@ -57,6 +57,16 @@ ALTER TABLE decision_recommendations
 ADD COLUMN execution_plan TEXT;
 ```
 
+**Table**: `decisions`
+
+### Add new column to track user's selected option:
+```sql
+ALTER TABLE decisions
+ADD COLUMN selected_option_id UUID REFERENCES decision_options(id);
+```
+
+This will store which option the user actually chose to commit to (may differ from the recommended option).
+
 ## 3. API Endpoint Updates
 
 ### `/decisions/create` (POST)
@@ -68,24 +78,38 @@ ADD COLUMN execution_plan TEXT;
 - Extract 3 options from analysis
 - Store execution_plan
 
-## 4. Frontend Display
+### `/decisions/:id/commit` (POST)
+- **NEW**: Accept `selected_option_id` in request body
+- Store the user's selected option ID in `decisions.selected_option_id`
+- This allows tracking which option the user actually chose (vs. what was recommended)
 
-The frontend already handles multiple options dynamically, so displaying 3 instead of 2 will work automatically.
-
-### Add Execution Plan Display
-
-You may want to add a new card in the workspace UI to display the execution plan separately, or append it to the recommendation card.
-
-Example placement in `app/index.html` (optional):
-```html
-<!-- After Analysis Card -->
-<section class="decision-card" id="execution-card">
-    <h2 class="card-title">Execution plan</h2>
-    <div id="execution-plan-content" class="execution-plan-content">
-        <!-- Rendered from recommendation.execution_plan -->
-    </div>
-</section>
+Request body:
+```json
+{
+  "note": "optional commit note",
+  "selected_option_id": "uuid-of-chosen-option"
+}
 ```
+
+## 4. Frontend Updates (COMPLETED)
+
+The frontend now includes:
+
+### ✅ Enhanced Analysis Section
+- Shows all 3 options as selectable cards
+- Displays detailed breakdown: upside, downside, key assumptions for each option
+- Marks recommended option with "RECOMMENDED" badge
+- Allows user to select which option they want (not just recommended)
+
+### ✅ Execution Plan Card
+- Shows execution plan for selected option
+- For recommended option: displays full execution_plan from backend
+- For other options: shows basic guidance until backend provides execution plans for all options
+
+### ✅ Commit Flow
+- Updated to include user's selected option
+- Sends `selected_option_id` to backend when committing
+- Shows confirmation dialog with selected option name
 
 ## Testing
 
@@ -97,9 +121,27 @@ After implementing these changes:
 4. Test the "This looks right" button triggers stress test
 5. Verify committed decisions can be viewed, edited, and deleted
 
+## 5. Future Enhancement: Execution Plans for All Options (Optional)
+
+Currently, the AI only generates an execution plan for the **recommended option**. 
+
+To provide execution plans for all options:
+- Modify AI prompt to generate execution plan for each of the 3 options
+- Store execution_plan_json as JSON in recommendation table with structure:
+  ```json
+  {
+    "option_a_id": "step-by-step plan...",
+    "option_b_id": "step-by-step plan...",
+    "option_c_id": "step-by-step plan..."
+  }
+  ```
+- Frontend will automatically display the appropriate plan when user selects an option
+
 ## Implementation Priority
 
 1. **High**: Update AI prompt and extraction logic for 3 options
-2. **High**: Add execution_plan database column
-3. **Medium**: Update API to store/return execution_plan
-4. **Low**: Add separate execution plan UI card (can append to recommendation card for now)
+2. **High**: Add `execution_plan` column to `decision_recommendations` table
+3. **High**: Add `selected_option_id` column to `decisions` table
+4. **High**: Update `/decisions/:id/commit` endpoint to accept and store selected_option_id
+5. **Medium**: Update API to store/return execution_plan
+6. **Low**: Generate execution plans for all options (not just recommended)

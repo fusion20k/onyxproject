@@ -4,6 +4,7 @@ let currentUser = null;
 let currentDecision = null;
 let currentOptions = [];
 let currentRecommendation = null;
+let selectedOptionId = null;
 
 function showDialog(message, isConfirm = false) {
     return new Promise((resolve) => {
@@ -172,7 +173,7 @@ async function confirmUnderstanding(decisionId, updates) {
     }
 }
 
-async function commitDecision(decisionId, note) {
+async function commitDecision(decisionId, note, selectedOptionId) {
     try {
         const sessionData = localStorage.getItem('session');
         const session = sessionData ? JSON.parse(sessionData) : null;
@@ -185,7 +186,10 @@ async function commitDecision(decisionId, note) {
                 'Authorization': `Bearer ${accessToken}`
             },
             credentials: 'include',
-            body: JSON.stringify({ note })
+            body: JSON.stringify({ 
+                note,
+                selected_option_id: selectedOptionId 
+            })
         });
 
         return await response.json();
@@ -340,9 +344,121 @@ function renderRecommendation(recommendation, options) {
 
     const recommendedOption = options.find(opt => opt.id === recommendation.recommended_option_id);
     
+    // Set default selected option to recommended
+    if (!selectedOptionId) {
+        selectedOptionId = recommendation.recommended_option_id;
+    }
+    
     document.getElementById('recommended-option-name').textContent = recommendedOption?.name || '—';
     document.getElementById('recommendation-reasoning').textContent = recommendation.reasoning || '—';
     document.getElementById('alternatives-text').textContent = recommendation.why_not_alternatives || '—';
+    
+    // Render selectable option cards
+    renderSelectableOptions(options, recommendation.recommended_option_id);
+    
+    // Show execution plan for selected option
+    updateExecutionPlan();
+}
+
+function renderSelectableOptions(options, recommendedOptionId) {
+    const container = document.getElementById('selectable-options-container');
+    container.innerHTML = '';
+    
+    options.forEach(option => {
+        const card = document.createElement('div');
+        card.className = 'selectable-option-card';
+        card.dataset.optionId = option.id;
+        
+        if (option.id === recommendedOptionId) {
+            card.classList.add('recommended');
+        }
+        
+        if (option.id === selectedOptionId) {
+            card.classList.add('selected');
+        }
+        
+        const fragilityClass = `fragility-${option.fragility_score || 'balanced'}`;
+        
+        card.innerHTML = `
+            <div class="selectable-option-header">
+                <h3 class="selectable-option-name">${option.name}</h3>
+                <span class="fragility-badge ${fragilityClass}">${option.fragility_score || 'balanced'}</span>
+            </div>
+            
+            <div class="selectable-option-body">
+                <div class="selectable-option-detail">
+                    <div class="selectable-option-detail-label">Upside</div>
+                    <div class="selectable-option-detail-text">${option.upside || '—'}</div>
+                </div>
+                
+                <div class="selectable-option-detail">
+                    <div class="selectable-option-detail-label">Downside</div>
+                    <div class="selectable-option-detail-text">${option.downside || '—'}</div>
+                </div>
+                
+                <div class="selectable-option-detail">
+                    <div class="selectable-option-detail-label">Key assumptions</div>
+                    <ul class="selectable-option-assumptions">
+                        ${Array.isArray(option.key_assumptions) 
+                            ? option.key_assumptions.map(a => `<li>${a}</li>`).join('') 
+                            : '<li>—</li>'}
+                    </ul>
+                </div>
+            </div>
+        `;
+        
+        card.addEventListener('click', () => selectOption(option.id));
+        
+        container.appendChild(card);
+    });
+}
+
+function selectOption(optionId) {
+    selectedOptionId = optionId;
+    
+    // Update UI
+    document.querySelectorAll('.selectable-option-card').forEach(card => {
+        if (card.dataset.optionId === optionId) {
+            card.classList.add('selected');
+        } else {
+            card.classList.remove('selected');
+        }
+    });
+    
+    // Update execution plan
+    updateExecutionPlan();
+}
+
+function updateExecutionPlan() {
+    const selectedOption = currentOptions.find(opt => opt.id === selectedOptionId);
+    const executionPlanCard = document.getElementById('execution-plan-card');
+    const executionPlanText = document.getElementById('execution-plan-text');
+    
+    if (!selectedOption) {
+        executionPlanCard.style.display = 'none';
+        return;
+    }
+    
+    // Show execution plan if available
+    // For now, generate a placeholder until backend provides execution plans for all options
+    if (currentRecommendation && selectedOptionId === currentRecommendation.recommended_option_id && currentRecommendation.execution_plan) {
+        executionPlanText.textContent = currentRecommendation.execution_plan;
+        executionPlanCard.style.display = 'block';
+    } else {
+        // Generate basic guidance for non-recommended options
+        executionPlanText.innerHTML = `
+            <p><strong>You've selected: ${selectedOption.name}</strong></p>
+            <p>To execute this option effectively:</p>
+            <ol style="margin: 12px 0; padding-left: 20px;">
+                <li>Validate your key assumptions first: ${Array.isArray(selectedOption.key_assumptions) ? selectedOption.key_assumptions.join(', ') : 'Review the assumptions listed above'}</li>
+                <li>Monitor for downside risks: ${selectedOption.downside || 'Watch for potential failures'}</li>
+                <li>Set checkpoints to measure if this is working as expected</li>
+                <li>Have a fallback plan if early indicators show this isn't panning out</li>
+            </ol>
+            <p style="color: #888; font-size: 14px; font-style: italic;">Note: Detailed execution plans are currently only available for the recommended option. Consider asking Onyx a follow-up question for more specific guidance.</p>
+        `;
+        executionPlanCard.style.display = 'block';
+    }
 }
 
 function renderSidebar(decision) {
@@ -531,11 +647,25 @@ function setupEventListeners() {
     });
 
     document.getElementById('commit-decision-btn')?.addEventListener('click', async () => {
-        const result = await commitDecision(currentDecision.id, '');
+        if (!selectedOptionId) {
+            await customAlert('Please select an option before committing.');
+            return;
+        }
+        
+        const selectedOption = currentOptions.find(opt => opt.id === selectedOptionId);
+        const optionName = selectedOption?.name || 'this option';
+        
+        const confirmed = await customConfirm(`You're about to commit to: "${optionName}". This will move the decision to your library. Continue?`);
+        
+        if (!confirmed) return;
+        
+        const result = await commitDecision(currentDecision.id, '', selectedOptionId);
         
         if (result.success) {
             await customAlert('Decision committed! Moving to library.');
             window.location.reload();
+        } else {
+            await customAlert('Failed to commit decision. Please try again.');
         }
     });
 

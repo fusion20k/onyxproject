@@ -157,26 +157,31 @@
                                     <h2 class="card-title">Analysis</h2>
                                     
                                     <div class="recommendation-content">
-                                        <div class="recommended-option">
-                                            <span class="recommendation-label">Most robust option:</span>
+                                        <div class="analysis-intro">
+                                            <span class="recommendation-label">Onyx recommends:</span>
                                             <h3 id="recommended-option-name">—</h3>
+                                            <p id="recommendation-reasoning" class="recommendation-text">—</p>
                                         </div>
-                                        
-                                        <p id="recommendation-reasoning" class="recommendation-text">—</p>
+
+                                        <div class="option-selection-section">
+                                            <h4>Choose which option you want to pursue:</h4>
+                                            <div id="selectable-options-container" class="selectable-options-grid">
+                                                <!-- Options populated by JS -->
+                                            </div>
+                                        </div>
+
+                                        <div id="alternatives-section" class="alternatives-section">
+                                            <h4>Why not the other options?</h4>
+                                            <p id="alternatives-text">—</p>
+                                        </div>
                                         
                                         <div class="card-actions" id="active-decision-actions">
                                             <button class="btn btn-primary" id="commit-decision-btn">Commit to this plan</button>
-                                            <button class="btn btn-ghost" id="show-alternatives-btn">Show me why not the others</button>
                                         </div>
                                         
                                         <div class="card-actions" id="committed-decision-actions" style="display: none;">
                                             <button class="btn btn-secondary" id="back-to-library-btn">← Back to library</button>
                                             <button class="btn btn-ghost" id="delete-decision-btn">Delete decision</button>
-                                        </div>
-
-                                        <div id="alternatives-section" class="alternatives-section" style="display: none;">
-                                            <h4>Why not the alternatives?</h4>
-                                            <p id="alternatives-text">—</p>
                                         </div>
                                     </div>
                                 </section>
