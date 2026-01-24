@@ -128,98 +128,12 @@ function renderLibrary(decisions) {
             <div class="library-item-action">Open →</div>
         `;
         
-        item.addEventListener('click', () => openDecisionModal(decision.id));
+        item.addEventListener('click', () => {
+            window.location.href = `/app?decision_id=${decision.id}`;
+        });
         
         container.appendChild(item);
     });
-}
-
-async function openDecisionModal(decisionId) {
-    const modal = document.getElementById('decision-modal');
-    const modalBody = document.getElementById('modal-body');
-    const modalTitle = document.getElementById('modal-title');
-    
-    modalBody.innerHTML = '<p style="text-align: center; padding: 40px; color: #888;">Loading...</p>';
-    modal.style.display = 'block';
-    
-    const data = await loadDecisionDetail(decisionId);
-    
-    if (!data.success || !data.decision) {
-        modalBody.innerHTML = '<p style="text-align: center; padding: 40px; color: #ff6b6b;">Failed to load decision</p>';
-        return;
-    }
-
-    const { decision, options, recommendation } = data;
-    
-    modalTitle.textContent = decision.title || 'Decision Detail';
-    
-    let html = '';
-    
-    html += `
-        <div class="modal-section">
-            <h3 class="modal-section-title">Understanding</h3>
-            <ul class="modal-understanding-list">
-                <li><strong>Goal:</strong> ${decision.goal || '—'}</li>
-                <li><strong>Time horizon:</strong> ${decision.time_horizon || '—'}</li>
-                <li><strong>Constraints:</strong> ${Array.isArray(decision.constraints) ? decision.constraints.join(', ') : '—'}</li>
-                <li><strong>Primary metric:</strong> ${decision.primary_metric || '—'}</li>
-                <li><strong>Risk tolerance:</strong> ${decision.risk_tolerance || '—'}</li>
-            </ul>
-        </div>
-    `;
-    
-    if (options && options.length > 0) {
-        html += `
-            <div class="modal-section">
-                <h3 class="modal-section-title">Options Analyzed</h3>
-                <div class="modal-options">
-        `;
-        
-        options.forEach(option => {
-            const fragilityClass = `fragility-${option.fragility_score || 'balanced'}`;
-            html += `
-                <div class="modal-option">
-                    <div class="modal-option-header">
-                        <h4 class="modal-option-name">${option.name}</h4>
-                        <span class="fragility-badge ${fragilityClass}">${option.fragility_score || 'balanced'}</span>
-                    </div>
-                    <div class="modal-option-detail">
-                        <div class="modal-option-label">Upside</div>
-                        <div class="modal-option-text">${option.upside || '—'}</div>
-                    </div>
-                    <div class="modal-option-detail">
-                        <div class="modal-option-label">Downside</div>
-                        <div class="modal-option-text">${option.downside || '—'}</div>
-                    </div>
-                </div>
-            `;
-        });
-        
-        html += `
-                </div>
-            </div>
-        `;
-    }
-    
-    if (recommendation) {
-        const recommendedOption = options?.find(opt => opt.id === recommendation.recommended_option_id);
-        html += `
-            <div class="modal-section">
-                <h3 class="modal-section-title">Analysis</h3>
-                <div class="modal-recommendation">
-                    <span class="modal-recommendation-label">Most robust option:</span>
-                    <h3>${recommendedOption?.name || 'Unknown'}</h3>
-                    <p>${recommendation.reasoning || '—'}</p>
-                </div>
-            </div>
-        `;
-    }
-    
-    modalBody.innerHTML = html;
-}
-
-function closeModal() {
-    document.getElementById('decision-modal').style.display = 'none';
 }
 
 async function logout() {
@@ -298,9 +212,6 @@ function setupEventListeners() {
             window.location.href = '/app';
         }
     });
-
-    document.getElementById('modal-close')?.addEventListener('click', closeModal);
-    document.getElementById('modal-overlay')?.addEventListener('click', closeModal);
 }
 
 document.addEventListener('DOMContentLoaded', initialize);

@@ -74,6 +74,35 @@ async function loadActiveDecision() {
     }
 }
 
+async function loadDecisionById(decisionId) {
+    try {
+        const sessionData = localStorage.getItem('session');
+        const session = sessionData ? JSON.parse(sessionData) : null;
+        const accessToken = session?.access_token;
+        
+        if (!accessToken) {
+            return { success: false };
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/decisions/library/${decisionId}`, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            return { success: false };
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error loading decision by ID:', error);
+        return { success: false };
+    }
+}
+
 async function confirmUnderstanding(decisionId, updates) {
     try {
         const sessionData = localStorage.getItem('session');
@@ -116,6 +145,27 @@ async function commitDecision(decisionId, note) {
         return await response.json();
     } catch (error) {
         console.error('Error committing decision:', error);
+        return { success: false };
+    }
+}
+
+async function deleteDecision(decisionId) {
+    try {
+        const sessionData = localStorage.getItem('session');
+        const session = sessionData ? JSON.parse(sessionData) : null;
+        const accessToken = session?.access_token;
+        
+        const response = await fetch(`${API_BASE_URL}/decisions/${decisionId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            },
+            credentials: 'include'
+        });
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error deleting decision:', error);
         return { success: false };
     }
 }
@@ -165,6 +215,10 @@ function renderDecision(decision, options, recommendation, followups) {
     renderStressTests(options);
     renderRecommendation(recommendation, options);
     renderSidebar(decision);
+    
+    const isCommitted = decision.status === 'committed';
+    document.getElementById('active-decision-actions').style.display = isCommitted ? 'none' : 'flex';
+    document.getElementById('committed-decision-actions').style.display = isCommitted ? 'flex' : 'none';
     
     if (followups && followups.length > 0) {
         renderFollowups(followups);
@@ -326,7 +380,16 @@ async function initialize() {
 
     showState('workspace-state');
 
-    const decisionData = await loadActiveDecision();
+    const urlParams = new URLSearchParams(window.location.search);
+    const decisionId = urlParams.get('decision_id');
+    
+    let decisionData;
+    
+    if (decisionId) {
+        decisionData = await loadDecisionById(decisionId);
+    } else {
+        decisionData = await loadActiveDecision();
+    }
 
     if (decisionData.success && decisionData.decision) {
         renderDecision(
@@ -413,6 +476,25 @@ function setupEventListeners() {
         if (result.success) {
             alert('Decision committed! Moving to library.');
             window.location.reload();
+        }
+    });
+
+    document.getElementById('back-to-library-btn')?.addEventListener('click', () => {
+        window.location.href = '/app/library.html';
+    });
+
+    document.getElementById('delete-decision-btn')?.addEventListener('click', async () => {
+        const confirmed = confirm('Are you sure you want to delete this decision? This cannot be undone.');
+        
+        if (!confirmed) return;
+        
+        const result = await deleteDecision(currentDecision.id);
+        
+        if (result.success) {
+            alert('Decision deleted.');
+            window.location.href = '/app/library.html';
+        } else {
+            alert('Failed to delete decision. Please try again.');
         }
     });
 

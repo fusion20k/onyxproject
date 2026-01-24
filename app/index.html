@@ -164,9 +164,14 @@
                                         
                                         <p id="recommendation-reasoning" class="recommendation-text">—</p>
                                         
-                                        <div class="card-actions">
+                                        <div class="card-actions" id="active-decision-actions">
                                             <button class="btn btn-primary" id="commit-decision-btn">Commit to this plan</button>
                                             <button class="btn btn-ghost" id="show-alternatives-btn">Show me why not the others</button>
+                                        </div>
+                                        
+                                        <div class="card-actions" id="committed-decision-actions" style="display: none;">
+                                            <button class="btn btn-secondary" id="back-to-library-btn">← Back to library</button>
+                                            <button class="btn btn-ghost" id="delete-decision-btn">Delete decision</button>
                                         </div>
 
                                         <div id="alternatives-section" class="alternatives-section" style="display: none;">
