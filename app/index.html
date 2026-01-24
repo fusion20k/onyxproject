@@ -85,48 +85,44 @@
 
                     <!-- No Active Decision State -->
                     <div id="no-decision-state" class="empty-decision-state" style="display: none;">
-                        <div class="empty-workspace-layout">
-                            <div class="empty-workspace-main">
-                                <h2>No active decision</h2>
-                                <p>Start a new decision analysis to get Onyx's assessment.</p>
-                                <a href="/app/new-decision.html" class="btn btn-primary">Start new decision</a>
+                        <h2>No active decision</h2>
+                        <p>Start a new decision analysis to get Onyx's assessment.</p>
+                        <a href="/app/new-decision.html" class="btn btn-primary">Start new decision</a>
+                    </div>
+                    
+                    <!-- Action Directives Sidebar (always visible on workspace) -->
+                    <aside class="workspace-directives-sidebar" id="workspace-directives-sidebar" style="display: none;">
+                        <div class="summary-card action-directives-card" id="workspace-action-directives-card">
+                            <div class="action-directives-header">
+                                <h3 class="summary-title">Action directives</h3>
+                                <select id="workspace-decision-selector" class="decision-selector" style="display: none;">
+                                    <!-- Populated by JS -->
+                                </select>
                             </div>
                             
-                            <!-- Action Directives Sidebar (always visible) -->
-                            <aside class="workspace-directives-sidebar">
-                                <div class="summary-card action-directives-card" id="workspace-action-directives-card">
-                                    <div class="action-directives-header">
-                                        <h3 class="summary-title">Action directives</h3>
-                                        <select id="workspace-decision-selector" class="decision-selector" style="display: none;">
-                                            <!-- Populated by JS -->
-                                        </select>
+                            <div id="workspace-empty-directives" class="empty-directives-state">
+                                <p>Commit a decision to see your action plan here.</p>
+                            </div>
+                            
+                            <div id="workspace-directives-content" style="display: none;">
+                                <p class="action-directives-subtitle">Your roadmap to success</p>
+                                
+                                <div id="workspace-action-directives-list" class="action-directives-list">
+                                    <!-- Populated by JS -->
+                                </div>
+                                
+                                <div class="action-directives-progress">
+                                    <div class="progress-label">
+                                        <span>Progress</span>
+                                        <span id="workspace-progress-percentage">0%</span>
                                     </div>
-                                    
-                                    <div id="workspace-empty-directives" class="empty-directives-state">
-                                        <p>Commit a decision to see your action plan here.</p>
-                                    </div>
-                                    
-                                    <div id="workspace-directives-content" style="display: none;">
-                                        <p class="action-directives-subtitle">Your roadmap to success</p>
-                                        
-                                        <div id="workspace-action-directives-list" class="action-directives-list">
-                                            <!-- Populated by JS -->
-                                        </div>
-                                        
-                                        <div class="action-directives-progress">
-                                            <div class="progress-label">
-                                                <span>Progress</span>
-                                                <span id="workspace-progress-percentage">0%</span>
-                                            </div>
-                                            <div class="progress-bar">
-                                                <div class="progress-fill" id="workspace-progress-fill" style="width: 0%"></div>
-                                            </div>
-                                        </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" id="workspace-progress-fill" style="width: 0%"></div>
                                     </div>
                                 </div>
-                            </aside>
+                            </div>
                         </div>
-                    </div>
+                    </aside>
 
                     <!-- Active Decision View -->
                     <div id="decision-view" class="decision-view" style="display: none;">

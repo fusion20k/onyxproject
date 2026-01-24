@@ -130,41 +130,15 @@
     padding: 40px 20px;
 }
 
-.empty-workspace-layout {
-    display: grid;
-    grid-template-columns: 1fr 400px;
-    gap: 32px;
-    max-width: 1400px;
-    margin: 0 auto;
-}
-
-.empty-workspace-main {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    min-height: 400px;
-}
-
-.empty-workspace-main h2 {
-    font-size: 28px;
-    margin: 0 0 16px 0;
-    color: #ffffff;
-}
-
-.empty-workspace-main p {
-    font-size: 16px;
-    color: #888;
-    margin: 0 0 32px 0;
-}
-
 .workspace-directives-sidebar {
-    position: sticky;
-    top: 20px;
+    position: fixed;
+    top: 93px;
+    right: 20px;
+    width: 380px;
     height: fit-content;
-    max-height: calc(100vh - 100px);
+    max-height: calc(100vh - 113px);
     overflow-y: auto;
+    z-index: 10;
 }
 
 .decision-view {
@@ -908,13 +882,12 @@ select.input {
         position: static;
     }
     
-    .empty-workspace-layout {
-        grid-template-columns: 1fr;
-    }
-    
     .workspace-directives-sidebar {
         position: static;
+        width: 100%;
         max-height: none;
+        right: auto;
+        top: auto;
     }
 }
 
