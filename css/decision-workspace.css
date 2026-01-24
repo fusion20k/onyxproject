@@ -134,6 +134,22 @@
     text-align: center;
 }
 
+.empty-decision-state h2 {
+    font-size: 32px;
+    font-weight: 600;
+    color: #ffffff;
+    margin: 0 0 24px 0;
+    letter-spacing: -0.02em;
+}
+
+.empty-decision-state p {
+    font-size: 16px;
+    color: #888;
+    margin: 0 0 40px 0;
+    max-width: 480px;
+    line-height: 1.6;
+}
+
 .workspace-directives-sidebar {
     position: fixed;
     top: 93px;
