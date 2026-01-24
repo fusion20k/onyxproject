@@ -441,6 +441,22 @@ function setupEventListeners() {
         document.getElementById('understanding-edit').style.display = 'none';
     });
 
+    document.getElementById('confirm-understanding-btn')?.addEventListener('click', async () => {
+        const btn = document.getElementById('confirm-understanding-btn');
+        btn.disabled = true;
+        btn.textContent = 'Running stress test...';
+        
+        const result = await confirmUnderstanding(currentDecision.id, {});
+        
+        if (result.success) {
+            window.location.reload();
+        } else {
+            btn.disabled = false;
+            btn.textContent = 'This looks right';
+            alert('Failed to run stress test. Please try again.');
+        }
+    });
+
     document.getElementById('save-understanding-btn')?.addEventListener('click', async () => {
         const updates = {
             goal: document.getElementById('edit-goal').value,
