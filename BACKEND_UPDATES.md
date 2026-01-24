@@ -82,15 +82,7 @@ ALTER TABLE decision_recommendations
 ADD COLUMN execution_plan TEXT;
 ```
 
-**Table**: `decisions`
 
-### Add new column to track user's selected option:
-```sql
-ALTER TABLE decisions
-ADD COLUMN selected_option_id UUID REFERENCES decision_options(id);
-```
-
-This will store which option the user actually chose to commit to (may differ from the recommended option).
 
 ## 3. API Endpoint Updates
 
@@ -104,15 +96,13 @@ This will store which option the user actually chose to commit to (may differ fr
 - Store execution_plan
 
 ### `/decisions/:id/commit` (POST)
-- **NEW**: Accept `selected_option_id` in request body
-- Store the user's selected option ID in `decisions.selected_option_id`
-- This allows tracking which option the user actually chose (vs. what was recommended)
+- Commits the decision with Onyx's recommended option
+- User cannot override the recommendation
 
 Request body:
 ```json
 {
-  "note": "optional commit note",
-  "selected_option_id": "uuid-of-chosen-option"
+  "note": "optional commit note"
 }
 ```
 
@@ -168,15 +158,16 @@ To provide execution plans for all options:
 2. **CRITICAL**: Update AI prompt to return execution_plan as JSON array (not plain text)
 3. **High**: Update extraction logic for 3 options
 4. **High**: Add `execution_plan` column to `decision_recommendations` table (store as TEXT, containing JSON string)
-5. **High**: Add `selected_option_id` column to `decisions` table
-6. **High**: Update `/decisions/:id/commit` endpoint to accept and store selected_option_id
-7. **Medium**: Allow AI to add custom sections when helpful (parse and store)
-8. **Low**: Generate execution plans for all options (not just recommended)
+5. **Medium**: Allow AI to add custom sections when helpful (parse and store)
+6. **Low**: Generate execution plans for all options (not just recommended - currently only recommended option gets full plan)
 
 ## Frontend Features (COMPLETED)
 
 The frontend now includes:
-- ✅ **Action Directive Checklist**: Interactive task list in sidebar with progress tracking
-- ✅ **Structured Execution Steps**: Formatted display with timeline, dependencies, metrics
-- ✅ **Progress Tracking**: Visual progress bar and localStorage persistence
-- ✅ **Enhanced Selection UI**: All 3 options displayed with detailed breakdown
+- ✅ **Workspace Action Directives**: Always-visible action plan on main workspace page
+- ✅ **Decision Switcher**: Dropdown to switch between multiple committed decisions' action plans
+- ✅ **Progress Tracking**: Visual progress bar with localStorage persistence per decision
+- ✅ **Interactive Checklist**: Click-to-complete tasks with strikethrough styling
+- ✅ **Analysis Display**: Shows Onyx's recommended option with detailed reasoning
+- ✅ **Stress Test View**: All 3 options displayed with upside/downside/assumptions
+- ✅ **Structured Execution Steps**: Timeline, dependencies, validation points, metrics, success criteria

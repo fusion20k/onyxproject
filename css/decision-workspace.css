@@ -641,6 +641,43 @@ select.input {
     margin-top: 20px;
 }
 
+.action-directives-header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.decision-selector {
+    width: 100%;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 14px;
+    color: #e8e8e8;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.decision-selector:focus {
+    outline: none;
+    border-color: #00cc66;
+}
+
+.decision-selector option {
+    background: #0a0a0a;
+    color: #e8e8e8;
+}
+
+.empty-directives-state {
+    padding: 40px 20px;
+    text-align: center;
+    color: #777;
+    font-size: 14px;
+}
+
 .action-directives-subtitle {
     font-size: 13px;
     color: #888;
@@ -848,6 +885,15 @@ select.input {
 
     .decision-sidebar {
         position: static;
+    }
+    
+    .empty-workspace-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .workspace-directives-sidebar {
+        position: static;
+        max-height: none;
     }
 }
 

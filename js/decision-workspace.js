@@ -4,7 +4,6 @@ let currentUser = null;
 let currentDecision = null;
 let currentOptions = [];
 let currentRecommendation = null;
-let selectedOptionId = null;
 
 function showDialog(message, isConfirm = false) {
     return new Promise((resolve) => {
@@ -173,7 +172,7 @@ async function confirmUnderstanding(decisionId, updates) {
     }
 }
 
-async function commitDecision(decisionId, note, selectedOptionId) {
+async function commitDecision(decisionId, note) {
     try {
         const sessionData = localStorage.getItem('session');
         const session = sessionData ? JSON.parse(sessionData) : null;
@@ -186,10 +185,7 @@ async function commitDecision(decisionId, note, selectedOptionId) {
                 'Authorization': `Bearer ${accessToken}`
             },
             credentials: 'include',
-            body: JSON.stringify({ 
-                note,
-                selected_option_id: selectedOptionId 
-            })
+            body: JSON.stringify({ note })
         });
 
         return await response.json();
@@ -344,122 +340,27 @@ function renderRecommendation(recommendation, options) {
 
     const recommendedOption = options.find(opt => opt.id === recommendation.recommended_option_id);
     
-    // Set default selected option to recommended
-    if (!selectedOptionId) {
-        selectedOptionId = recommendation.recommended_option_id;
-    }
-    
     document.getElementById('recommended-option-name').textContent = recommendedOption?.name || '—';
     document.getElementById('recommendation-reasoning').textContent = recommendation.reasoning || '—';
     document.getElementById('alternatives-text').textContent = recommendation.why_not_alternatives || '—';
     
-    // Render selectable option cards
-    renderSelectableOptions(options, recommendation.recommended_option_id);
-    
-    // Show execution plan for selected option
-    updateExecutionPlan();
-}
-
-function renderSelectableOptions(options, recommendedOptionId) {
-    const container = document.getElementById('selectable-options-container');
-    container.innerHTML = '';
-    
-    options.forEach(option => {
-        const card = document.createElement('div');
-        card.className = 'selectable-option-card';
-        card.dataset.optionId = option.id;
-        
-        if (option.id === recommendedOptionId) {
-            card.classList.add('recommended');
-        }
-        
-        if (option.id === selectedOptionId) {
-            card.classList.add('selected');
-        }
-        
-        const fragilityClass = `fragility-${option.fragility_score || 'balanced'}`;
-        
-        card.innerHTML = `
-            <div class="selectable-option-header">
-                <h3 class="selectable-option-name">${option.name}</h3>
-                <span class="fragility-badge ${fragilityClass}">${option.fragility_score || 'balanced'}</span>
-            </div>
-            
-            <div class="selectable-option-body">
-                <div class="selectable-option-detail">
-                    <div class="selectable-option-detail-label">Upside</div>
-                    <div class="selectable-option-detail-text">${option.upside || '—'}</div>
-                </div>
-                
-                <div class="selectable-option-detail">
-                    <div class="selectable-option-detail-label">Downside</div>
-                    <div class="selectable-option-detail-text">${option.downside || '—'}</div>
-                </div>
-                
-                <div class="selectable-option-detail">
-                    <div class="selectable-option-detail-label">Key assumptions</div>
-                    <ul class="selectable-option-assumptions">
-                        ${Array.isArray(option.key_assumptions) 
-                            ? option.key_assumptions.map(a => `<li>${a}</li>`).join('') 
-                            : '<li>—</li>'}
-                    </ul>
-                </div>
-            </div>
-        `;
-        
-        card.addEventListener('click', () => selectOption(option.id));
-        
-        container.appendChild(card);
-    });
-}
-
-function selectOption(optionId) {
-    selectedOptionId = optionId;
-    
-    // Update UI
-    document.querySelectorAll('.selectable-option-card').forEach(card => {
-        if (card.dataset.optionId === optionId) {
-            card.classList.add('selected');
-        } else {
-            card.classList.remove('selected');
-        }
-    });
-    
-    // Update execution plan
+    // Show execution plan
     updateExecutionPlan();
 }
 
 function updateExecutionPlan() {
-    const selectedOption = currentOptions.find(opt => opt.id === selectedOptionId);
     const executionPlanCard = document.getElementById('execution-plan-card');
     const executionPlanText = document.getElementById('execution-plan-text');
     
-    if (!selectedOption) {
+    if (!currentRecommendation || !currentRecommendation.execution_plan) {
         executionPlanCard.style.display = 'none';
         return;
     }
     
-    // Show execution plan if available
-    if (currentRecommendation && selectedOptionId === currentRecommendation.recommended_option_id && currentRecommendation.execution_plan) {
-        // Parse and format execution plan
-        const formattedPlan = formatExecutionPlan(currentRecommendation.execution_plan);
-        executionPlanText.innerHTML = formattedPlan;
-        executionPlanCard.style.display = 'block';
-    } else {
-        // Generate basic guidance for non-recommended options
-        executionPlanText.innerHTML = `
-            <p><strong>You've selected: ${selectedOption.name}</strong></p>
-            <p>To execute this option effectively:</p>
-            <ol style="margin: 12px 0; padding-left: 20px;">
-                <li>Validate your key assumptions first: ${Array.isArray(selectedOption.key_assumptions) ? selectedOption.key_assumptions.join(', ') : 'Review the assumptions listed above'}</li>
-                <li>Monitor for downside risks: ${selectedOption.downside || 'Watch for potential failures'}</li>
-                <li>Set checkpoints to measure if this is working as expected</li>
-                <li>Have a fallback plan if early indicators show this isn't panning out</li>
-            </ol>
-            <p style="color: #888; font-size: 14px; font-style: italic;">Note: Detailed execution plans are currently only available for the recommended option. Consider asking Onyx a follow-up question for more specific guidance.</p>
-        `;
-        executionPlanCard.style.display = 'block';
-    }
+    // Parse and format execution plan
+    const formattedPlan = formatExecutionPlan(currentRecommendation.execution_plan);
+    executionPlanText.innerHTML = formattedPlan;
+    executionPlanCard.style.display = 'block';
 }
 
 function formatExecutionPlan(executionPlan) {
@@ -617,6 +518,169 @@ function renderFollowups(followups) {
 function showNoDecisionState() {
     document.getElementById('no-decision-state').style.display = 'block';
     document.getElementById('decision-view').style.display = 'none';
+    
+    // Load workspace directives
+    loadWorkspaceDirectives();
+}
+
+async function loadWorkspaceDirectives() {
+    try {
+        const sessionData = localStorage.getItem('session');
+        const session = sessionData ? JSON.parse(sessionData) : null;
+        const accessToken = session?.access_token;
+        
+        const response = await fetch(`${API_BASE_URL}/decisions/library`, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) return;
+        
+        const data = await response.json();
+        const decisions = data.decisions || [];
+        
+        if (decisions.length === 0) {
+            document.getElementById('workspace-empty-directives').style.display = 'block';
+            document.getElementById('workspace-directives-content').style.display = 'none';
+            return;
+        }
+        
+        // Populate decision selector
+        const selector = document.getElementById('workspace-decision-selector');
+        selector.innerHTML = '';
+        
+        decisions.forEach(decision => {
+            const option = document.createElement('option');
+            option.value = decision.id;
+            option.textContent = decision.title || decision.goal || 'Untitled Decision';
+            selector.appendChild(option);
+        });
+        
+        if (decisions.length > 1) {
+            selector.style.display = 'block';
+        }
+        
+        // Load first decision's directives
+        await loadDirectivesForDecision(decisions[0].id);
+        
+        // Add change listener
+        selector.addEventListener('change', async (e) => {
+            await loadDirectivesForDecision(e.target.value);
+        });
+        
+    } catch (error) {
+        console.error('Error loading workspace directives:', error);
+    }
+}
+
+async function loadDirectivesForDecision(decisionId) {
+    try {
+        const sessionData = localStorage.getItem('session');
+        const session = sessionData ? JSON.parse(sessionData) : null;
+        const accessToken = session?.access_token;
+        
+        const response = await fetch(`${API_BASE_URL}/decisions/library/${decisionId}`, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) return;
+        
+        const data = await response.json();
+        
+        if (data.recommendation && data.recommendation.execution_plan) {
+            try {
+                const executionPlan = JSON.parse(data.recommendation.execution_plan);
+                if (Array.isArray(executionPlan)) {
+                    populateWorkspaceDirectives(executionPlan, decisionId);
+                    document.getElementById('workspace-empty-directives').style.display = 'none';
+                    document.getElementById('workspace-directives-content').style.display = 'block';
+                    return;
+                }
+            } catch (e) {
+                // Not valid JSON
+            }
+        }
+        
+        document.getElementById('workspace-empty-directives').style.display = 'block';
+        document.getElementById('workspace-directives-content').style.display = 'none';
+        
+    } catch (error) {
+        console.error('Error loading directives for decision:', error);
+    }
+}
+
+function populateWorkspaceDirectives(steps, decisionId) {
+    const list = document.getElementById('workspace-action-directives-list');
+    
+    if (!steps || steps.length === 0) {
+        return;
+    }
+    
+    // Load saved progress from localStorage
+    const progressKey = `action_progress_${decisionId}`;
+    const savedProgress = JSON.parse(localStorage.getItem(progressKey) || '{}');
+    
+    list.innerHTML = '';
+    let completedCount = 0;
+    
+    steps.forEach((step, index) => {
+        const stepId = `step_${index}`;
+        const isCompleted = savedProgress[stepId] || false;
+        if (isCompleted) completedCount++;
+        
+        const item = document.createElement('div');
+        item.className = `action-directive-item ${isCompleted ? 'completed' : ''}`;
+        item.innerHTML = `
+            <div class="action-directive-checkbox" data-step-id="${stepId}" data-decision-id="${decisionId}">
+                <svg class="check-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M2 7L5.5 10.5L12 3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="action-directive-content">
+                <div class="action-directive-header">
+                    <strong>${step.step || `Step ${index + 1}`}</strong>
+                    ${step.timeline ? `<span class="action-directive-timeline">${step.timeline}</span>` : ''}
+                </div>
+                <div class="action-directive-action">${step.action}</div>
+                ${step.success_criteria ? `<div class="action-directive-success">✓ ${step.success_criteria}</div>` : ''}
+            </div>
+        `;
+        
+        // Add click handler to toggle completion
+        const checkbox = item.querySelector('.action-directive-checkbox');
+        checkbox.addEventListener('click', () => toggleWorkspaceActionComplete(stepId, decisionId, item));
+        
+        list.appendChild(item);
+    });
+    
+    // Update progress bar
+    updateWorkspaceProgressBar(completedCount, steps.length);
+}
+
+function toggleWorkspaceActionComplete(stepId, decisionId, itemElement) {
+    const progressKey = `action_progress_${decisionId}`;
+    const savedProgress = JSON.parse(localStorage.getItem(progressKey) || '{}');
+    
+    savedProgress[stepId] = !savedProgress[stepId];
+    localStorage.setItem(progressKey, JSON.stringify(savedProgress));
+    
+    itemElement.classList.toggle('completed');
+    
+    // Recalculate progress
+    const completedCount = Object.values(savedProgress).filter(v => v).length;
+    const totalSteps = document.querySelectorAll('#workspace-action-directives-list .action-directive-item').length;
+    updateWorkspaceProgressBar(completedCount, totalSteps);
+}
+
+function updateWorkspaceProgressBar(completed, total) {
+    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+    document.getElementById('workspace-progress-percentage').textContent = `${percentage}%`;
+    document.getElementById('workspace-progress-fill').style.width = `${percentage}%`;
 }
 
 async function logout() {
@@ -768,19 +832,7 @@ function setupEventListeners() {
     });
 
     document.getElementById('commit-decision-btn')?.addEventListener('click', async () => {
-        if (!selectedOptionId) {
-            await customAlert('Please select an option before committing.');
-            return;
-        }
-        
-        const selectedOption = currentOptions.find(opt => opt.id === selectedOptionId);
-        const optionName = selectedOption?.name || 'this option';
-        
-        const confirmed = await customConfirm(`You're about to commit to: "${optionName}". This will move the decision to your library. Continue?`);
-        
-        if (!confirmed) return;
-        
-        const result = await commitDecision(currentDecision.id, '', selectedOptionId);
+        const result = await commitDecision(currentDecision.id, '');
         
         if (result.success) {
             await customAlert('Decision committed! Moving to library.');
