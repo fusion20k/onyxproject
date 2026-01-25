@@ -34,6 +34,7 @@ body {
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
 }
 
 /* Site Header */
@@ -113,6 +114,7 @@ section:not(.hero):not(.final-cta):not(.application):not(.pricing) .section-titl
     height: 100vh;
     z-index: 1;
     pointer-events: auto;
+    overflow: hidden;
 }
 
 .hero-3d-container spline-viewer {
@@ -132,9 +134,20 @@ section:not(.hero):not(.final-cta):not(.application):not(.pricing) .section-titl
     z-index: 10;
 }
 
+.hero-3d-container::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 200px;
+    height: 80px;
+    background: #000;
+    z-index: 10;
+}
+
 .hero-content {
     position: relative;
-    z-index: 2;
+    z-index: 100;
     display: flex;
     flex-direction: column;
     align-items: center;
