@@ -36,20 +36,37 @@
         </div>
 
         <!-- Admin Dashboard -->
-        <div id="dashboard-state" class="admin-state" style="display: none;">
+        <div id="dashboard-state" class="admin-state" style="display: none;" role="main">
             <!-- Sidebar -->
-            <aside class="admin-sidebar" id="admin-sidebar">
+            <aside class="admin-sidebar" id="admin-sidebar" role="navigation" aria-label="Admin navigation">
                 <div class="admin-brand">ONYX<span class="admin-brand-label">ADMIN</span></div>
                 <nav class="admin-nav">
-                    <a href="#" class="admin-nav-item active" data-section="applications">
-                        <span class="admin-nav-icon">📋</span>
-                        <span>Applications</span>
-                        <span class="admin-nav-badge" id="applications-badge">0</span>
+                    <a href="#" class="admin-nav-item active" data-section="overview">
+                        <span class="admin-nav-icon">📊</span>
+                        <span>Overview</span>
                     </a>
-                    <a href="#" class="admin-nav-item" data-section="decisions">
-                        <span class="admin-nav-icon">💬</span>
-                        <span>Decisions</span>
-                        <span class="admin-nav-badge" id="decisions-badge">0</span>
+                    <a href="#" class="admin-nav-item" data-section="users">
+                        <span class="admin-nav-icon">👥</span>
+                        <span>Users</span>
+                        <span class="admin-nav-badge" id="users-badge">0</span>
+                    </a>
+                    <a href="#" class="admin-nav-item" data-section="trials">
+                        <span class="admin-nav-icon">⏱️</span>
+                        <span>Trials</span>
+                        <span class="admin-nav-badge" id="trials-badge">0</span>
+                    </a>
+                    <a href="#" class="admin-nav-item" data-section="subscriptions">
+                        <span class="admin-nav-icon">💳</span>
+                        <span>Subscriptions</span>
+                        <span class="admin-nav-badge" id="subscriptions-badge">0</span>
+                    </a>
+                    <a href="#" class="admin-nav-item" data-section="revenue">
+                        <span class="admin-nav-icon">💰</span>
+                        <span>Revenue</span>
+                    </a>
+                    <a href="#" class="admin-nav-item" data-section="monitoring">
+                        <span class="admin-nav-icon">🔍</span>
+                        <span>Monitoring</span>
                     </a>
                 </nav>
                 <div class="admin-sidebar-footer">
@@ -59,109 +76,379 @@
 
             <!-- Main Content -->
             <main class="admin-main">
-                <!-- Applications Section -->
-                <section id="applications-section" class="admin-section active">
+                <!-- Overview Section -->
+                <section id="overview-section" class="admin-section active">
                     <div class="admin-header">
                         <div class="admin-header-left">
-                            <h1 class="admin-title">Applications</h1>
-                            <p class="admin-subtitle">Review and manage membership applications</p>
+                            <h1 class="admin-title">Dashboard Overview</h1>
+                            <p class="admin-subtitle">Real-time metrics and system status</p>
                         </div>
                         <div class="admin-header-actions">
-                            <button id="refresh-applications-btn" class="admin-button">Refresh</button>
-                            <button id="clear-denied-btn" class="admin-button admin-button--danger">Clear Denied</button>
+                            <button id="refresh-overview-btn" class="admin-button">Refresh</button>
+                        </div>
+                    </div>
+
+                    <div class="metrics-container">
+                        <div class="metric-card-large">
+                            <div class="metric-icon">👥</div>
+                            <div class="metric-content">
+                                <div class="metric-label">Total Users</div>
+                                <div class="metric-value" id="overview-total-users">0</div>
+                                <div class="metric-subtext">+12 this week</div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card-large">
+                            <div class="metric-icon">⏱️</div>
+                            <div class="metric-content">
+                                <div class="metric-label">Active Trials</div>
+                                <div class="metric-value" id="overview-active-trials">0</div>
+                                <div class="metric-subtext">14 expiring soon</div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card-large">
+                            <div class="metric-icon">💳</div>
+                            <div class="metric-content">
+                                <div class="metric-label">Paid Subscribers</div>
+                                <div class="metric-value" id="overview-paid-subs">0</div>
+                                <div class="metric-subtext">92% retention</div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card-large">
+                            <div class="metric-icon">💰</div>
+                            <div class="metric-content">
+                                <div class="metric-label">MRR</div>
+                                <div class="metric-value" id="overview-mrr">$0</div>
+                                <div class="metric-subtext">+18% vs last month</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="overview-grid">
+                        <div class="overview-card">
+                            <h3 class="overview-card-title">Recent Signups</h3>
+                            <div id="recent-signups-list" class="activity-list">
+                                <div class="activity-item">Loading...</div>
+                            </div>
+                        </div>
+
+                        <div class="overview-card">
+                            <h3 class="overview-card-title">Expiring Trials</h3>
+                            <div id="expiring-trials-list" class="activity-list">
+                                <div class="activity-item">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Users Section -->
+                <section id="users-section" class="admin-section" style="display: none;">
+                    <div class="admin-header">
+                        <div class="admin-header-left">
+                            <h1 class="admin-title">User Management</h1>
+                            <p class="admin-subtitle">Manage user accounts and permissions</p>
+                        </div>
+                        <div class="admin-header-actions">
+                            <button id="refresh-users-btn" class="admin-button">Refresh</button>
+                            <button id="create-user-btn" class="admin-button">Create User</button>
                         </div>
                     </div>
 
                     <div class="admin-filters">
-                        <button class="admin-filter-btn active" data-filter="pending">Pending</button>
-                        <button class="admin-filter-btn" data-filter="approved">Approved</button>
-                        <button class="admin-filter-btn" data-filter="denied">Denied</button>
-                        <button class="admin-filter-btn" data-filter="all">All</button>
+                        <button class="admin-filter-btn active" data-filter="all">All Users</button>
+                        <button class="admin-filter-btn" data-filter="trial">On Trial</button>
+                        <button class="admin-filter-btn" data-filter="paid">Paid</button>
+                        <button class="admin-filter-btn" data-filter="expired">Expired</button>
                     </div>
 
-                    <div id="loading-applications" class="admin-loading">
-                        Loading applications...
+                    <div id="loading-users" class="admin-loading">
+                        Loading users...
                     </div>
 
-                    <div id="applications-container" class="admin-table-container" style="display: none;">
+                    <div id="users-container" class="admin-table-container" style="display: none;">
                         <table class="admin-table">
                             <thead>
                                 <tr>
-                                    <th>Date</th>
+                                    <th>Joined</th>
                                     <th>Name</th>
                                     <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Reason</th>
-                                    <th>Project</th>
+                                    <th>Company</th>
                                     <th>Status</th>
+                                    <th>Plan</th>
+                                    <th>MRR</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="applications-tbody">
+                            <tbody id="users-tbody">
                             </tbody>
                         </table>
                     </div>
 
-                    <div id="no-applications" class="admin-empty" style="display: none;">
-                        No applications found.
+                    <div id="no-users" class="admin-empty" style="display: none;">
+                        No users found.
                     </div>
                 </section>
 
-                <!-- Decisions Section -->
-                <section id="decisions-section" class="admin-section" style="display: none;">
+                <!-- Trials Section -->
+                <section id="trials-section" class="admin-section" style="display: none;">
                     <div class="admin-header">
                         <div class="admin-header-left">
-                            <h1 class="admin-title">User Decisions</h1>
-                            <p class="admin-subtitle">View and respond to user decision threads</p>
+                            <h1 class="admin-title">Trial Management</h1>
+                            <p class="admin-subtitle">Monitor and manage user trials</p>
                         </div>
                         <div class="admin-header-actions">
-                            <button id="refresh-decisions-btn" class="admin-button">Refresh</button>
+                            <button id="refresh-trials-btn" class="admin-button">Refresh</button>
                         </div>
                     </div>
 
                     <div class="admin-filters">
-                        <button class="admin-filter-btn-decisions active" data-filter="all">All</button>
-                        <button class="admin-filter-btn-decisions" data-filter="active">Active</button>
-                        <button class="admin-filter-btn-decisions" data-filter="resolved">Resolved</button>
+                        <button class="admin-filter-btn-trials active" data-filter="active">Active</button>
+                        <button class="admin-filter-btn-trials" data-filter="expiring">Expiring Soon</button>
+                        <button class="admin-filter-btn-trials" data-filter="expired">Expired</button>
+                        <button class="admin-filter-btn-trials" data-filter="converted">Converted</button>
                     </div>
 
-                    <div id="loading-decisions" class="admin-loading">
-                        Loading decisions...
+                    <div id="loading-trials" class="admin-loading">
+                        Loading trials...
                     </div>
 
-                    <!-- Decisions List -->
-                    <div id="decisions-list-view" class="decisions-list" style="display: none;">
+                    <div id="trials-container" class="admin-table-container" style="display: none;">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Email</th>
+                                    <th>Started</th>
+                                    <th>Expires</th>
+                                    <th>Days Left</th>
+                                    <th>Activity</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="trials-tbody">
+                            </tbody>
+                        </table>
                     </div>
 
-                    <!-- Decision Detail View -->
-                    <div id="decision-detail-view" style="display: none;">
-                        <button id="back-to-decisions-list" class="admin-back-btn">← Back to Decisions</button>
-                        <div id="decision-detail-content"></div>
+                    <div id="no-trials" class="admin-empty" style="display: none;">
+                        No trials found.
+                    </div>
+                </section>
+
+                <!-- Subscriptions Section -->
+                <section id="subscriptions-section" class="admin-section" style="display: none;">
+                    <div class="admin-header">
+                        <div class="admin-header-left">
+                            <h1 class="admin-title">Subscription Management</h1>
+                            <p class="admin-subtitle">View and manage active subscriptions</p>
+                        </div>
+                        <div class="admin-header-actions">
+                            <button id="refresh-subscriptions-btn" class="admin-button">Refresh</button>
+                        </div>
                     </div>
 
-                    <div id="no-decisions" class="admin-empty" style="display: none;">
-                        No decisions found.
+                    <div class="admin-filters">
+                        <button class="admin-filter-btn-subs active" data-filter="all">All</button>
+                        <button class="admin-filter-btn-subs" data-filter="solo">Solo</button>
+                        <button class="admin-filter-btn-subs" data-filter="team">Team</button>
+                        <button class="admin-filter-btn-subs" data-filter="agency">Agency</button>
+                    </div>
+
+                    <div id="loading-subscriptions" class="admin-loading">
+                        Loading subscriptions...
+                    </div>
+
+                    <div id="subscriptions-container" class="admin-table-container" style="display: none;">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Email</th>
+                                    <th>Plan</th>
+                                    <th>Started</th>
+                                    <th>Next Billing</th>
+                                    <th>MRR</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subscriptions-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="no-subscriptions" class="admin-empty" style="display: none;">
+                        No subscriptions found.
+                    </div>
+                </section>
+
+                <!-- Revenue Section -->
+                <section id="revenue-section" class="admin-section" style="display: none;">
+                    <div class="admin-header">
+                        <div class="admin-header-left">
+                            <h1 class="admin-title">Revenue Analytics</h1>
+                            <p class="admin-subtitle">Financial performance and metrics</p>
+                        </div>
+                        <div class="admin-header-actions">
+                            <button id="refresh-revenue-btn" class="admin-button">Refresh</button>
+                        </div>
+                    </div>
+
+                    <div class="revenue-metrics">
+                        <div class="revenue-card">
+                            <div class="revenue-label">MRR</div>
+                            <div class="revenue-value" id="revenue-mrr">$0</div>
+                            <div class="revenue-change positive" id="revenue-mrr-change">+0%</div>
+                        </div>
+                        <div class="revenue-card">
+                            <div class="revenue-label">ARR</div>
+                            <div class="revenue-value" id="revenue-arr">$0</div>
+                            <div class="revenue-change positive" id="revenue-arr-change">+0%</div>
+                        </div>
+                        <div class="revenue-card">
+                            <div class="revenue-label">Avg. Revenue Per User</div>
+                            <div class="revenue-value" id="revenue-arpu">$0</div>
+                            <div class="revenue-change" id="revenue-arpu-change">—</div>
+                        </div>
+                        <div class="revenue-card">
+                            <div class="revenue-label">Churn Rate</div>
+                            <div class="revenue-value" id="revenue-churn">0%</div>
+                            <div class="revenue-change negative" id="revenue-churn-change">—</div>
+                        </div>
+                    </div>
+
+                    <div class="revenue-chart-section">
+                        <h3 class="section-subtitle">Monthly Recurring Revenue</h3>
+                        <div class="revenue-chart" id="mrr-chart">
+                            <div class="chart-placeholder">Revenue chart placeholder (backend integration required)</div>
+                        </div>
+                    </div>
+
+                    <div class="revenue-breakdown">
+                        <h3 class="section-subtitle">Revenue by Plan</h3>
+                        <div class="plan-breakdown-list" id="plan-breakdown">
+                            <div class="plan-breakdown-item">
+                                <div class="plan-name">Solo ($97/mo)</div>
+                                <div class="plan-count" id="solo-count">0 users</div>
+                                <div class="plan-revenue" id="solo-revenue">$0/mo</div>
+                            </div>
+                            <div class="plan-breakdown-item">
+                                <div class="plan-name">Team ($297/mo)</div>
+                                <div class="plan-count" id="team-count">0 users</div>
+                                <div class="plan-revenue" id="team-revenue">$0/mo</div>
+                            </div>
+                            <div class="plan-breakdown-item">
+                                <div class="plan-name">Agency ($797/mo)</div>
+                                <div class="plan-count" id="agency-count">0 users</div>
+                                <div class="plan-revenue" id="agency-revenue">$0/mo</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Monitoring Section -->
+                <section id="monitoring-section" class="admin-section" style="display: none;">
+                    <div class="admin-header">
+                        <div class="admin-header-left">
+                            <h1 class="admin-title">System Monitoring</h1>
+                            <p class="admin-subtitle">System health and activity logs</p>
+                        </div>
+                        <div class="admin-header-actions">
+                            <button id="refresh-monitoring-btn" class="admin-button">Refresh</button>
+                        </div>
+                    </div>
+
+                    <div class="system-status">
+                        <div class="status-card">
+                            <div class="status-indicator active"></div>
+                            <div class="status-info">
+                                <div class="status-label">API Status</div>
+                                <div class="status-value">Operational</div>
+                            </div>
+                        </div>
+                        <div class="status-card">
+                            <div class="status-indicator active"></div>
+                            <div class="status-info">
+                                <div class="status-label">Database</div>
+                                <div class="status-value">Connected</div>
+                            </div>
+                        </div>
+                        <div class="status-card">
+                            <div class="status-indicator active"></div>
+                            <div class="status-info">
+                                <div class="status-label">Email Service</div>
+                                <div class="status-value">Active</div>
+                            </div>
+                        </div>
+                        <div class="status-card">
+                            <div class="status-indicator active"></div>
+                            <div class="status-info">
+                                <div class="status-label">Payment Gateway</div>
+                                <div class="status-value">Connected</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="monitoring-grid">
+                        <div class="monitoring-card">
+                            <h3 class="monitoring-title">Recent Activity</h3>
+                            <div id="activity-log" class="log-list">
+                                <div class="log-item">
+                                    <div class="log-time">2 min ago</div>
+                                    <div class="log-message">User signup: john@example.com</div>
+                                </div>
+                                <div class="log-item">
+                                    <div class="log-time">15 min ago</div>
+                                    <div class="log-message">Subscription created: Team plan</div>
+                                </div>
+                                <div class="log-item">
+                                    <div class="log-time">1 hour ago</div>
+                                    <div class="log-message">Trial expired: sarah@example.com</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="monitoring-card">
+                            <h3 class="monitoring-title">System Metrics</h3>
+                            <div class="metrics-list">
+                                <div class="metric-row">
+                                    <span class="metric-name">API Requests (24h)</span>
+                                    <span class="metric-stat">12,487</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="metric-name">Avg Response Time</span>
+                                    <span class="metric-stat">142ms</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="metric-name">Error Rate</span>
+                                    <span class="metric-stat">0.02%</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="metric-name">Database Queries</span>
+                                    <span class="metric-stat">45,231</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
             </main>
         </div>
     </div>
 
-    <!-- Deny Application Modal -->
-    <div id="deny-modal" class="modal" style="display: none;">
+    <!-- User Detail Modal -->
+    <div id="user-modal" class="modal" style="display: none;">
         <div class="modal-overlay"></div>
-        <div class="modal-content">
-            <h2 class="modal-title">Deny Application</h2>
-            <form id="deny-form">
-                <div class="form-group">
-                    <label for="deny-reason">Reason (optional)</label>
-                    <textarea id="deny-reason" name="reason" rows="4" placeholder="Optional message to applicant"></textarea>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" id="cancel-deny" class="admin-button">Cancel</button>
-                    <button type="submit" class="admin-button admin-button--danger">Confirm Deny</button>
-                </div>
-            </form>
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 class="modal-title" id="user-modal-title">User Details</h2>
+                <button class="modal-close" id="close-user-modal">×</button>
+            </div>
+            <div id="user-modal-content" class="modal-body">
+                Loading...
+            </div>
         </div>
     </div>
 

@@ -5,6 +5,23 @@
     box-sizing: border-box;
 }
 
+/* Skip Link for Accessibility */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #fff;
+    color: #000;
+    padding: 8px 16px;
+    text-decoration: none;
+    font-weight: bold;
+    z-index: 10000;
+}
+
+.skip-link:focus {
+    top: 0;
+}
+
 /* Base Styles */
 :root {
     --color-bg: #000000;
@@ -395,6 +412,78 @@ section:not(.hero):not(.final-cta):not(.application):not(.pricing) .section-titl
     text-align: center;
 }
 
+.pricing .section-title {
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.pricing__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-sm);
+    max-width: 1200px;
+    margin: 0 auto var(--spacing-sm);
+}
+
+.pricing__tier {
+    border: 1px solid var(--color-border);
+    padding: var(--spacing-sm);
+    text-align: center;
+    position: relative;
+    transition: border-color 0.2s;
+}
+
+.pricing__tier:hover {
+    border-color: var(--color-text);
+}
+
+.pricing__tier--featured {
+    border-color: var(--color-text);
+    border-width: 2px;
+}
+
+.pricing__tier-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-bg);
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    border: 1px solid var(--color-text);
+}
+
+.pricing__tier-name {
+    font-size: 1.25rem;
+    margin-bottom: 1em;
+}
+
+.pricing__tier-price {
+    font-size: 2.5rem;
+    margin-bottom: 1.5em;
+}
+
+.pricing__tier-period {
+    font-size: 1rem;
+    opacity: 0.7;
+}
+
+.pricing__tier-features {
+    list-style: none;
+    margin-bottom: var(--spacing-sm);
+    text-align: left;
+}
+
+.pricing__tier-features li {
+    padding: 0.75em 0;
+    border-top: 1px solid var(--color-border);
+    font-size: 0.9rem;
+}
+
+.pricing__tier-features li:first-child {
+    border-top: none;
+}
+
 .pricing__amount {
     font-size: 1.5rem;
     margin-bottom: 1em;
@@ -402,7 +491,7 @@ section:not(.hero):not(.final-cta):not(.application):not(.pricing) .section-titl
 
 .pricing__details {
     opacity: 0.7;
-    margin-bottom: 0.5em;
+    margin-top: var(--spacing-sm);
 }
 
 .pricing__filter {
@@ -411,16 +500,31 @@ section:not(.hero):not(.final-cta):not(.application):not(.pricing) .section-titl
     font-style: italic;
 }
 
+@media (max-width: 968px) {
+    .pricing__grid {
+        grid-template-columns: 1fr;
+        max-width: 500px;
+    }
+    
+    .pricing__tier {
+        margin-bottom: var(--spacing-sm);
+    }
+}
+
 /* Final CTA Section */
 .final-cta {
     text-align: center;
     padding: var(--spacing-md) 0;
 }
 
+.final-cta .section-title {
+    text-align: center;
+}
+
 .final-cta__subtext {
-    margin-top: 1em;
-    opacity: 0.6;
-    font-size: 0.875rem;
+    margin: 1em 0;
+    opacity: 0.7;
+    font-size: 0.95rem;
 }
 
 /* Application Form */
@@ -476,6 +580,20 @@ section:not(.hero):not(.final-cta):not(.application):not(.pricing) .section-titl
 
 .form-group textarea {
     resize: vertical;
+}
+
+.form-help {
+    display: block;
+    margin-top: 0.5em;
+    font-size: 0.75rem;
+    opacity: 0.6;
+}
+
+.signup-terms {
+    text-align: center;
+    font-size: 0.75rem;
+    opacity: 0.6;
+    margin-top: var(--spacing-sm);
 }
 
 .application__message {

@@ -12,11 +12,12 @@
 }
 
 .invite__brand {
-    font-size: 2rem;
+    font-size: 4rem;
     font-weight: bold;
     margin-bottom: var(--spacing-md);
     letter-spacing: 0.02em;
     text-align: center;
+    text-transform: uppercase;
 }
 
 .invite__state {

@@ -15,7 +15,7 @@
 }
 
 .payment__state {
-    max-width: 600px;
+    max-width: 1200px;
     width: 100%;
 }
 
@@ -27,18 +27,55 @@
 .payment__message {
     font-size: 1rem;
     color: #888;
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+}
+
+.payment__subtitle {
+    font-size: 0.875rem;
+    color: #666;
+    margin-bottom: var(--spacing-md);
 }
 
 .payment__details {
     margin-top: var(--spacing-md);
 }
 
+.payment__plans {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin: var(--spacing-md) 0;
+}
+
 .payment__plan {
     border: 1px solid var(--color-border);
     padding: var(--spacing-sm);
-    margin-bottom: var(--spacing-sm);
     text-align: left;
+    position: relative;
+    transition: border-color 0.2s;
+}
+
+.payment__plan:hover {
+    border-color: #666;
+}
+
+.payment__plan--featured {
+    border-color: #fff;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.payment__plan-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    color: #000;
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .payment__plan-name {
@@ -73,14 +110,42 @@
     border-top: none;
 }
 
-.payment__secure {
+.cta--plan {
+    width: 100%;
     margin-top: var(--spacing-sm);
-    font-size: 0.875rem;
-    color: #888;
 }
 
-.payment__secure span {
-    margin-right: 8px;
+.cta--featured {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+}
+
+.cta--featured:hover {
+    background: #e6e6e6;
+    border-color: #e6e6e6;
+}
+
+.payment__secure {
+    margin-top: var(--spacing-md);
+    font-size: 0.875rem;
+    color: #888;
+    text-align: center;
+}
+
+.payment__skip {
+    margin-top: var(--spacing-sm);
+    text-align: center;
+}
+
+.payment__skip-link {
+    color: #666;
+    text-decoration: underline;
+    font-size: 0.875rem;
+}
+
+.payment__skip-link:hover {
+    color: #fff;
 }
 
 .payment__error {
@@ -89,6 +154,15 @@
     margin-top: var(--spacing-sm);
     padding: 12px;
     border: 1px solid #ff6b6b;
+}
+
+@media (max-width: 992px) {
+    .payment__plans {
+        grid-template-columns: 1fr;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
 }
 
 @media (max-width: 768px) {

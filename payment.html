@@ -11,9 +11,9 @@
     <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
-    <main class="container">
+    <main class="container" role="main">
         <section class="payment">
-            <div class="payment__brand">the onyx project</div>
+            <div class="payment__brand">ONYX</div>
             
             <div id="loading-state" class="payment__state">
                 <p class="payment__message">Verifying account...</p>
@@ -35,25 +35,60 @@
             </div>
 
             <div id="payment-state" class="payment__state" style="display: none;">
-                <h1 class="payment__title">Complete Your Membership</h1>
+                <h1 class="payment__title">Choose Your Plan</h1>
                 <p class="payment__message" id="user-email"></p>
+                <p class="payment__subtitle">Your 14-day free trial is active. Select a plan to continue after trial ends.</p>
                 
-                <div class="payment__details">
-                    <div class="payment__plan">
-                        <div class="payment__plan-name">Founding Membership</div>
-                        <div class="payment__plan-price">$100<span>/month</span></div>
+                <div class="payment__plans">
+                    <div class="payment__plan" data-plan="solo">
+                        <div class="payment__plan-name">Solo</div>
+                        <div class="payment__plan-price">$97<span>/month</span></div>
                         <ul class="payment__plan-features">
-                            <li>Private decision support workspace</li>
-                            <li>Access to curated member community</li>
-                            <li>Cancel anytime</li>
+                            <li>1 user account</li>
+                            <li>Up to 500 prospects/month</li>
+                            <li>LinkedIn + Email outreach</li>
+                            <li>Basic analytics</li>
+                            <li>Email support</li>
                         </ul>
+                        <button class="cta cta--plan" data-plan="solo" data-price="97">Select Solo</button>
                     </div>
 
-                    <button id="checkout-btn" class="cta">Proceed to Payment</button>
-                    
-                    <div class="payment__secure">
-                        Secure payment powered by Stripe
+                    <div class="payment__plan payment__plan--featured" data-plan="team">
+                        <div class="payment__plan-badge">Most Popular</div>
+                        <div class="payment__plan-name">Team</div>
+                        <div class="payment__plan-price">$297<span>/month</span></div>
+                        <ul class="payment__plan-features">
+                            <li>3 user accounts</li>
+                            <li>Up to 2,000 prospects/month</li>
+                            <li>LinkedIn + Email outreach</li>
+                            <li>Advanced analytics</li>
+                            <li>Priority support</li>
+                            <li>Custom messaging templates</li>
+                        </ul>
+                        <button class="cta cta--plan cta--featured" data-plan="team" data-price="297">Select Team</button>
                     </div>
+
+                    <div class="payment__plan" data-plan="agency">
+                        <div class="payment__plan-name">Agency</div>
+                        <div class="payment__plan-price">$797<span>/month</span></div>
+                        <ul class="payment__plan-features">
+                            <li>Unlimited users</li>
+                            <li>Up to 10,000 prospects/month</li>
+                            <li>Multi-channel outreach</li>
+                            <li>White-label option</li>
+                            <li>Dedicated account manager</li>
+                            <li>API access</li>
+                        </ul>
+                        <button class="cta cta--plan" data-plan="agency" data-price="797">Select Agency</button>
+                    </div>
+                </div>
+                
+                <div class="payment__secure">
+                    Secure payment powered by Stripe
+                </div>
+
+                <div class="payment__skip">
+                    <a href="/app" class="payment__skip-link">Skip for now - Continue with trial</a>
                 </div>
 
                 <div id="payment-error" class="payment__error" style="display: none;"></div>

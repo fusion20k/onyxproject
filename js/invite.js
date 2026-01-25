@@ -92,14 +92,12 @@ async function createAccount(data) {
         
         const responseData = await response.json();
         
-        if (responseData.session) {
-            localStorage.setItem('session', JSON.stringify(responseData.session));
-            console.log('Session stored:', responseData.session);
+        if (responseData.token) {
+            localStorage.setItem('onyx-token', responseData.token);
         }
         
         if (responseData.user) {
-            localStorage.setItem('user', JSON.stringify(responseData.user));
-            console.log('User stored:', responseData.user);
+            localStorage.setItem('onyx-user-data', JSON.stringify(responseData.user));
         }
         
         return { success: true };
@@ -194,9 +192,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (result.success) {
                 showState('success-state');
-                // Redirect to /payment after 2 seconds
                 setTimeout(() => {
-                    window.location.href = '/payment';
+                    window.location.href = '/onboarding';
                 }, 2000);
             } else {
                 submitButton.disabled = false;

@@ -1,55 +1,128 @@
-const API_BASE_URL = '/api';
+// Onyx Admin Panel - Autonomous Outreach Platform
 
-let session = null;
-let currentApplicationId = null;
-let currentFilter = 'pending';
-let currentDecisionFilter = 'all';
-let allApplications = [];
-let allDecisions = [];
-let currentDecisionDetail = null;
-
-function getSession() {
-    if (session) return session;
-    const stored = localStorage.getItem('session');
-    if (stored) {
-        session = JSON.parse(stored);
+const mockData = {
+    overview: {
+        totalUsers: 147,
+        activeTrials: 42,
+        paidSubscribers: 105,
+        mrr: 28794,
+        recentSignups: [
+            { name: 'John Smith', email: 'john@techstartup.com', date: '2 hours ago' },
+            { name: 'Sarah Johnson', email: 'sarah@growthco.io', date: '5 hours ago' },
+            { name: 'Mike Davis', email: 'mike@scalelabs.com', date: '1 day ago' }
+        ],
+        expiringTrials: [
+            { name: 'Emma Wilson', email: 'emma@startup.co', daysLeft: 2 },
+            { name: 'Tom Brown', email: 'tom@bizdev.com', daysLeft: 3 },
+            { name: 'Lisa Anderson', email: 'lisa@marketing.io', daysLeft: 5 }
+        ]
+    },
+    users: [
+        { id: 1, name: 'Alice Cooper', email: 'alice@company.com', company: 'TechCorp', status: 'paid', plan: 'Team', mrr: 297, joined: '2024-01-15' },
+        { id: 2, name: 'Bob Johnson', email: 'bob@startup.io', company: 'StartupXYZ', status: 'trial', plan: 'Solo', mrr: 0, joined: '2024-03-20' },
+        { id: 3, name: 'Carol White', email: 'carol@agency.co', company: 'GrowthAgency', status: 'paid', plan: 'Agency', mrr: 797, joined: '2023-11-10' },
+        { id: 4, name: 'David Miller', email: 'david@saas.com', company: 'SaaSPro', status: 'paid', plan: 'Solo', mrr: 97, joined: '2024-02-05' },
+        { id: 5, name: 'Eve Davis', email: 'eve@consulting.com', company: 'ConsultCo', status: 'expired', plan: 'Solo', mrr: 0, joined: '2024-01-25' }
+    ],
+    trials: [
+        { id: 1, name: 'Bob Johnson', email: 'bob@startup.io', started: '2024-03-20', expires: '2024-04-03', daysLeft: 10, activity: 'High', status: 'active' },
+        { id: 2, name: 'Frank Wilson', email: 'frank@newco.com', started: '2024-03-25', expires: '2024-04-08', daysLeft: 3, activity: 'Medium', status: 'expiring' },
+        { id: 3, name: 'Grace Lee', email: 'grace@bizdev.io', started: '2024-02-15', expires: '2024-03-01', daysLeft: 0, activity: 'Low', status: 'expired' },
+        { id: 4, name: 'Henry Kim', email: 'henry@growth.co', started: '2024-03-10', expires: '2024-03-24', daysLeft: 0, activity: 'High', status: 'converted' }
+    ],
+    subscriptions: [
+        { id: 1, name: 'Alice Cooper', email: 'alice@company.com', plan: 'Team', started: '2024-01-15', nextBilling: '2024-04-15', mrr: 297, status: 'active' },
+        { id: 2, name: 'Carol White', email: 'carol@agency.co', plan: 'Agency', started: '2023-11-10', nextBilling: '2024-04-10', mrr: 797, status: 'active' },
+        { id: 3, name: 'David Miller', email: 'david@saas.com', plan: 'Solo', started: '2024-02-05', nextBilling: '2024-04-05', mrr: 97, status: 'active' },
+        { id: 4, name: 'Ian Foster', email: 'ian@marketing.com', plan: 'Team', started: '2024-03-01', nextBilling: '2024-04-01', mrr: 297, status: 'active' }
+    ],
+    revenue: {
+        mrr: 28794,
+        arr: 345528,
+        arpu: 274,
+        churn: 3.2,
+        mrrChange: 18,
+        arrChange: 22,
+        arpuChange: -5,
+        churnChange: 1.2,
+        planBreakdown: {
+            solo: { count: 45, revenue: 4365 },
+            team: { count: 48, revenue: 14256 },
+            agency: { count: 12, revenue: 9564 }
+        }
     }
-    return session;
+};
+
+let currentSection = 'overview';
+let currentUserFilter = 'all';
+let currentTrialFilter = 'active';
+let currentSubFilter = 'all';
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAdmin();
+});
+
+function initializeAdmin() {
+    showState('auth-state');
+    
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+    }
+    
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', handleLogout);
+    }
+    
+    initializeNavigation();
+    initializeRefreshButtons();
+    initializeFilters();
+    initializeModalHandlers();
+    
+    checkAuth();
 }
 
-function getAccessToken() {
-    const sess = getSession();
-    return sess ? sess.access_token : null;
+function checkAuth() {
+    const token = localStorage.getItem('onyx-admin-token');
+    
+    if (token) {
+        showState('dashboard-state');
+        loadDashboard();
+    } else {
+        showState('auth-state');
+    }
 }
 
 function showState(stateId) {
     document.querySelectorAll('.admin-state').forEach(state => {
         state.style.display = 'none';
     });
+    
     const targetState = document.getElementById(stateId);
     if (targetState) {
         targetState.style.display = stateId === 'dashboard-state' ? 'flex' : 'block';
     }
 }
 
-function showSection(sectionId) {
-    document.querySelectorAll('.admin-section').forEach(section => {
-        section.classList.remove('active');
-        section.style.display = 'none';
-    });
-    const targetSection = document.getElementById(sectionId);
-    if (targetSection) {
-        targetSection.classList.add('active');
-        targetSection.style.display = 'block';
-    }
+function handleLogin(e) {
+    e.preventDefault();
     
-    document.querySelectorAll('.admin-nav-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    const activeNavItem = document.querySelector(`[data-section="${sectionId.replace('-section', '')}"]`);
-    if (activeNavItem) {
-        activeNavItem.classList.add('active');
+    const email = document.getElementById('admin-email').value;
+    const password = document.getElementById('admin-password').value;
+    
+    if (email && password) {
+        localStorage.setItem('onyx-admin-token', 'mock-admin-token');
+        showState('dashboard-state');
+        loadDashboard();
+    } else {
+        showError('login-error', 'Please enter email and password');
     }
+}
+
+function handleLogout() {
+    localStorage.removeItem('onyx-admin-token');
+    showState('auth-state');
 }
 
 function showError(elementId, message) {
@@ -63,6 +136,361 @@ function showError(elementId, message) {
     }
 }
 
+function initializeNavigation() {
+    document.querySelectorAll('.admin-nav-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const section = this.getAttribute('data-section');
+            showSection(section);
+        });
+    });
+}
+
+function initializeRefreshButtons() {
+    document.getElementById('refresh-overview-btn')?.addEventListener('click', () => loadOverview());
+    document.getElementById('refresh-users-btn')?.addEventListener('click', () => loadUsers());
+    document.getElementById('refresh-trials-btn')?.addEventListener('click', () => loadTrials());
+    document.getElementById('refresh-subscriptions-btn')?.addEventListener('click', () => loadSubscriptions());
+    document.getElementById('refresh-revenue-btn')?.addEventListener('click', () => loadRevenue());
+    document.getElementById('refresh-monitoring-btn')?.addEventListener('click', () => loadMonitoring());
+}
+
+function initializeFilters() {
+    document.querySelectorAll('.admin-filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.admin-filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentUserFilter = this.getAttribute('data-filter');
+            renderUsers();
+        });
+    });
+    
+    document.querySelectorAll('.admin-filter-btn-trials').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.admin-filter-btn-trials').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentTrialFilter = this.getAttribute('data-filter');
+            renderTrials();
+        });
+    });
+    
+    document.querySelectorAll('.admin-filter-btn-subs').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.admin-filter-btn-subs').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentSubFilter = this.getAttribute('data-filter');
+            renderSubscriptions();
+        });
+    });
+}
+
+function initializeModalHandlers() {
+    const closeBtn = document.getElementById('close-user-modal');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            document.getElementById('user-modal').classList.remove('show');
+        });
+    }
+}
+
+function showSection(sectionId) {
+    document.querySelectorAll('.admin-section').forEach(section => {
+        section.classList.remove('active');
+        section.style.display = 'none';
+    });
+    
+    const targetSection = document.getElementById(`${sectionId}-section`);
+    if (targetSection) {
+        targetSection.classList.add('active');
+        targetSection.style.display = 'block';
+    }
+    
+    document.querySelectorAll('.admin-nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    const activeNavItem = document.querySelector(`[data-section="${sectionId}"]`);
+    if (activeNavItem) {
+        activeNavItem.classList.add('active');
+    }
+    
+    currentSection = sectionId;
+    loadSectionData(sectionId);
+}
+
+function loadDashboard() {
+    loadOverview();
+    updateBadges();
+}
+
+function loadSectionData(section) {
+    switch(section) {
+        case 'overview':
+            loadOverview();
+            break;
+        case 'users':
+            loadUsers();
+            break;
+        case 'trials':
+            loadTrials();
+            break;
+        case 'subscriptions':
+            loadSubscriptions();
+            break;
+        case 'revenue':
+            loadRevenue();
+            break;
+        case 'monitoring':
+            loadMonitoring();
+            break;
+    }
+}
+
+function updateBadges() {
+    document.getElementById('users-badge').textContent = mockData.users.length;
+    document.getElementById('trials-badge').textContent = mockData.trials.filter(t => t.status === 'active').length;
+    document.getElementById('subscriptions-badge').textContent = mockData.subscriptions.length;
+}
+
+function loadOverview() {
+    document.getElementById('overview-total-users').textContent = mockData.overview.totalUsers;
+    document.getElementById('overview-active-trials').textContent = mockData.overview.activeTrials;
+    document.getElementById('overview-paid-subs').textContent = mockData.overview.paidSubscribers;
+    document.getElementById('overview-mrr').textContent = `$${mockData.overview.mrr.toLocaleString()}`;
+    
+    const signupsList = document.getElementById('recent-signups-list');
+    signupsList.innerHTML = mockData.overview.recentSignups.map(signup => `
+        <div class="activity-item">
+            <strong>${signup.name}</strong> (${signup.email}) - ${signup.date}
+        </div>
+    `).join('');
+    
+    const trialsList = document.getElementById('expiring-trials-list');
+    trialsList.innerHTML = mockData.overview.expiringTrials.map(trial => `
+        <div class="activity-item">
+            <strong>${trial.name}</strong> (${trial.email}) - ${trial.daysLeft} days left
+        </div>
+    `).join('');
+}
+
+function loadUsers() {
+    document.getElementById('loading-users').style.display = 'block';
+    document.getElementById('users-container').style.display = 'none';
+    document.getElementById('no-users').style.display = 'none';
+    
+    setTimeout(() => {
+        renderUsers();
+    }, 300);
+}
+
+function renderUsers() {
+    const loading = document.getElementById('loading-users');
+    const container = document.getElementById('users-container');
+    const noUsers = document.getElementById('no-users');
+    const tbody = document.getElementById('users-tbody');
+    
+    loading.style.display = 'none';
+    
+    let filtered = mockData.users;
+    if (currentUserFilter !== 'all') {
+        filtered = mockData.users.filter(u => u.status === currentUserFilter);
+    }
+    
+    if (filtered.length === 0) {
+        container.style.display = 'none';
+        noUsers.style.display = 'block';
+        return;
+    }
+    
+    container.style.display = 'block';
+    noUsers.style.display = 'none';
+    
+    tbody.innerHTML = filtered.map(user => `
+        <tr>
+            <td>${formatDate(user.joined)}</td>
+            <td>${user.name}</td>
+            <td>${user.email}</td>
+            <td>${user.company}</td>
+            <td><span class="admin-table__status admin-table__status--${user.status}">${user.status}</span></td>
+            <td>${user.plan}</td>
+            <td>$${user.mrr}</td>
+            <td>
+                <div class="admin-table__actions">
+                    <button class="admin-table__action-btn" onclick="viewUser(${user.id})">View</button>
+                    <button class="admin-table__action-btn">Impersonate</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function loadTrials() {
+    document.getElementById('loading-trials').style.display = 'block';
+    document.getElementById('trials-container').style.display = 'none';
+    document.getElementById('no-trials').style.display = 'none';
+    
+    setTimeout(() => {
+        renderTrials();
+    }, 300);
+}
+
+function renderTrials() {
+    const loading = document.getElementById('loading-trials');
+    const container = document.getElementById('trials-container');
+    const noTrials = document.getElementById('no-trials');
+    const tbody = document.getElementById('trials-tbody');
+    
+    loading.style.display = 'none';
+    
+    let filtered = mockData.trials;
+    if (currentTrialFilter !== 'all') {
+        filtered = mockData.trials.filter(t => t.status === currentTrialFilter);
+    }
+    
+    if (filtered.length === 0) {
+        container.style.display = 'none';
+        noTrials.style.display = 'block';
+        return;
+    }
+    
+    container.style.display = 'block';
+    noTrials.style.display = 'none';
+    
+    tbody.innerHTML = filtered.map(trial => `
+        <tr>
+            <td>${trial.name}</td>
+            <td>${trial.email}</td>
+            <td>${formatDate(trial.started)}</td>
+            <td>${formatDate(trial.expires)}</td>
+            <td>${trial.daysLeft}</td>
+            <td>${trial.activity}</td>
+            <td><span class="admin-table__status admin-table__status--${trial.status}">${trial.status}</span></td>
+            <td>
+                <div class="admin-table__actions">
+                    <button class="admin-table__action-btn">Extend</button>
+                    <button class="admin-table__action-btn">Contact</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function loadSubscriptions() {
+    document.getElementById('loading-subscriptions').style.display = 'block';
+    document.getElementById('subscriptions-container').style.display = 'none';
+    document.getElementById('no-subscriptions').style.display = 'none';
+    
+    setTimeout(() => {
+        renderSubscriptions();
+    }, 300);
+}
+
+function renderSubscriptions() {
+    const loading = document.getElementById('loading-subscriptions');
+    const container = document.getElementById('subscriptions-container');
+    const noSubs = document.getElementById('no-subscriptions');
+    const tbody = document.getElementById('subscriptions-tbody');
+    
+    loading.style.display = 'none';
+    
+    let filtered = mockData.subscriptions;
+    if (currentSubFilter !== 'all') {
+        filtered = mockData.subscriptions.filter(s => s.plan.toLowerCase() === currentSubFilter);
+    }
+    
+    if (filtered.length === 0) {
+        container.style.display = 'none';
+        noSubs.style.display = 'block';
+        return;
+    }
+    
+    container.style.display = 'block';
+    noSubs.style.display = 'none';
+    
+    tbody.innerHTML = filtered.map(sub => `
+        <tr>
+            <td>${sub.name}</td>
+            <td>${sub.email}</td>
+            <td>${sub.plan}</td>
+            <td>${formatDate(sub.started)}</td>
+            <td>${formatDate(sub.nextBilling)}</td>
+            <td>$${sub.mrr}</td>
+            <td><span class="admin-table__status admin-table__status--${sub.status}">${sub.status}</span></td>
+            <td>
+                <div class="admin-table__actions">
+                    <button class="admin-table__action-btn">Manage</button>
+                    <button class="admin-table__action-btn">Cancel</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function loadRevenue() {
+    const data = mockData.revenue;
+    
+    document.getElementById('revenue-mrr').textContent = `$${data.mrr.toLocaleString()}`;
+    document.getElementById('revenue-arr').textContent = `$${data.arr.toLocaleString()}`;
+    document.getElementById('revenue-arpu').textContent = `$${data.arpu}`;
+    document.getElementById('revenue-churn').textContent = `${data.churn}%`;
+    
+    document.getElementById('revenue-mrr-change').textContent = `+${data.mrrChange}%`;
+    document.getElementById('revenue-arr-change').textContent = `+${data.arrChange}%`;
+    document.getElementById('revenue-arpu-change').textContent = `${data.arpuChange}%`;
+    document.getElementById('revenue-churn-change').textContent = `${data.churnChange}%`;
+    
+    document.getElementById('solo-count').textContent = `${data.planBreakdown.solo.count} users`;
+    document.getElementById('solo-revenue').textContent = `$${data.planBreakdown.solo.revenue.toLocaleString()}/mo`;
+    
+    document.getElementById('team-count').textContent = `${data.planBreakdown.team.count} users`;
+    document.getElementById('team-revenue').textContent = `$${data.planBreakdown.team.revenue.toLocaleString()}/mo`;
+    
+    document.getElementById('agency-count').textContent = `${data.planBreakdown.agency.count} users`;
+    document.getElementById('agency-revenue').textContent = `$${data.planBreakdown.agency.revenue.toLocaleString()}/mo`;
+}
+
+function loadMonitoring() {
+}
+
+function viewUser(userId) {
+    const user = mockData.users.find(u => u.id === userId);
+    if (!user) return;
+    
+    const modal = document.getElementById('user-modal');
+    const modalTitle = document.getElementById('user-modal-title');
+    const modalContent = document.getElementById('user-modal-content');
+    
+    modalTitle.textContent = `User: ${user.name}`;
+    modalContent.innerHTML = `
+        <div style="display: grid; gap: 20px;">
+            <div>
+                <strong>Email:</strong> ${user.email}
+            </div>
+            <div>
+                <strong>Company:</strong> ${user.company}
+            </div>
+            <div>
+                <strong>Status:</strong> <span class="admin-table__status admin-table__status--${user.status}">${user.status}</span>
+            </div>
+            <div>
+                <strong>Plan:</strong> ${user.plan}
+            </div>
+            <div>
+                <strong>MRR:</strong> $${user.mrr}
+            </div>
+            <div>
+                <strong>Joined:</strong> ${formatDate(user.joined)}
+            </div>
+        </div>
+        <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #1a1a1a;">
+            <button class="admin-button" style="margin-right: 8px;">Reset Password</button>
+            <button class="admin-button">Send Email</button>
+        </div>
+    `;
+    
+    modal.classList.add('show');
+}
+
 function formatDate(dateString) {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
@@ -72,819 +500,11 @@ function formatDate(dateString) {
     });
 }
 
-function formatDateTime(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit'
-    });
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text || '';
-    return div.innerHTML;
-}
-
-async function login(email, password) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/admin/login`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify({ email, password })
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Login failed:', response.status, errorText);
-            return { success: false, error: `Login failed (${response.status}). Check backend logs.` };
-        }
-
-        const data = await response.json();
-        console.log('Login response:', data);
-        
-        if (data.session) {
-            session = data.session;
-            localStorage.setItem('session', JSON.stringify(data.session));
-            console.log('Stored session:', session);
-            console.log('Access token:', session.access_token);
-        } else {
-            console.error('No session in login response. Full response:', data);
-            return { success: false, error: 'Invalid login response format' };
-        }
-        
-        return { success: true };
-    } catch (error) {
-        console.error('Login error:', error);
-        return { success: false, error: 'Cannot connect to backend. Check if backend is running.' };
-    }
-}
-
-async function fetchApplications() {
-    try {
-        const accessToken = getAccessToken();
-        
-        console.log('Fetching applications with token:', accessToken);
-        console.log('Full session:', getSession());
-        
-        if (!accessToken) {
-            console.error('No access token available');
-            return { success: false, error: 'Not authenticated' };
-        }
-        
-        const response = await fetch(`${API_BASE_URL}/admin/applications`, {
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-        });
-        
-        console.log('Applications response status:', response.status);
-
-        if (response.status === 401) {
-            return { success: false, error: 'Authentication failed. Please check your credentials.' };
-        }
-
-        if (!response.ok) {
-            return { success: false, error: 'Failed to fetch applications. Backend may not be ready.' };
-        }
-
-        const data = await response.json();
-        console.log('Applications data received:', data);
-        console.log('Applications array:', data.applications || data);
-        
-        const applications = data.applications || data || [];
-        return { success: true, applications: applications };
-    } catch (error) {
-        console.error('Fetch applications error:', error);
-        return { success: false, error: 'Cannot connect to backend. Please check if backend is running.' };
-    }
-}
-
-async function fetchDecisions(statusFilter = null) {
-    try {
-        const accessToken = getAccessToken();
-        
-        if (!accessToken) {
-            return { success: false, error: 'Not authenticated' };
-        }
-        
-        let url = `${API_BASE_URL}/admin/decisions`;
-        if (statusFilter && statusFilter !== 'all') {
-            url += `?status=${statusFilter}`;
-        }
-        
-        const response = await fetch(url, {
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-        });
-
-        if (!response.ok) {
-            return { success: false, error: 'Failed to fetch decisions' };
-        }
-
-        const data = await response.json();
-        const decisions = data.decisions || data || [];
-        return { success: true, decisions: decisions };
-    } catch (error) {
-        console.error('Fetch decisions error:', error);
-        return { success: false, error: 'Failed to fetch decisions' };
-    }
-}
-
-async function fetchDecisionDetail(decisionId) {
-    try {
-        const accessToken = getAccessToken();
-        
-        if (!accessToken) {
-            return { success: false, error: 'Not authenticated' };
-        }
-        
-        const response = await fetch(`${API_BASE_URL}/admin/decisions/${decisionId}`, {
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-        });
-
-        if (!response.ok) {
-            return { success: false, error: 'Failed to fetch decision detail' };
-        }
-
-        const data = await response.json();
-        return { success: true, data: data };
-    } catch (error) {
-        console.error('Fetch decision detail error:', error);
-        return { success: false, error: 'Failed to fetch decision detail' };
-    }
-}
-
-async function respondToDecision(decisionId, content) {
-    try {
-        const accessToken = getAccessToken();
-        
-        if (!accessToken) {
-            return { success: false, error: 'Not authenticated' };
-        }
-        
-        const response = await fetch(`${API_BASE_URL}/admin/decisions/${decisionId}/respond`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify({ content })
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            return { success: false, error: error.message || 'Failed to send response' };
-        }
-
-        return { success: true };
-    } catch (error) {
-        console.error('Respond to decision error:', error);
-        return { success: false, error: 'Failed to send response' };
-    }
-}
-
-async function approveApplication(applicationId) {
-    try {
-        const accessToken = getAccessToken();
-        
-        if (!accessToken) {
-            return { success: false, error: 'Not authenticated' };
-        }
-        
-        const response = await fetch(`${API_BASE_URL}/admin/approve`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify({ applicationId })
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            return { success: false, error: error.message || 'Approval failed' };
-        }
-
-        return { success: true };
-    } catch (error) {
-        console.error('Approve error:', error);
-        return { success: false, error: 'Approval failed' };
-    }
-}
-
-async function denyApplication(applicationId, reason = '') {
-    try {
-        const accessToken = getAccessToken();
-        
-        if (!accessToken) {
-            return { success: false, error: 'Not authenticated' };
-        }
-        
-        const response = await fetch(`${API_BASE_URL}/admin/deny`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify({ applicationId, reason })
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            return { success: false, error: error.message || 'Denial failed' };
-        }
-
-        return { success: true };
-    } catch (error) {
-        console.error('Deny error:', error);
-        return { success: false, error: 'Denial failed' };
-    }
-}
-
-async function clearDeniedApplications() {
-    try {
-        const accessToken = getAccessToken();
-        
-        if (!accessToken) {
-            return { success: false, error: 'Not authenticated' };
-        }
-        
-        const response = await fetch(`${API_BASE_URL}/admin/clear-denied`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            return { success: false, error: error.message || 'Failed to clear denied applications' };
-        }
-
-        const data = await response.json();
-        return { success: true, count: data.count || 0 };
-    } catch (error) {
-        console.error('Clear denied error:', error);
-        return { success: false, error: 'Failed to clear denied applications' };
-    }
-}
-
-function renderApplications(applications) {
-    allApplications = applications || [];
-    
-    const tbody = document.getElementById('applications-tbody');
-    const container = document.getElementById('applications-container');
-    const noApps = document.getElementById('no-applications');
-    const loading = document.getElementById('loading-applications');
-    const badge = document.getElementById('applications-badge');
-
-    loading.style.display = 'none';
-
-    let filteredApps = allApplications;
-    if (currentFilter !== 'all') {
-        filteredApps = allApplications.filter(a => a.status === currentFilter);
-    }
-
-    const pending = allApplications.filter(a => a.status === 'pending').length;
-    if (badge) badge.textContent = pending;
-
-    if (filteredApps.length === 0) {
-        container.style.display = 'none';
-        noApps.style.display = 'block';
-        noApps.textContent = `No ${currentFilter} applications`;
-        return;
-    }
-
-    noApps.style.display = 'none';
-    container.style.display = 'block';
-
-    tbody.innerHTML = '';
-
-    filteredApps.forEach(app => {
-        const tr = document.createElement('tr');
-        tr.dataset.status = app.status;
-        
-        tr.innerHTML = `
-            <td>${formatDate(app.created_at)}</td>
-            <td>${escapeHtml(app.name)}</td>
-            <td>${escapeHtml(app.email)}</td>
-            <td>${escapeHtml(app.role || 'N/A')}</td>
-            <td>${escapeHtml(app.reason || app.context || 'N/A')}</td>
-            <td>${escapeHtml(app.project || 'N/A')}</td>
-            <td><span class="admin-table__status admin-table__status--${app.status}">${app.status}</span></td>
-            <td>
-                <div class="admin-table__actions">
-                ${app.status === 'pending' ? `
-                    <button class="admin-table__action-btn admin-table__action-btn--approve" data-id="${app.id}">Approve</button>
-                    <button class="admin-table__action-btn admin-table__action-btn--deny" data-id="${app.id}">Deny</button>
-                ` : '-'}
-                </div>
-            </td>
-        `;
-
-        tbody.appendChild(tr);
-    });
-
-    document.querySelectorAll('.admin-table__action-btn--approve').forEach(btn => {
-        btn.addEventListener('click', handleApprove);
-    });
-
-    document.querySelectorAll('.admin-table__action-btn--deny').forEach(btn => {
-        btn.addEventListener('click', handleDeny);
-    });
-}
-
-function renderDecisions(decisions) {
-    allDecisions = decisions || [];
-    
-    const listView = document.getElementById('decisions-list-view');
-    const noDecisions = document.getElementById('no-decisions');
-    const loading = document.getElementById('loading-decisions');
-    const badge = document.getElementById('decisions-badge');
-
-    loading.style.display = 'none';
-
-    let filteredDecisions = allDecisions;
-    if (currentDecisionFilter !== 'all') {
-        filteredDecisions = allDecisions.filter(d => d.status === currentDecisionFilter);
-    }
-
-    const totalDecisions = allDecisions.length;
-    if (badge) badge.textContent = totalDecisions;
-
-    if (filteredDecisions.length === 0) {
-        listView.style.display = 'none';
-        noDecisions.style.display = 'block';
-        noDecisions.textContent = `No ${currentDecisionFilter} decisions`;
-        return;
-    }
-
-    noDecisions.style.display = 'none';
-    listView.style.display = 'grid';
-
-    listView.innerHTML = '';
-
-    filteredDecisions.forEach(decision => {
-        const card = document.createElement('div');
-        card.className = 'decision-card';
-        card.dataset.id = decision.id;
-        
-        const statusMap = {
-            'active': 'Active',
-            'in_progress': 'In Progress',
-            'under_review': 'Under Review',
-            'responded': 'Responded',
-            'resolved': 'Resolved'
-        };
-        
-        const displayStatus = decision.status || 'active';
-        const decisionTitle = decision.summary?.decision || decision.title || decision.situation || 'Untitled conversation';
-        const messageCount = decision.message_count || decision.feedback_count || 0;
-        
-        card.innerHTML = `
-            <div class="decision-card-header">
-                <div>
-                    <div class="decision-card-user">${escapeHtml(decision.user_name || decision.user_email || 'Unknown User')}</div>
-                    <div class="decision-card-email">${escapeHtml(decision.user_email || '')}</div>
-                </div>
-                <span class="decision-card-status decision-card-status--${displayStatus}">${statusMap[displayStatus] || displayStatus}</span>
-            </div>
-            <div class="decision-card-situation">${escapeHtml(decisionTitle)}</div>
-            <div class="decision-card-meta">
-                <span>Created ${formatDate(decision.created_at)}</span>
-                <span>${messageCount} messages</span>
-            </div>
-        `;
-        
-        card.addEventListener('click', () => {
-            showDecisionDetail(decision.id);
-        });
-
-        listView.appendChild(card);
-    });
-}
-
-async function showDecisionDetail(decisionId) {
-    const listView = document.getElementById('decisions-list-view');
-    const detailView = document.getElementById('decision-detail-view');
-    const loading = document.getElementById('loading-decisions');
-    const noDecisions = document.getElementById('no-decisions');
-
-    listView.style.display = 'none';
-    noDecisions.style.display = 'none';
-    loading.style.display = 'block';
-    detailView.style.display = 'none';
-
-    const result = await fetchDecisionDetail(decisionId);
-
-    loading.style.display = 'none';
-
-    if (!result.success) {
-        alert(result.error || 'Failed to load decision detail');
-        listView.style.display = 'grid';
-        return;
-    }
-
-    currentDecisionDetail = result.data;
-    const { decision, user, feedback } = result.data;
-
-    const detailContent = document.getElementById('decision-detail-content');
-    
-    const statusMap = {
-        'in_progress': 'In Progress',
-        'under_review': 'Under Review',
-        'responded': 'Responded',
-        'resolved': 'Resolved'
-    };
-
-    detailContent.innerHTML = `
-        <div class="decision-detail-header">
-            <div class="decision-detail-user">${escapeHtml(user.display_name || user.email)}</div>
-            <div class="decision-detail-meta">
-                <span>Email: ${escapeHtml(user.email)}</span>
-                <span>Status: <span class="decision-card-status decision-card-status--${decision.status}">${statusMap[decision.status]}</span></span>
-                <span>Created: ${formatDate(decision.created_at)}</span>
-            </div>
-        </div>
-
-        <div class="decision-detail-sections">
-            <div class="decision-detail-section decision-detail-section--full">
-                <h3>Situation</h3>
-                <p>${escapeHtml(decision.situation) || '<span class="empty">No situation provided</span>'}</p>
-            </div>
-
-            <div class="decision-detail-section">
-                <h3>Context</h3>
-                <p>${decision.context ? escapeHtml(decision.context) : '<span class="empty">Not provided</span>'}</p>
-            </div>
-
-            <div class="decision-detail-section">
-                <h3>Risks</h3>
-                <p>${decision.risks ? escapeHtml(decision.risks) : '<span class="empty">Not provided</span>'}</p>
-            </div>
-
-            <div class="decision-detail-section">
-                <h3>Unknowns</h3>
-                <p>${decision.unknowns ? escapeHtml(decision.unknowns) : '<span class="empty">Not provided</span>'}</p>
-            </div>
-
-            <div class="decision-detail-section decision-detail-section--full">
-                <h3>Options</h3>
-                <p><strong>A:</strong> ${decision.option_a ? escapeHtml(decision.option_a) : '<span class="empty">Not provided</span>'}</p>
-                <p><strong>B:</strong> ${decision.option_b ? escapeHtml(decision.option_b) : '<span class="empty">Not provided</span>'}</p>
-                ${decision.option_c ? `<p><strong>C:</strong> ${escapeHtml(decision.option_c)}</p>` : ''}
-            </div>
-        </div>
-
-        <div class="decision-feedback-section">
-            <h2>Communication Thread</h2>
-            <div class="decision-feedback-list">
-                ${feedback && feedback.length > 0 ? feedback.map(item => `
-                    <div class="decision-feedback-item decision-feedback-item--${item.author_type}">
-                        <div class="decision-feedback-meta">
-                            <span class="decision-feedback-author">${item.author_type === 'admin' ? 'Admin' : 'User'}</span>
-                            <span class="decision-feedback-time">${formatDateTime(item.created_at)}</span>
-                        </div>
-                        <div class="decision-feedback-content">${escapeHtml(item.content)}</div>
-                    </div>
-                `).join('') : '<p class="empty">No messages yet</p>'}
-            </div>
-
-            <form class="decision-response-form" id="decision-response-form">
-                <textarea id="admin-response-input" placeholder="Type your response to the user..." required></textarea>
-                <button type="submit">Send Response</button>
-            </form>
-        </div>
-    `;
-
-    detailView.style.display = 'block';
-
-    const responseForm = document.getElementById('decision-response-form');
-    if (responseForm) {
-        responseForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const input = document.getElementById('admin-response-input');
-            const content = input.value.trim();
-            
-            if (!content) return;
-            
-            const submitBtn = responseForm.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Sending...';
-            
-            const result = await respondToDecision(decision.id, content);
-            
-            if (result.success) {
-                await showDecisionDetail(decision.id);
-            } else {
-                alert(result.error || 'Failed to send response');
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Send Response';
-            }
-        });
-    }
-}
-
-async function handleApprove(e) {
-    const applicationId = e.target.dataset.id;
-    
-    if (!confirm('Approve this application and send invite?')) {
-        return;
-    }
-
-    e.target.disabled = true;
-    e.target.textContent = 'Approving...';
-
-    const result = await approveApplication(applicationId);
-
-    if (result.success) {
-        await loadApplications();
-    } else {
-        alert(result.error || 'Approval failed');
-        e.target.disabled = false;
-        e.target.textContent = 'Approve';
-    }
-}
-
-function handleDeny(e) {
-    currentApplicationId = e.target.dataset.id;
-    showModal('deny-modal');
-}
-
-function showModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.add('show');
-        modal.style.display = 'flex';
-    }
-}
-
-function hideModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.remove('show');
-        modal.style.display = 'none';
-        
-        const form = modal.querySelector('form');
-        if (form) {
-            form.reset();
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('user-modal');
+    if (modal && modal.classList.contains('show')) {
+        if (e.target.classList.contains('modal-overlay')) {
+            modal.classList.remove('show');
         }
     }
-}
-
-async function loadApplications() {
-    const loading = document.getElementById('loading-applications');
-    const container = document.getElementById('applications-container');
-    const noApps = document.getElementById('no-applications');
-
-    if (!loading || !container || !noApps) {
-        console.error('Application elements not found');
-        return;
-    }
-
-    loading.style.display = 'block';
-    container.style.display = 'none';
-    noApps.style.display = 'none';
-
-    const result = await fetchApplications();
-
-    loading.style.display = 'none';
-
-    if (result.success) {
-        renderApplications(result.applications);
-    } else {
-        noApps.style.display = 'block';
-        noApps.textContent = result.error || 'Failed to load applications';
-    }
-}
-
-async function loadDecisions() {
-    const loading = document.getElementById('loading-decisions');
-    const listView = document.getElementById('decisions-list-view');
-    const noDecisions = document.getElementById('no-decisions');
-
-    if (!loading || !listView || !noDecisions) {
-        console.error('Decision elements not found');
-        return;
-    }
-
-    loading.style.display = 'block';
-    listView.style.display = 'none';
-    noDecisions.style.display = 'none';
-
-    const result = await fetchDecisions(currentDecisionFilter !== 'all' ? currentDecisionFilter : null);
-
-    loading.style.display = 'none';
-
-    if (result.success) {
-        renderDecisions(result.decisions);
-    } else {
-        noDecisions.style.display = 'block';
-        noDecisions.textContent = result.error || 'Failed to load decisions';
-    }
-}
-
-function logout() {
-    session = null;
-    localStorage.removeItem('session');
-    showState('auth-state');
-}
-
-async function checkAuth() {
-    const sess = getSession();
-    
-    if (sess && sess.access_token) {
-        showState('dashboard-state');
-        setTimeout(async () => {
-            await loadApplications();
-            await loadDecisions();
-        }, 50);
-    } else {
-        showState('auth-state');
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const loginForm = document.getElementById('login-form');
-    const logoutBtn = document.getElementById('logout-btn');
-    const refreshApplicationsBtn = document.getElementById('refresh-applications-btn');
-    const refreshDecisionsBtn = document.getElementById('refresh-decisions-btn');
-    const denyForm = document.getElementById('deny-form');
-    const cancelDenyBtn = document.getElementById('cancel-deny');
-
-    if (loginForm) {
-        loginForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const email = document.getElementById('admin-email').value;
-            const password = document.getElementById('admin-password').value;
-            const submitButton = loginForm.querySelector('button[type="submit"]');
-            const loginError = document.getElementById('login-error');
-
-            loginError.style.display = 'none';
-            submitButton.disabled = true;
-            submitButton.textContent = 'Signing in...';
-
-            const result = await login(email, password);
-
-            if (result.success) {
-                showState('dashboard-state');
-                setTimeout(async () => {
-                    await loadApplications();
-                    await loadDecisions();
-                }, 50);
-            } else {
-                showError('login-error', result.error || 'Login failed');
-                submitButton.disabled = false;
-                submitButton.textContent = 'Sign In';
-            }
-        });
-    }
-
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', logout);
-    }
-
-    if (refreshApplicationsBtn) {
-        refreshApplicationsBtn.addEventListener('click', loadApplications);
-    }
-
-    if (refreshDecisionsBtn) {
-        refreshDecisionsBtn.addEventListener('click', loadDecisions);
-    }
-
-    const clearDeniedBtn = document.getElementById('clear-denied-btn');
-    if (clearDeniedBtn) {
-        clearDeniedBtn.addEventListener('click', async function() {
-            const deniedCount = allApplications.filter(a => a.status === 'denied').length;
-            
-            if (deniedCount === 0) {
-                alert('No denied applications to clear');
-                return;
-            }
-            
-            if (!confirm(`Are you sure you want to permanently delete ${deniedCount} denied application(s)?`)) {
-                return;
-            }
-
-            this.disabled = true;
-            this.textContent = 'Clearing...';
-
-            const result = await clearDeniedApplications();
-
-            this.disabled = false;
-            this.textContent = 'Clear Denied';
-
-            if (result.success) {
-                alert(`Successfully deleted ${result.count} denied application(s)`);
-                await loadApplications();
-            } else {
-                alert(result.error || 'Failed to clear denied applications');
-            }
-        });
-    }
-
-    if (denyForm) {
-        denyForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const reason = document.getElementById('deny-reason').value;
-            const submitButton = denyForm.querySelector('button[type="submit"]');
-
-            submitButton.disabled = true;
-            submitButton.textContent = 'Denying...';
-
-            const result = await denyApplication(currentApplicationId, reason);
-
-            submitButton.disabled = false;
-            submitButton.textContent = 'Confirm Deny';
-
-            if (result.success) {
-                hideModal('deny-modal');
-                await loadApplications();
-            } else {
-                alert(result.error || 'Denial failed');
-            }
-        });
-    }
-
-    if (cancelDenyBtn) {
-        cancelDenyBtn.addEventListener('click', function() {
-            hideModal('deny-modal');
-        });
-    }
-
-    const filterBtns = document.querySelectorAll('.admin-filter-btn');
-    filterBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            currentFilter = this.dataset.filter;
-            
-            filterBtns.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            
-            renderApplications(allApplications);
-        });
-    });
-
-    const decisionFilterBtns = document.querySelectorAll('.admin-filter-btn-decisions');
-    decisionFilterBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            currentDecisionFilter = this.dataset.filter;
-            
-            decisionFilterBtns.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            
-            renderDecisions(allDecisions);
-        });
-    });
-
-    const navItems = document.querySelectorAll('.admin-nav-item');
-    navItems.forEach(item => {
-        item.addEventListener('click', function(e) {
-            e.preventDefault();
-            const section = this.dataset.section;
-            showSection(`${section}-section`);
-            
-            if (section === 'decisions') {
-                const detailView = document.getElementById('decision-detail-view');
-                detailView.style.display = 'none';
-                const listView = document.getElementById('decisions-list-view');
-                listView.style.display = 'grid';
-            }
-        });
-    });
-
-    const backToDecisionsBtn = document.getElementById('back-to-decisions-list');
-    if (backToDecisionsBtn) {
-        backToDecisionsBtn.addEventListener('click', function() {
-            const listView = document.getElementById('decisions-list-view');
-            const detailView = document.getElementById('decision-detail-view');
-            
-            detailView.style.display = 'none';
-            listView.style.display = 'grid';
-        });
-    }
-
-    checkAuth();
 });

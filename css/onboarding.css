@@ -1,0 +1,530 @@
+/*
+ * Onyx Onboarding Flow
+ * Multi-step setup experience for new users
+ */
+
+/* ========================================
+   BASE & LAYOUT
+   ======================================== */
+
+.onboarding-page {
+    background-color: #000;
+    color: #fff;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+.onboarding-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 60px 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ========================================
+   PROGRESS BAR
+   ======================================== */
+
+.progress-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 80px;
+    padding: 0 20px;
+}
+
+.progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.progress-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid #333;
+    background: #000;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.progress-step.active .progress-dot {
+    border-color: #fff;
+    background: #fff;
+}
+
+.progress-step.completed .progress-dot {
+    border-color: #4ade80;
+    background: #4ade80;
+}
+
+.progress-step.completed .progress-dot::after {
+    content: '✓';
+    color: #000;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.progress-label {
+    position: absolute;
+    top: 40px;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    white-space: nowrap;
+    transition: color 0.3s;
+}
+
+.progress-step.active .progress-label {
+    color: #fff;
+}
+
+.progress-line {
+    width: 80px;
+    height: 2px;
+    background: #333;
+    margin: 0 8px;
+}
+
+.progress-step.completed + .progress-line {
+    background: #4ade80;
+}
+
+/* ========================================
+   STEP CONTENT
+   ======================================== */
+
+.onboarding-step {
+    display: none;
+    flex: 1;
+}
+
+.onboarding-step.active {
+    display: block;
+}
+
+.step-content {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.step-brand {
+    font-size: 1rem;
+    font-weight: bold;
+    letter-spacing: 0.1em;
+    margin-bottom: 40px;
+    text-align: center;
+    opacity: 0.6;
+}
+
+.step-title {
+    font-size: 2rem;
+    font-weight: normal;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.step-description {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
+    margin-bottom: 48px;
+    line-height: 1.8;
+}
+
+/* ========================================
+   WELCOME SCREEN (Step 1)
+   ======================================== */
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-bottom: 48px;
+}
+
+.feature-item {
+    background: #0a0a0a;
+    border: 1px solid #222;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: border-color 0.2s;
+}
+
+.feature-item:hover {
+    border-color: #333;
+}
+
+.feature-icon {
+    font-size: 2rem;
+    margin-bottom: 16px;
+}
+
+.feature-text {
+    font-size: 0.9375rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* ========================================
+   FORMS
+   ======================================== */
+
+.onboarding-form {
+    margin-bottom: 48px;
+}
+
+.form-field {
+    margin-bottom: 28px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 28px;
+}
+
+.field-label {
+    display: block;
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 8px;
+    font-weight: normal;
+}
+
+.field-input,
+.field-textarea,
+.field-select {
+    width: 100%;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    color: #fff;
+    padding: 12px 16px;
+    font-family: inherit;
+    font-size: 0.9375rem;
+    transition: border-color 0.2s;
+}
+
+.field-input:focus,
+.field-textarea:focus,
+.field-select:focus {
+    outline: none;
+    border-color: #666;
+}
+
+.field-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.field-select {
+    cursor: pointer;
+}
+
+.field-hint {
+    display: block;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 6px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+/* ========================================
+   BUTTONS
+   ======================================== */
+
+.btn-primary {
+    background: #fff;
+    border: 1px solid #fff;
+    color: #000;
+    padding: 14px 32px;
+    font-family: inherit;
+    font-size: 0.9375rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: bold;
+}
+
+.btn-primary:hover {
+    background: #e6e6e6;
+    border-color: #e6e6e6;
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: transparent;
+    border: 1px solid #333;
+    color: #fff;
+    padding: 14px 32px;
+    font-family: inherit;
+    font-size: 0.9375rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    border-color: #666;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* ========================================
+   CHANNEL CONNECTION (Step 4)
+   ======================================== */
+
+.channel-list {
+    margin-bottom: 32px;
+}
+
+.channel-card {
+    background: #0a0a0a;
+    border: 1px solid #222;
+    padding: 24px;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+}
+
+.channel-card:hover {
+    border-color: #333;
+}
+
+.channel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.channel-info {
+    display: flex;
+    gap: 16px;
+    flex: 1;
+}
+
+.channel-icon {
+    font-size: 1.75rem;
+}
+
+.channel-name {
+    font-size: 1rem;
+    margin-bottom: 4px;
+}
+
+.channel-desc {
+    font-size: 0.8125rem;
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.5;
+}
+
+.channel-status {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    background: #1a1a1a;
+    padding: 4px 12px;
+    border-radius: 2px;
+}
+
+.channel-status.connected {
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.1);
+}
+
+.btn-channel {
+    background: transparent;
+    border: 1px solid #333;
+    color: #fff;
+    padding: 10px 20px;
+    font-family: inherit;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.btn-channel:hover {
+    border-color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.btn-channel.connected {
+    border-color: #4ade80;
+    color: #4ade80;
+}
+
+.skip-notice {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.skip-notice p {
+    font-size: 0.8125rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* ========================================
+   LAUNCH SCREEN (Step 5)
+   ======================================== */
+
+.launch-icon {
+    font-size: 4rem;
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.setup-summary {
+    background: #0a0a0a;
+    border: 1px solid #222;
+    padding: 32px;
+    margin-bottom: 40px;
+}
+
+.summary-title {
+    font-size: 1rem;
+    font-weight: normal;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #222;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.summary-label {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 6px;
+}
+
+.summary-value {
+    font-size: 0.9375rem;
+    color: #fff;
+}
+
+.next-steps {
+    margin-bottom: 40px;
+}
+
+.next-steps-list {
+    list-style: none;
+    padding: 0;
+}
+
+.next-steps-list li {
+    padding: 12px 0;
+    padding-left: 32px;
+    position: relative;
+    font-size: 0.9375rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.next-steps-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: #4ade80;
+    font-weight: bold;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 768px) {
+    .onboarding-container {
+        padding: 40px 16px;
+    }
+
+    .progress-bar {
+        margin-bottom: 60px;
+        padding: 0;
+    }
+
+    .progress-line {
+        width: 40px;
+        margin: 0 4px;
+    }
+
+    .progress-label {
+        font-size: 0.65rem;
+    }
+
+    .step-title {
+        font-size: 1.5rem;
+    }
+
+    .step-description {
+        font-size: 0.9375rem;
+    }
+
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+    }
+
+    .channel-header {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .channel-status {
+        align-self: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .progress-step:nth-child(odd) .progress-label {
+        top: -30px;
+    }
+
+    .progress-step:nth-child(even) .progress-label {
+        top: 40px;
+    }
+
+    .progress-line {
+        width: 20px;
+    }
+}

@@ -74,23 +74,29 @@ loginForm?.addEventListener('submit', async function(e) {
             return;
         }
         
-        if (data.session) {
-            localStorage.setItem('session', JSON.stringify(data.session));
+        if (data.token) {
+            localStorage.setItem('onyx-token', data.token);
         }
         
         if (data.user) {
-            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('onyx-user-data', JSON.stringify(data.user));
         }
         
-        if (data.user?.paid) {
+        const onboardingComplete = localStorage.getItem('onyx-onboarding-complete');
+        
+        if (onboardingComplete === 'true') {
             window.location.href = '/app';
         } else {
-            window.location.href = '/payment';
+            window.location.href = '/onboarding';
         }
         
     } catch (error) {
         console.error('Login error:', error);
-        showLoginError('Network error. Please try again.');
+        let errorMsg = 'Network error. Please try again.';
+        if (error.message.includes('fetch')) {
+            errorMsg = 'Unable to connect to server. Please check your internet connection.';
+        }
+        showLoginError(errorMsg);
         submitBtn.disabled = false;
         submitBtn.textContent = 'Sign In';
     }
