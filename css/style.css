@@ -116,6 +116,7 @@ section:not(.hero):not(.final-cta):not(.application):not(.pricing) .section-titl
 }
 
 .hero-3d-container spline-viewer {
+    display: block;
     width: 100%;
     height: 100%;
 }
