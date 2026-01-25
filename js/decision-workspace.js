@@ -4,6 +4,7 @@ let currentUser = null;
 let currentDecision = null;
 let currentOptions = [];
 let currentRecommendation = null;
+let pollingInterval = null;
 
 function showDialog(message, isConfirm = false) {
     return new Promise((resolve) => {
@@ -521,8 +522,59 @@ function showNoDecisionState() {
     document.getElementById('decision-view').style.display = 'none';
     document.getElementById('workspace-directives-sidebar').style.display = 'block';
     
-    // Load workspace directives
     loadWorkspaceDirectives();
+}
+
+function showAnalyzingState(decision) {
+    document.getElementById('no-decision-state').style.display = 'none';
+    document.getElementById('decision-view').style.display = 'block';
+    
+    const analysisCard = document.getElementById('stress-test-card');
+    if (analysisCard) {
+        analysisCard.innerHTML = `
+            <div style="text-align: center; padding: 60px 20px;">
+                <div class="analyzing-spinner" style="
+                    width: 48px;
+                    height: 48px;
+                    border: 4px solid #222;
+                    border-top-color: #fff;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                    margin: 0 auto 24px;
+                "></div>
+                <h3 style="font-size: 20px; margin-bottom: 12px;">Analyzing your decision...</h3>
+                <p style="color: #888; font-size: 15px;">This usually takes 20-30 seconds. Running stress tests and generating recommendations.</p>
+            </div>
+        `;
+    }
+    
+    renderUnderstanding(decision);
+    document.getElementById('recommendation-card').style.display = 'none';
+    document.getElementById('execution-plan-card').style.display = 'none';
+}
+
+function startPollingDecision(decisionId) {
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+    }
+    
+    pollingInterval = setInterval(async () => {
+        const decisionData = await loadDecisionById(decisionId);
+        
+        if (decisionData.success && decisionData.decision) {
+            if (decisionData.decision.status === 'ready') {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+                
+                renderDecision(
+                    decisionData.decision,
+                    decisionData.options,
+                    decisionData.recommendation,
+                    decisionData.followups
+                );
+            }
+        }
+    }, 3000);
 }
 
 async function loadWorkspaceDirectives() {
@@ -741,12 +793,17 @@ async function initialize() {
     }
 
     if (decisionData.success && decisionData.decision) {
-        renderDecision(
-            decisionData.decision, 
-            decisionData.options, 
-            decisionData.recommendation,
-            decisionData.followups
-        );
+        if (decisionData.decision.status === 'analyzing') {
+            showAnalyzingState(decisionData.decision);
+            startPollingDecision(decisionId || decisionData.decision.id);
+        } else {
+            renderDecision(
+                decisionData.decision, 
+                decisionData.options, 
+                decisionData.recommendation,
+                decisionData.followups
+            );
+        }
     } else {
         showNoDecisionState();
     }
