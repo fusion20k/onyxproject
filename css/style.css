@@ -91,31 +91,37 @@ section:not(.hero):not(.final-cta):not(.application):not(.pricing) .section-titl
 /* Hero Section */
 .hero {
     min-height: 100vh;
+    height: 100vh;
     display: flex;
-    flex-direction: row;
     align-items: center;
-    gap: 60px;
-    padding: var(--spacing-md) 0;
+    justify-content: center;
     position: relative;
+    overflow: hidden;
 }
 
 .hero-3d-container {
-    flex: 1;
-    height: 600px;
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
 }
 
 .hero-3d-container spline-viewer {
     width: 100%;
     height: 100%;
-    border-radius: 12px;
 }
 
 .hero-content {
-    flex: 1;
+    position: relative;
+    z-index: 2;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    align-items: center;
+    text-align: center;
+    max-width: 900px;
+    padding: 0 var(--spacing-sm);
 }
 
 .hero__brand {
@@ -124,6 +130,7 @@ section:not(.hero):not(.final-cta):not(.application):not(.pricing) .section-titl
     margin-bottom: var(--spacing-sm);
     letter-spacing: 0.02em;
     position: relative;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8);
 }
 
 .hero__brand::after {
@@ -150,37 +157,28 @@ section:not(.hero):not(.final-cta):not(.application):not(.pricing) .section-titl
     font-size: 2rem;
     margin-bottom: var(--spacing-xs);
     line-height: 1.3;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8);
 }
 
 .hero__subheadline {
     font-size: 1rem;
-    opacity: 0.7;
+    opacity: 0.9;
     margin-bottom: var(--spacing-sm);
     line-height: 1.6;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8);
 }
 
-@media (max-width: 1024px) {
-    .hero {
-        flex-direction: column;
-        min-height: auto;
-        gap: 40px;
-    }
-    
-    .hero-3d-container {
-        width: 100%;
-        height: 400px;
-    }
-    
-    .hero-content {
-        text-align: center;
-    }
-    
+@media (max-width: 768px) {
     .hero__brand {
-        font-size: 3rem;
+        font-size: 2.5rem;
     }
     
     .hero__headline {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
+    }
+    
+    .hero__subheadline {
+        font-size: 0.9rem;
     }
 }
 
