@@ -860,24 +860,60 @@ Get revenue analytics data from Stripe API and database calculations.
 
 ---
 
-#### **GET /admin/system**
+#### **GET /admin/monitoring**
 
-Get system health and monitoring data.
+Get system health and monitoring data for the System Monitoring dashboard.
 
 **Auth**: Admin token required
 
 **Response (200)**:
 ```json
 {
-  "api_status": "healthy",
-  "api_response_time": 145,
-  "database_status": "healthy",
-  "worker_status": "running",
-  "stripe_connection": "healthy",
-  "last_backup": "timestamp",
-  "error_count_24h": 3
+  "system_health": {
+    "api": "operational",
+    "database": "connected",
+    "email": "active",
+    "payment": "connected"
+  },
+  "metrics": {
+    "api_requests_24h": 12487,
+    "avg_response_time": 142,
+    "error_rate": 0.02,
+    "database_queries": 45231
+  },
+  "recent_activity": [
+    {
+      "timestamp": "2026-01-26T10:30:00Z",
+      "message": "User signup: john@example.com"
+    },
+    {
+      "timestamp": "2026-01-26T10:15:00Z",
+      "message": "Subscription created: Team plan"
+    },
+    {
+      "timestamp": "2026-01-26T09:30:00Z",
+      "message": "Trial expired: sarah@example.com"
+    }
+  ]
 }
 ```
+
+**Logic**:
+1. Check API health by testing backend response time
+2. Check database connection status with a simple query
+3. Check email service status (e.g., SendGrid API health check)
+4. Check payment gateway status (Stripe API health check)
+5. Query application logs or metrics table for 24h API request count
+6. Calculate average response time from request logs
+7. Calculate error rate from error logs (errors / total requests)
+8. Query database query count from monitoring table or database stats
+9. Fetch recent system events from activity log table (last 10 entries)
+
+**Status Values**:
+- `"operational"`, `"active"`, `"connected"` = Green indicator
+- `"degraded"`, `"warning"` = Yellow indicator
+- `"down"`, `"error"` = Red indicator
+- `"unknown"` = Gray indicator
 
 ---
 

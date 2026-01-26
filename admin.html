@@ -353,31 +353,31 @@
 
                     <div class="system-status">
                         <div class="status-card">
-                            <div class="status-indicator active"></div>
+                            <div class="status-indicator" id="status-api-indicator"></div>
                             <div class="status-info">
                                 <div class="status-label">API Status</div>
-                                <div class="status-value">Operational</div>
+                                <div class="status-value" id="status-api-value">Checking...</div>
                             </div>
                         </div>
                         <div class="status-card">
-                            <div class="status-indicator active"></div>
+                            <div class="status-indicator" id="status-db-indicator"></div>
                             <div class="status-info">
                                 <div class="status-label">Database</div>
-                                <div class="status-value">Connected</div>
+                                <div class="status-value" id="status-db-value">Checking...</div>
                             </div>
                         </div>
                         <div class="status-card">
-                            <div class="status-indicator active"></div>
+                            <div class="status-indicator" id="status-email-indicator"></div>
                             <div class="status-info">
                                 <div class="status-label">Email Service</div>
-                                <div class="status-value">Active</div>
+                                <div class="status-value" id="status-email-value">Checking...</div>
                             </div>
                         </div>
                         <div class="status-card">
-                            <div class="status-indicator active"></div>
+                            <div class="status-indicator" id="status-payment-indicator"></div>
                             <div class="status-info">
                                 <div class="status-label">Payment Gateway</div>
-                                <div class="status-value">Connected</div>
+                                <div class="status-value" id="status-payment-value">Checking...</div>
                             </div>
                         </div>
                     </div>
@@ -386,18 +386,7 @@
                         <div class="monitoring-card">
                             <h3 class="monitoring-title">Recent Activity</h3>
                             <div id="activity-log" class="log-list">
-                                <div class="log-item">
-                                    <div class="log-time">2 min ago</div>
-                                    <div class="log-message">User signup: john@example.com</div>
-                                </div>
-                                <div class="log-item">
-                                    <div class="log-time">15 min ago</div>
-                                    <div class="log-message">Subscription created: Team plan</div>
-                                </div>
-                                <div class="log-item">
-                                    <div class="log-time">1 hour ago</div>
-                                    <div class="log-message">Trial expired: sarah@example.com</div>
-                                </div>
+                                <div class="log-item">Loading...</div>
                             </div>
                         </div>
 
@@ -406,19 +395,19 @@
                             <div class="metrics-list">
                                 <div class="metric-row">
                                     <span class="metric-name">API Requests (24h)</span>
-                                    <span class="metric-stat">12,487</span>
+                                    <span class="metric-stat" id="metric-api-requests">0</span>
                                 </div>
                                 <div class="metric-row">
                                     <span class="metric-name">Avg Response Time</span>
-                                    <span class="metric-stat">142ms</span>
+                                    <span class="metric-stat" id="metric-response-time">0ms</span>
                                 </div>
                                 <div class="metric-row">
                                     <span class="metric-name">Error Rate</span>
-                                    <span class="metric-stat">0.02%</span>
+                                    <span class="metric-stat" id="metric-error-rate">0%</span>
                                 </div>
                                 <div class="metric-row">
                                     <span class="metric-name">Database Queries</span>
-                                    <span class="metric-stat">45,231</span>
+                                    <span class="metric-stat" id="metric-db-queries">0</span>
                                 </div>
                             </div>
                         </div>

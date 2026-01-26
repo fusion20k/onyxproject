@@ -680,6 +680,16 @@
     box-shadow: 0 0 12px rgba(74, 222, 128, 0.4);
 }
 
+.status-indicator.warning {
+    background: #fbbf24;
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.4);
+}
+
+.status-indicator.error {
+    background: #ef4444;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+}
+
 .status-info {
     flex: 1;
 }

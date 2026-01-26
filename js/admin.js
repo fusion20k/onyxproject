@@ -640,7 +640,93 @@ function renderRevenue(data) {
     document.getElementById('agency-revenue').textContent = `$${(breakdown.agency?.revenue || 0).toLocaleString()}/mo`;
 }
 
-function loadMonitoring() {
+async function loadMonitoring(forceRefresh = false) {
+    const token = localStorage.getItem('onyx-admin-token');
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/admin/monitoring`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch monitoring data');
+        }
+        
+        const data = await response.json();
+        renderMonitoring(data);
+        
+    } catch (error) {
+        console.error('Error loading monitoring data:', error);
+        renderMonitoring({
+            system_health: {
+                api: 'unknown',
+                database: 'unknown',
+                email: 'unknown',
+                payment: 'unknown'
+            },
+            metrics: {
+                api_requests_24h: 0,
+                avg_response_time: 0,
+                error_rate: 0,
+                database_queries: 0
+            },
+            recent_activity: []
+        });
+    }
+}
+
+function renderMonitoring(data) {
+    const health = data.system_health || {};
+    
+    setStatusIndicator('api', health.api);
+    setStatusIndicator('db', health.database);
+    setStatusIndicator('email', health.email);
+    setStatusIndicator('payment', health.payment);
+    
+    const metrics = data.metrics || {};
+    
+    document.getElementById('metric-api-requests').textContent = (metrics.api_requests_24h || 0).toLocaleString();
+    document.getElementById('metric-response-time').textContent = `${metrics.avg_response_time || 0}ms`;
+    document.getElementById('metric-error-rate').textContent = `${(metrics.error_rate || 0).toFixed(2)}%`;
+    document.getElementById('metric-db-queries').textContent = (metrics.database_queries || 0).toLocaleString();
+    
+    const activityLog = document.getElementById('activity-log');
+    const activities = data.recent_activity || [];
+    
+    if (activities.length === 0) {
+        activityLog.innerHTML = '<div class="log-item">No recent activity</div>';
+    } else {
+        activityLog.innerHTML = activities.map(activity => `
+            <div class="log-item">
+                <div class="log-time">${formatRelativeTime(activity.timestamp)}</div>
+                <div class="log-message">${activity.message}</div>
+            </div>
+        `).join('');
+    }
+}
+
+function setStatusIndicator(service, status) {
+    const indicator = document.getElementById(`status-${service}-indicator`);
+    const valueEl = document.getElementById(`status-${service}-value`);
+    
+    if (!indicator || !valueEl) return;
+    
+    indicator.className = 'status-indicator';
+    
+    if (status === 'operational' || status === 'active' || status === 'connected') {
+        indicator.classList.add('active');
+        valueEl.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+    } else if (status === 'degraded' || status === 'warning') {
+        indicator.classList.add('warning');
+        valueEl.textContent = 'Degraded';
+    } else if (status === 'down' || status === 'error') {
+        indicator.classList.add('error');
+        valueEl.textContent = 'Down';
+    } else {
+        valueEl.textContent = 'Unknown';
+    }
 }
 
 function viewUser(userId) {

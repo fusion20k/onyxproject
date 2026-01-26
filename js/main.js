@@ -1,6 +1,6 @@
 const BACKEND_URL = 'https://onyxbackend-55af.onrender.com';
 
-function checkAuthStatus() {
+window.checkAuthStatus = function checkAuthStatus() {
     const token = localStorage.getItem('onyx-token');
     const userData = localStorage.getItem('onyx-user-data');
     

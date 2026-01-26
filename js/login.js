@@ -83,7 +83,16 @@ loginForm?.addEventListener('submit', async function(e) {
         }
         
         closeModal();
-        window.location.href = '/index.html#pricing';
+        
+        if (window.checkAuthStatus) {
+            window.checkAuthStatus();
+        }
+        
+        window.location.hash = 'pricing';
+        const pricingSection = document.getElementById('pricing');
+        if (pricingSection) {
+            pricingSection.scrollIntoView({ behavior: 'smooth' });
+        }
         
     } catch (error) {
         console.error('Login error:', error);
