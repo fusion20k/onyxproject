@@ -1,62 +1,17 @@
-// Onyx Admin Panel - Autonomous Outreach Platform
-
-const mockData = {
-    overview: {
-        totalUsers: 147,
-        activeTrials: 42,
-        paidSubscribers: 105,
-        mrr: 28794,
-        recentSignups: [
-            { name: 'John Smith', email: 'john@techstartup.com', date: '2 hours ago' },
-            { name: 'Sarah Johnson', email: 'sarah@growthco.io', date: '5 hours ago' },
-            { name: 'Mike Davis', email: 'mike@scalelabs.com', date: '1 day ago' }
-        ],
-        expiringTrials: [
-            { name: 'Emma Wilson', email: 'emma@startup.co', daysLeft: 2 },
-            { name: 'Tom Brown', email: 'tom@bizdev.com', daysLeft: 3 },
-            { name: 'Lisa Anderson', email: 'lisa@marketing.io', daysLeft: 5 }
-        ]
-    },
-    users: [
-        { id: 1, name: 'Alice Cooper', email: 'alice@company.com', company: 'TechCorp', status: 'paid', plan: 'Team', mrr: 297, joined: '2024-01-15' },
-        { id: 2, name: 'Bob Johnson', email: 'bob@startup.io', company: 'StartupXYZ', status: 'trial', plan: 'Solo', mrr: 0, joined: '2024-03-20' },
-        { id: 3, name: 'Carol White', email: 'carol@agency.co', company: 'GrowthAgency', status: 'paid', plan: 'Agency', mrr: 797, joined: '2023-11-10' },
-        { id: 4, name: 'David Miller', email: 'david@saas.com', company: 'SaaSPro', status: 'paid', plan: 'Solo', mrr: 97, joined: '2024-02-05' },
-        { id: 5, name: 'Eve Davis', email: 'eve@consulting.com', company: 'ConsultCo', status: 'expired', plan: 'Solo', mrr: 0, joined: '2024-01-25' }
-    ],
-    trials: [
-        { id: 1, name: 'Bob Johnson', email: 'bob@startup.io', started: '2024-03-20', expires: '2024-04-03', daysLeft: 10, activity: 'High', status: 'active' },
-        { id: 2, name: 'Frank Wilson', email: 'frank@newco.com', started: '2024-03-25', expires: '2024-04-08', daysLeft: 3, activity: 'Medium', status: 'expiring' },
-        { id: 3, name: 'Grace Lee', email: 'grace@bizdev.io', started: '2024-02-15', expires: '2024-03-01', daysLeft: 0, activity: 'Low', status: 'expired' },
-        { id: 4, name: 'Henry Kim', email: 'henry@growth.co', started: '2024-03-10', expires: '2024-03-24', daysLeft: 0, activity: 'High', status: 'converted' }
-    ],
-    subscriptions: [
-        { id: 1, name: 'Alice Cooper', email: 'alice@company.com', plan: 'Team', started: '2024-01-15', nextBilling: '2024-04-15', mrr: 297, status: 'active' },
-        { id: 2, name: 'Carol White', email: 'carol@agency.co', plan: 'Agency', started: '2023-11-10', nextBilling: '2024-04-10', mrr: 797, status: 'active' },
-        { id: 3, name: 'David Miller', email: 'david@saas.com', plan: 'Solo', started: '2024-02-05', nextBilling: '2024-04-05', mrr: 97, status: 'active' },
-        { id: 4, name: 'Ian Foster', email: 'ian@marketing.com', plan: 'Team', started: '2024-03-01', nextBilling: '2024-04-01', mrr: 297, status: 'active' }
-    ],
-    revenue: {
-        mrr: 28794,
-        arr: 345528,
-        arpu: 274,
-        churn: 3.2,
-        mrrChange: 18,
-        arrChange: 22,
-        arpuChange: -5,
-        churnChange: 1.2,
-        planBreakdown: {
-            solo: { count: 45, revenue: 4365 },
-            team: { count: 48, revenue: 14256 },
-            agency: { count: 12, revenue: 9564 }
-        }
-    }
-};
+const BACKEND_URL = 'https://onyxbackend-55af.onrender.com';
 
 let currentSection = 'overview';
 let currentUserFilter = 'all';
 let currentTrialFilter = 'active';
 let currentSubFilter = 'all';
+
+let cachedData = {
+    overview: null,
+    users: null,
+    trials: null,
+    subscriptions: null,
+    revenue: null
+};
 
 document.addEventListener('DOMContentLoaded', function() {
     initializeAdmin();
@@ -105,23 +60,59 @@ function showState(stateId) {
     }
 }
 
-function handleLogin(e) {
+async function handleLogin(e) {
     e.preventDefault();
     
     const email = document.getElementById('admin-email').value;
     const password = document.getElementById('admin-password').value;
+    const errorElement = document.getElementById('login-error');
     
-    if (email && password) {
-        localStorage.setItem('onyx-admin-token', 'mock-admin-token');
+    if (!email || !password) {
+        showError('login-error', 'Please enter email and password');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            showError('login-error', data.message || 'Invalid credentials');
+            return;
+        }
+        
+        if (!data.user || !data.user.is_admin) {
+            showError('login-error', 'Admin access required');
+            return;
+        }
+        
+        localStorage.setItem('onyx-admin-token', data.token);
+        errorElement.style.display = 'none';
         showState('dashboard-state');
         loadDashboard();
-    } else {
-        showError('login-error', 'Please enter email and password');
+        
+    } catch (error) {
+        console.error('Login error:', error);
+        showError('login-error', 'Unable to connect to server');
     }
 }
 
 function handleLogout() {
     localStorage.removeItem('onyx-admin-token');
+    cachedData = {
+        overview: null,
+        users: null,
+        trials: null,
+        subscriptions: null,
+        revenue: null
+    };
     showState('auth-state');
 }
 
@@ -147,12 +138,12 @@ function initializeNavigation() {
 }
 
 function initializeRefreshButtons() {
-    document.getElementById('refresh-overview-btn')?.addEventListener('click', () => loadOverview());
-    document.getElementById('refresh-users-btn')?.addEventListener('click', () => loadUsers());
-    document.getElementById('refresh-trials-btn')?.addEventListener('click', () => loadTrials());
-    document.getElementById('refresh-subscriptions-btn')?.addEventListener('click', () => loadSubscriptions());
-    document.getElementById('refresh-revenue-btn')?.addEventListener('click', () => loadRevenue());
-    document.getElementById('refresh-monitoring-btn')?.addEventListener('click', () => loadMonitoring());
+    document.getElementById('refresh-overview-btn')?.addEventListener('click', () => loadOverview(true));
+    document.getElementById('refresh-users-btn')?.addEventListener('click', () => loadUsers(true));
+    document.getElementById('refresh-trials-btn')?.addEventListener('click', () => loadTrials(true));
+    document.getElementById('refresh-subscriptions-btn')?.addEventListener('click', () => loadSubscriptions(true));
+    document.getElementById('refresh-revenue-btn')?.addEventListener('click', () => loadRevenue(true));
+    document.getElementById('refresh-monitoring-btn')?.addEventListener('click', () => loadMonitoring(true));
 }
 
 function initializeFilters() {
@@ -220,7 +211,6 @@ function showSection(sectionId) {
 
 function loadDashboard() {
     loadOverview();
-    updateBadges();
 }
 
 function loadSectionData(section) {
@@ -246,41 +236,144 @@ function loadSectionData(section) {
     }
 }
 
-function updateBadges() {
-    document.getElementById('users-badge').textContent = mockData.users.length;
-    document.getElementById('trials-badge').textContent = mockData.trials.filter(t => t.status === 'active').length;
-    document.getElementById('subscriptions-badge').textContent = mockData.subscriptions.length;
+async function loadOverview(forceRefresh = false) {
+    if (cachedData.overview && !forceRefresh) {
+        renderOverview(cachedData.overview);
+        return;
+    }
+    
+    const token = localStorage.getItem('onyx-admin-token');
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/admin/overview`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch overview data');
+        }
+        
+        const data = await response.json();
+        cachedData.overview = data;
+        renderOverview(data);
+        updateBadges(data);
+        
+    } catch (error) {
+        console.error('Error loading overview:', error);
+        renderOverview({
+            total_users: 0,
+            active_trials: 0,
+            paid_subscribers: 0,
+            mrr: 0,
+            churn_rate: 0,
+            trial_conversion_rate: 0
+        });
+    }
 }
 
-function loadOverview() {
-    document.getElementById('overview-total-users').textContent = mockData.overview.totalUsers;
-    document.getElementById('overview-active-trials').textContent = mockData.overview.activeTrials;
-    document.getElementById('overview-paid-subs').textContent = mockData.overview.paidSubscribers;
-    document.getElementById('overview-mrr').textContent = `$${mockData.overview.mrr.toLocaleString()}`;
+function renderOverview(data) {
+    document.getElementById('overview-total-users').textContent = data.total_users || 0;
+    document.getElementById('overview-active-trials').textContent = data.active_trials || 0;
+    document.getElementById('overview-paid-subs').textContent = data.paid_subscribers || 0;
+    document.getElementById('overview-mrr').textContent = `$${(data.mrr || 0).toLocaleString()}`;
     
-    const signupsList = document.getElementById('recent-signups-list');
-    signupsList.innerHTML = mockData.overview.recentSignups.map(signup => `
-        <div class="activity-item">
-            <strong>${signup.name}</strong> (${signup.email}) - ${signup.date}
-        </div>
-    `).join('');
+    document.getElementById('overview-total-users-subtext').textContent = '';
+    document.getElementById('overview-active-trials-subtext').textContent = '';
+    document.getElementById('overview-paid-subs-subtext').textContent = data.churn_rate ? `${data.churn_rate.toFixed(1)}% churn` : '';
+    document.getElementById('overview-mrr-subtext').textContent = data.trial_conversion_rate ? `${data.trial_conversion_rate.toFixed(1)}% conversion` : '';
     
-    const trialsList = document.getElementById('expiring-trials-list');
-    trialsList.innerHTML = mockData.overview.expiringTrials.map(trial => `
-        <div class="activity-item">
-            <strong>${trial.name}</strong> (${trial.email}) - ${trial.daysLeft} days left
-        </div>
-    `).join('');
+    loadRecentActivity();
 }
 
-function loadUsers() {
+async function loadRecentActivity() {
+    const token = localStorage.getItem('onyx-admin-token');
+    
+    try {
+        const usersResponse = await fetch(`${BACKEND_URL}/api/admin/users?limit=3&sort=created_desc`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (usersResponse.ok) {
+            const usersData = await usersResponse.json();
+            const signupsList = document.getElementById('recent-signups-list');
+            
+            if (usersData.users && usersData.users.length > 0) {
+                signupsList.innerHTML = usersData.users.map(user => `
+                    <div class="activity-item">
+                        <strong>${user.name}</strong> (${user.email}) - ${formatRelativeTime(user.created_at)}
+                    </div>
+                `).join('');
+            } else {
+                signupsList.innerHTML = '<div class="activity-item">No recent signups</div>';
+            }
+        }
+        
+        const trialsResponse = await fetch(`${BACKEND_URL}/api/admin/trials?filter=expiring&limit=3`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (trialsResponse.ok) {
+            const trialsData = await trialsResponse.json();
+            const trialsList = document.getElementById('expiring-trials-list');
+            
+            if (trialsData.trials && trialsData.trials.length > 0) {
+                trialsList.innerHTML = trialsData.trials.map(trial => `
+                    <div class="activity-item">
+                        <strong>${trial.name}</strong> (${trial.email}) - ${trial.days_left} days left
+                    </div>
+                `).join('');
+            } else {
+                trialsList.innerHTML = '<div class="activity-item">No expiring trials</div>';
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error loading recent activity:', error);
+    }
+}
+
+function updateBadges(data) {
+    if (data) {
+        document.getElementById('users-badge').textContent = data.total_users || 0;
+        document.getElementById('trials-badge').textContent = data.active_trials || 0;
+        document.getElementById('subscriptions-badge').textContent = data.paid_subscribers || 0;
+    }
+}
+
+async function loadUsers(forceRefresh = false) {
+    if (cachedData.users && !forceRefresh) {
+        renderUsers();
+        return;
+    }
+    
     document.getElementById('loading-users').style.display = 'block';
     document.getElementById('users-container').style.display = 'none';
     document.getElementById('no-users').style.display = 'none';
     
-    setTimeout(() => {
+    const token = localStorage.getItem('onyx-admin-token');
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/admin/users`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch users');
+        }
+        
+        const data = await response.json();
+        cachedData.users = data.users || [];
         renderUsers();
-    }, 300);
+        
+    } catch (error) {
+        console.error('Error loading users:', error);
+        cachedData.users = [];
+        renderUsers();
+    }
 }
 
 function renderUsers() {
@@ -291,9 +384,9 @@ function renderUsers() {
     
     loading.style.display = 'none';
     
-    let filtered = mockData.users;
+    let filtered = cachedData.users || [];
     if (currentUserFilter !== 'all') {
-        filtered = mockData.users.filter(u => u.status === currentUserFilter);
+        filtered = filtered.filter(u => u.subscription_status === currentUserFilter);
     }
     
     if (filtered.length === 0) {
@@ -307,31 +400,54 @@ function renderUsers() {
     
     tbody.innerHTML = filtered.map(user => `
         <tr>
-            <td>${formatDate(user.joined)}</td>
+            <td>${formatDate(user.created_at)}</td>
             <td>${user.name}</td>
             <td>${user.email}</td>
-            <td>${user.company}</td>
-            <td><span class="admin-table__status admin-table__status--${user.status}">${user.status}</span></td>
-            <td>${user.plan}</td>
-            <td>$${user.mrr}</td>
+            <td>${user.company || 'N/A'}</td>
+            <td><span class="admin-table__status admin-table__status--${user.subscription_status}">${user.subscription_status}</span></td>
+            <td>${user.subscription_plan || 'None'}</td>
+            <td>$${user.mrr || 0}</td>
             <td>
                 <div class="admin-table__actions">
-                    <button class="admin-table__action-btn" onclick="viewUser(${user.id})">View</button>
-                    <button class="admin-table__action-btn">Impersonate</button>
+                    <button class="admin-table__action-btn" onclick="viewUser('${user.id}')">View</button>
                 </div>
             </td>
         </tr>
     `).join('');
 }
 
-function loadTrials() {
+async function loadTrials(forceRefresh = false) {
+    if (cachedData.trials && !forceRefresh) {
+        renderTrials();
+        return;
+    }
+    
     document.getElementById('loading-trials').style.display = 'block';
     document.getElementById('trials-container').style.display = 'none';
     document.getElementById('no-trials').style.display = 'none';
     
-    setTimeout(() => {
+    const token = localStorage.getItem('onyx-admin-token');
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/admin/trials`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch trials');
+        }
+        
+        const data = await response.json();
+        cachedData.trials = data.trials || [];
         renderTrials();
-    }, 300);
+        
+    } catch (error) {
+        console.error('Error loading trials:', error);
+        cachedData.trials = [];
+        renderTrials();
+    }
 }
 
 function renderTrials() {
@@ -342,9 +458,15 @@ function renderTrials() {
     
     loading.style.display = 'none';
     
-    let filtered = mockData.trials;
-    if (currentTrialFilter !== 'all') {
-        filtered = mockData.trials.filter(t => t.status === currentTrialFilter);
+    let filtered = cachedData.trials || [];
+    if (currentTrialFilter === 'active') {
+        filtered = filtered.filter(t => t.status === 'active' && t.days_left > 3);
+    } else if (currentTrialFilter === 'expiring') {
+        filtered = filtered.filter(t => t.status === 'active' && t.days_left <= 3 && t.days_left > 0);
+    } else if (currentTrialFilter === 'expired') {
+        filtered = filtered.filter(t => t.status === 'expired');
+    } else if (currentTrialFilter === 'converted') {
+        filtered = filtered.filter(t => t.status === 'converted');
     }
     
     if (filtered.length === 0) {
@@ -360,14 +482,13 @@ function renderTrials() {
         <tr>
             <td>${trial.name}</td>
             <td>${trial.email}</td>
-            <td>${formatDate(trial.started)}</td>
-            <td>${formatDate(trial.expires)}</td>
-            <td>${trial.daysLeft}</td>
-            <td>${trial.activity}</td>
+            <td>${formatDate(trial.trial_start)}</td>
+            <td>${formatDate(trial.trial_end)}</td>
+            <td>${trial.days_left}</td>
+            <td>${trial.last_active || 'N/A'}</td>
             <td><span class="admin-table__status admin-table__status--${trial.status}">${trial.status}</span></td>
             <td>
                 <div class="admin-table__actions">
-                    <button class="admin-table__action-btn">Extend</button>
                     <button class="admin-table__action-btn">Contact</button>
                 </div>
             </td>
@@ -375,14 +496,38 @@ function renderTrials() {
     `).join('');
 }
 
-function loadSubscriptions() {
+async function loadSubscriptions(forceRefresh = false) {
+    if (cachedData.subscriptions && !forceRefresh) {
+        renderSubscriptions();
+        return;
+    }
+    
     document.getElementById('loading-subscriptions').style.display = 'block';
     document.getElementById('subscriptions-container').style.display = 'none';
     document.getElementById('no-subscriptions').style.display = 'none';
     
-    setTimeout(() => {
+    const token = localStorage.getItem('onyx-admin-token');
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/admin/subscriptions`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch subscriptions');
+        }
+        
+        const data = await response.json();
+        cachedData.subscriptions = data.subscriptions || [];
         renderSubscriptions();
-    }, 300);
+        
+    } catch (error) {
+        console.error('Error loading subscriptions:', error);
+        cachedData.subscriptions = [];
+        renderSubscriptions();
+    }
 }
 
 function renderSubscriptions() {
@@ -393,9 +538,9 @@ function renderSubscriptions() {
     
     loading.style.display = 'none';
     
-    let filtered = mockData.subscriptions;
+    let filtered = cachedData.subscriptions || [];
     if (currentSubFilter !== 'all') {
-        filtered = mockData.subscriptions.filter(s => s.plan.toLowerCase() === currentSubFilter);
+        filtered = filtered.filter(s => s.plan.toLowerCase() === currentSubFilter);
     }
     
     if (filtered.length === 0) {
@@ -412,48 +557,94 @@ function renderSubscriptions() {
             <td>${sub.name}</td>
             <td>${sub.email}</td>
             <td>${sub.plan}</td>
-            <td>${formatDate(sub.started)}</td>
-            <td>${formatDate(sub.nextBilling)}</td>
+            <td>${formatDate(sub.subscription_start)}</td>
+            <td>${sub.next_billing_date ? formatDate(sub.next_billing_date) : 'N/A'}</td>
             <td>$${sub.mrr}</td>
             <td><span class="admin-table__status admin-table__status--${sub.status}">${sub.status}</span></td>
             <td>
                 <div class="admin-table__actions">
                     <button class="admin-table__action-btn">Manage</button>
-                    <button class="admin-table__action-btn">Cancel</button>
                 </div>
             </td>
         </tr>
     `).join('');
 }
 
-function loadRevenue() {
-    const data = mockData.revenue;
+async function loadRevenue(forceRefresh = false) {
+    if (cachedData.revenue && !forceRefresh) {
+        renderRevenue(cachedData.revenue);
+        return;
+    }
     
-    document.getElementById('revenue-mrr').textContent = `$${data.mrr.toLocaleString()}`;
-    document.getElementById('revenue-arr').textContent = `$${data.arr.toLocaleString()}`;
-    document.getElementById('revenue-arpu').textContent = `$${data.arpu}`;
-    document.getElementById('revenue-churn').textContent = `${data.churn}%`;
+    const token = localStorage.getItem('onyx-admin-token');
     
-    document.getElementById('revenue-mrr-change').textContent = `+${data.mrrChange}%`;
-    document.getElementById('revenue-arr-change').textContent = `+${data.arrChange}%`;
-    document.getElementById('revenue-arpu-change').textContent = `${data.arpuChange}%`;
-    document.getElementById('revenue-churn-change').textContent = `${data.churnChange}%`;
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/admin/revenue`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch revenue data');
+        }
+        
+        const data = await response.json();
+        cachedData.revenue = data;
+        renderRevenue(data);
+        
+    } catch (error) {
+        console.error('Error loading revenue:', error);
+        renderRevenue({
+            mrr: 0,
+            arr: 0,
+            arpu: 0,
+            churn_rate: 0,
+            mrr_growth: 0,
+            plan_breakdown: { solo: {}, team: {}, agency: {} }
+        });
+    }
+}
+
+function renderRevenue(data) {
+    document.getElementById('revenue-mrr').textContent = `$${(data.mrr || 0).toLocaleString()}`;
+    document.getElementById('revenue-arr').textContent = `$${(data.arr || 0).toLocaleString()}`;
+    document.getElementById('revenue-arpu').textContent = `$${data.arpu || 0}`;
+    document.getElementById('revenue-churn').textContent = `${data.churn_rate || 0}%`;
     
-    document.getElementById('solo-count').textContent = `${data.planBreakdown.solo.count} users`;
-    document.getElementById('solo-revenue').textContent = `$${data.planBreakdown.solo.revenue.toLocaleString()}/mo`;
+    const mrrGrowth = data.mrr_growth || 0;
+    const mrrChangeEl = document.getElementById('revenue-mrr-change');
+    mrrChangeEl.textContent = `${mrrGrowth >= 0 ? '+' : ''}${mrrGrowth}%`;
+    mrrChangeEl.className = mrrGrowth >= 0 ? 'revenue-change positive' : 'revenue-change negative';
     
-    document.getElementById('team-count').textContent = `${data.planBreakdown.team.count} users`;
-    document.getElementById('team-revenue').textContent = `$${data.planBreakdown.team.revenue.toLocaleString()}/mo`;
+    const arrGrowth = data.arr_growth || 0;
+    const arrChangeEl = document.getElementById('revenue-arr-change');
+    arrChangeEl.textContent = `${arrGrowth >= 0 ? '+' : ''}${arrGrowth}%`;
+    arrChangeEl.className = arrGrowth >= 0 ? 'revenue-change positive' : 'revenue-change negative';
     
-    document.getElementById('agency-count').textContent = `${data.planBreakdown.agency.count} users`;
-    document.getElementById('agency-revenue').textContent = `$${data.planBreakdown.agency.revenue.toLocaleString()}/mo`;
+    document.getElementById('revenue-arpu-change').textContent = '—';
+    
+    const churnChange = data.churn_change || 0;
+    const churnChangeEl = document.getElementById('revenue-churn-change');
+    churnChangeEl.textContent = `${churnChange >= 0 ? '+' : ''}${churnChange}%`;
+    
+    const breakdown = data.plan_breakdown || {};
+    
+    document.getElementById('solo-count').textContent = `${breakdown.solo?.count || 0} users`;
+    document.getElementById('solo-revenue').textContent = `$${(breakdown.solo?.revenue || 0).toLocaleString()}/mo`;
+    
+    document.getElementById('team-count').textContent = `${breakdown.team?.count || 0} users`;
+    document.getElementById('team-revenue').textContent = `$${(breakdown.team?.revenue || 0).toLocaleString()}/mo`;
+    
+    document.getElementById('agency-count').textContent = `${breakdown.agency?.count || 0} users`;
+    document.getElementById('agency-revenue').textContent = `$${(breakdown.agency?.revenue || 0).toLocaleString()}/mo`;
 }
 
 function loadMonitoring() {
 }
 
 function viewUser(userId) {
-    const user = mockData.users.find(u => u.id === userId);
+    const user = (cachedData.users || []).find(u => u.id === userId);
     if (!user) return;
     
     const modal = document.getElementById('user-modal');
@@ -467,24 +658,21 @@ function viewUser(userId) {
                 <strong>Email:</strong> ${user.email}
             </div>
             <div>
-                <strong>Company:</strong> ${user.company}
+                <strong>Company:</strong> ${user.company || 'N/A'}
             </div>
             <div>
-                <strong>Status:</strong> <span class="admin-table__status admin-table__status--${user.status}">${user.status}</span>
+                <strong>Status:</strong> <span class="admin-table__status admin-table__status--${user.subscription_status}">${user.subscription_status}</span>
             </div>
             <div>
-                <strong>Plan:</strong> ${user.plan}
+                <strong>Plan:</strong> ${user.subscription_plan || 'None'}
             </div>
             <div>
-                <strong>MRR:</strong> $${user.mrr}
+                <strong>MRR:</strong> $${user.mrr || 0}
             </div>
             <div>
-                <strong>Joined:</strong> ${formatDate(user.joined)}
+                <strong>Joined:</strong> ${formatDate(user.created_at)}
             </div>
-        </div>
-        <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #1a1a1a;">
-            <button class="admin-button" style="margin-right: 8px;">Reset Password</button>
-            <button class="admin-button">Send Email</button>
+            ${user.trial_end ? `<div><strong>Trial Ends:</strong> ${formatDate(user.trial_end)}</div>` : ''}
         </div>
     `;
     
@@ -492,12 +680,27 @@ function viewUser(userId) {
 }
 
 function formatDate(dateString) {
+    if (!dateString) return 'N/A';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
         month: 'short', 
         day: 'numeric', 
         year: 'numeric' 
     });
+}
+
+function formatRelativeTime(dateString) {
+    if (!dateString) return 'Unknown';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffHours < 1) return 'Less than an hour ago';
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    return formatDate(dateString);
 }
 
 document.addEventListener('click', function(e) {
