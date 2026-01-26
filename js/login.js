@@ -83,7 +83,7 @@ loginForm?.addEventListener('submit', async function(e) {
         }
         
         closeModal();
-        window.location.href = '/#pricing';
+        window.location.href = '/index.html#pricing';
         
     } catch (error) {
         console.error('Login error:', error);
