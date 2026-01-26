@@ -84,6 +84,20 @@ async function checkAuth() {
             const data = await response.json();
             if (data.user) {
                 localStorage.setItem('onyx-user-data', JSON.stringify(data.user));
+                
+                if (data.user.subscription_status === 'expired') {
+                    window.location.href = '/payment';
+                    return;
+                }
+                
+                if (data.user.trial_end) {
+                    const trialEnd = new Date(data.user.trial_end);
+                    const now = new Date();
+                    if (trialEnd < now && data.user.subscription_status !== 'active') {
+                        window.location.href = '/payment';
+                        return;
+                    }
+                }
             }
         }
     } catch (error) {

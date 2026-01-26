@@ -90,9 +90,9 @@ Create new user account with 14-day trial.
     "name": "John Doe",
     "display_name": "John D",
     "company": "Acme Inc",
-    "trial_start": "2026-01-25T00:00:00Z",
-    "trial_end": "2026-02-08T23:59:59Z",
-    "trial_days_remaining": 14,
+    "trial_start": null,
+    "trial_end": null,
+    "trial_days_remaining": null,
     "subscription_status": "trial",
     "onboarding_complete": false
   }
@@ -102,10 +102,12 @@ Create new user account with 14-day trial.
 **Logic**:
 1. Validate email format and password strength
 2. Check if email already exists (return 409 if duplicate)
-3. Create user in database with `trial_start = NOW()`, `trial_end = NOW() + 14 days`
+3. Create user in database with `trial_start = NULL`, `trial_end = NULL`, `subscription_status = 'trial'`
 4. Store `display_name` in users table (used for workspace display, account menu, and user identification)
 5. Generate JWT token
 6. Return token + user object
+
+**Note**: Trial does NOT start on signup. It starts when user selects a plan on the payment page.
 
 ---
 
@@ -218,7 +220,8 @@ Create account from invite link (invite.html page).
 
 ### Trial System
 
-**Trial Duration**: 14 days from signup  
+**Trial Duration**: 14 days from plan selection (NOT from signup)  
+**Trial Start**: When user selects a plan on the payment page (`/payment`)  
 **Trial Status Indicators** (frontend):
 - **Normal** (14-8 days): Gray badge
 - **Caution** (7-4 days): Yellow badge
@@ -245,9 +248,9 @@ GREATEST(0, EXTRACT(DAYS FROM (trial_end - NOW())))
 
 ### Subscription Status Logic
 
-- **trial**: User is within 14-day trial period
+- **trial**: User has NOT started trial yet (trial_start is NULL) OR is within 14-day trial period
 - **active**: User has paid subscription
-- **expired**: Trial ended without payment OR subscription cancelled
+- **expired**: Trial ended without payment (trial_end < NOW() and no subscription)
 - **cancelled**: User explicitly cancelled subscription
 
 ---
@@ -263,9 +266,9 @@ Users can access `/payment` at any time during or after trial. The page shows:
 
 ### Required Endpoints
 
-#### **POST /payment/create-checkout-session**
+#### **POST /payment/create-checkout**
 
-Create Stripe Checkout session for plan selection.
+Create Stripe Checkout session for plan selection and START TRIAL.
 
 **Auth**: Bearer token required
 
@@ -287,13 +290,18 @@ Create Stripe Checkout session for plan selection.
 
 **Logic**:
 1. Get user from token
-2. Create or retrieve Stripe customer ID
-3. Create Stripe Checkout session with:
+2. **START TRIAL**: Set `trial_start = NOW()`, `trial_end = NOW() + 14 days` if trial_start is NULL
+3. Set `subscription_plan` to selected plan (solo/team/agency)
+4. Create or retrieve Stripe customer ID
+5. Create Stripe Checkout session with:
    - `mode: 'subscription'`
    - `line_items`: Selected plan
+   - `trial_period_days: 14`
    - `success_url`: `https://yourapp.com/app?payment=success`
    - `cancel_url`: `https://yourapp.com/payment?payment=cancelled`
-4. Return session ID for frontend redirect
+6. Return session ID for frontend redirect
+
+**IMPORTANT**: This endpoint STARTS the trial. Trial does not start on signup.
 
 ---
 
@@ -965,8 +973,8 @@ CREATE TABLE users (
   company TEXT,
   
   -- Trial & Subscription
-  trial_start TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  trial_end TIMESTAMP WITH TIME ZONE DEFAULT NOW() + INTERVAL '14 days',
+  trial_start TIMESTAMP WITH TIME ZONE, -- Set when user selects plan on /payment
+  trial_end TIMESTAMP WITH TIME ZONE, -- Set to trial_start + 14 days when plan selected
   subscription_status TEXT DEFAULT 'trial', -- 'trial', 'active', 'expired', 'cancelled'
   subscription_plan TEXT, -- 'solo', 'team', 'agency', NULL
   subscription_start TIMESTAMP WITH TIME ZONE,
