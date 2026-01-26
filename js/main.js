@@ -90,9 +90,26 @@ function initializeAccountMenu() {
     }
 }
 
+function initializePricingButtons() {
+    const pricingButtons = document.querySelectorAll('.pricing-cta');
+    
+    pricingButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            const token = localStorage.getItem('onyx-token');
+            
+            if (token) {
+                e.preventDefault();
+                const plan = this.getAttribute('data-plan');
+                window.location.href = `/payment${plan ? '?plan=' + plan : ''}`;
+            }
+        });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     checkAuthStatus();
     initializeAccountMenu();
+    initializePricingButtons();
     
     const signupForm = document.getElementById('signup-form-element');
     const successMessage = document.getElementById('success-message');
