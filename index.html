@@ -14,6 +14,17 @@
     
     <header class="site-header" role="banner">
         <button id="login-btn" class="login-btn" aria-label="Sign in to your account">Login</button>
+        <div id="account-menu" class="account-menu" style="display: none;">
+            <button id="account-trigger" class="account-trigger" aria-label="Account menu">
+                <span id="account-name">My Account</span>
+                <span class="dropdown-arrow">▼</span>
+            </button>
+            <div id="account-dropdown" class="account-dropdown" style="display: none;">
+                <a href="/app" class="account-dropdown-item">Workspace</a>
+                <a href="#" id="billing-portal-link" class="account-dropdown-item">Manage Billing</a>
+                <a href="#" id="logout-link" class="account-dropdown-item">Logout</a>
+            </div>
+        </div>
     </header>
     
     <main id="main-content" class="container" role="main">

@@ -1,6 +1,99 @@
 const BACKEND_URL = 'https://onyxbackend-55af.onrender.com';
 
+function checkAuthStatus() {
+    const token = localStorage.getItem('onyx-token');
+    const userData = localStorage.getItem('onyx-user-data');
+    
+    const loginBtn = document.getElementById('login-btn');
+    const accountMenu = document.getElementById('account-menu');
+    
+    if (token && userData) {
+        try {
+            const user = JSON.parse(userData);
+            
+            if (loginBtn) loginBtn.style.display = 'none';
+            if (accountMenu) {
+                accountMenu.style.display = 'block';
+                const accountName = document.getElementById('account-name');
+                if (accountName) {
+                    accountName.textContent = user.name || 'My Account';
+                }
+            }
+        } catch (e) {
+            console.error('Error parsing user data:', e);
+        }
+    } else {
+        if (loginBtn) loginBtn.style.display = 'block';
+        if (accountMenu) accountMenu.style.display = 'none';
+    }
+}
+
+function initializeAccountMenu() {
+    const accountTrigger = document.getElementById('account-trigger');
+    const accountDropdown = document.getElementById('account-dropdown');
+    const billingLink = document.getElementById('billing-portal-link');
+    const logoutLink = document.getElementById('logout-link');
+    
+    if (accountTrigger && accountDropdown) {
+        accountTrigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isVisible = accountDropdown.style.display === 'block';
+            accountDropdown.style.display = isVisible ? 'none' : 'block';
+        });
+        
+        document.addEventListener('click', function() {
+            accountDropdown.style.display = 'none';
+        });
+    }
+    
+    if (billingLink) {
+        billingLink.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            const token = localStorage.getItem('onyx-token');
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/payment/create-portal-session`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.url) {
+                    window.location.href = data.url;
+                } else {
+                    alert('Unable to access billing portal. Please contact support.');
+                }
+            } catch (error) {
+                console.error('Billing portal error:', error);
+                alert('Unable to access billing portal. Please try again.');
+            }
+        });
+    }
+    
+    if (logoutLink) {
+        logoutLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('onyx-token');
+            localStorage.removeItem('onyx-user-data');
+            localStorage.removeItem('onyx-onboarding-complete');
+            localStorage.removeItem('onyx-onboarding-data');
+            window.location.href = '/';
+        });
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    checkAuthStatus();
+    initializeAccountMenu();
+    
     const signupForm = document.getElementById('signup-form-element');
     const successMessage = document.getElementById('success-message');
     const errorMessage = document.getElementById('error-message');

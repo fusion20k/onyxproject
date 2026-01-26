@@ -82,13 +82,8 @@ loginForm?.addEventListener('submit', async function(e) {
             localStorage.setItem('onyx-user-data', JSON.stringify(data.user));
         }
         
-        const onboardingComplete = localStorage.getItem('onyx-onboarding-complete');
-        
-        if (onboardingComplete === 'true') {
-            window.location.href = '/app';
-        } else {
-            window.location.href = '/onboarding';
-        }
+        closeModal();
+        window.location.href = '/#pricing';
         
     } catch (error) {
         console.error('Login error:', error);

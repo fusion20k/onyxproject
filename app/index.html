@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Dashboard - Onyx</title>
+    <title>Workspace - Onyx</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/workspace.css">
 </head>
 <body class="workspace-page">
-    <div class="workspace-container">
+        <div class="workspace-container">
         <!-- Loading State -->
         <div id="loading-state" class="workspace-state">
             <div class="workspace-content">
@@ -27,15 +27,10 @@
         </div>
 
         <!-- Main Workspace -->
-        <div id="main-workspace" class="workspace-state" style="display: none;" role="main">
+        <div id="main-workspace" class="workspace-state" style="display: none;">
             <!-- Top Navigation -->
-            <header class="workspace-header" role="banner">
+            <header class="workspace-header">
                 <div class="workspace-header-left">
-                    <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle menu">
-                        <span class="hamburger-line"></span>
-                        <span class="hamburger-line"></span>
-                        <span class="hamburger-line"></span>
-                    </button>
                     <h1 class="workspace-brand">ONYX</h1>
                     <div class="trial-badge" id="trial-badge">
                         <span id="trial-days">14</span> days left in trial
@@ -56,7 +51,7 @@
             </header>
 
             <!-- Sidebar Navigation -->
-            <nav class="workspace-nav" role="navigation" aria-label="Main navigation">
+            <nav class="workspace-nav">
                 <button class="nav-item active" data-view="command-center">
                     <span class="nav-icon">⚡</span>
                     <span class="nav-label">Command Center</span>
@@ -86,15 +81,6 @@
                     <div class="view-header">
                         <h2 class="view-title">Command Center</h2>
                         <p class="view-subtitle">Real-time overview of your autonomous outreach</p>
-                    </div>
-
-                    <!-- Trial Expiration Warning -->
-                    <div class="trial-warning" id="trial-warning" style="display: none;">
-                        <span class="trial-warning-icon">⚠️</span>
-                        <span class="trial-warning-text">
-                            Your trial expires in <strong id="warning-days">0</strong> days. 
-                            <a href="/payment" class="trial-warning-link">Choose a plan to continue</a>
-                        </span>
                     </div>
 
                     <div class="metrics-grid">
