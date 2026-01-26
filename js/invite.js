@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 token: currentToken,
                 email: currentEmail,
                 password: password,
-                displayName: displayName || null
+                display_name: displayName || null
             });
             
             if (result.success) {

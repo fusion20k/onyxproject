@@ -72,6 +72,7 @@ Create new user account with 14-day trial.
 ```json
 {
   "name": "string (required)",
+  "display_name": "string (required)",
   "email": "string (required, valid email)",
   "password": "string (required, min 8 chars)",
   "company": "string (optional)"
@@ -87,6 +88,7 @@ Create new user account with 14-day trial.
     "id": "uuid",
     "email": "user@example.com",
     "name": "John Doe",
+    "display_name": "John D",
     "company": "Acme Inc",
     "trial_start": "2026-01-25T00:00:00Z",
     "trial_end": "2026-02-08T23:59:59Z",
@@ -101,8 +103,9 @@ Create new user account with 14-day trial.
 1. Validate email format and password strength
 2. Check if email already exists (return 409 if duplicate)
 3. Create user in database with `trial_start = NOW()`, `trial_end = NOW() + 14 days`
-4. Generate JWT token
-5. Return token + user object
+4. Store `display_name` in users table (used for workspace display, account menu, and user identification)
+5. Generate JWT token
+6. Return token + user object
 
 ---
 
@@ -127,6 +130,7 @@ Authenticate user and return token.
     "id": "uuid",
     "email": "user@example.com",
     "name": "John Doe",
+    "display_name": "John D",
     "company": "Acme Inc",
     "trial_start": "2026-01-25T00:00:00Z",
     "trial_end": "2026-02-08T23:59:59Z",
@@ -162,6 +166,7 @@ Check authentication status (used by workspace on load).
     "id": "uuid",
     "email": "user@example.com",
     "name": "John Doe",
+    "display_name": "John D",
     "trial_days_remaining": 10,
     "subscription_status": "trial|active|expired",
     "subscription_plan": "solo|team|agency|null",
@@ -182,10 +187,10 @@ Create account from invite link (invite.html page).
 **Request Body**:
 ```json
 {
-  "invite_code": "string (required)",
-  "name": "string (required)",
+  "invite_code": "string (optional, from token flow)",
   "email": "string (required)",
-  "password": "string (required, min 8 chars)"
+  "password": "string (required, min 8 chars)",
+  "display_name": "string (optional)"
 }
 ```
 
@@ -199,11 +204,13 @@ Create account from invite link (invite.html page).
 ```
 
 **Logic**:
-1. Validate invite code exists and is unused
-2. Create user account with 14-day trial
-3. Mark invite code as used
-4. Return token + user object
-5. **Frontend redirects to `/onboarding`**
+1. Validate invite code (if provided from token flow) or email (if from email verification flow)
+2. Extract name from email (part before @) if not provided
+3. Use display_name if provided, otherwise default to name
+4. Create user account with 14-day trial
+5. Mark invite code as used (if token flow)
+6. Return token + user object
+7. **Frontend redirects to `/onboarding`**
 
 ---
 
@@ -954,6 +961,7 @@ CREATE TABLE users (
   email TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
   name TEXT NOT NULL,
+  display_name TEXT NOT NULL,
   company TEXT,
   
   -- Trial & Subscription

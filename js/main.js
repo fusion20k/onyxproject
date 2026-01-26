@@ -16,7 +16,7 @@ window.checkAuthStatus = function checkAuthStatus() {
                 accountMenu.style.display = 'block';
                 const accountName = document.getElementById('account-name');
                 if (accountName) {
-                    accountName.textContent = user.name || 'My Account';
+                    accountName.textContent = user.display_name || user.name || 'My Account';
                 }
             }
         } catch (e) {
@@ -105,6 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const formData = new FormData(signupForm);
             const data = {
                 name: formData.get('name'),
+                display_name: formData.get('display_name'),
                 email: formData.get('email'),
                 password: formData.get('password'),
                 company: formData.get('company')
@@ -162,6 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify({
                     name: data.name,
+                    display_name: data.display_name,
                     email: data.email,
                     password: data.password,
                     company: data.company || null
