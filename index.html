@@ -8,6 +8,9 @@
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
     <link rel="stylesheet" href="css/style.css">
     <script type="module" src="https://unpkg.com/@splinetool/viewer@1.12.39/build/spline-viewer.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="js/api.js"></script>
+    <script src="js/google-auth.js"></script>
 </head>
 <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -169,6 +172,27 @@
                 </div>
                 
                 <button type="submit" class="cta">Start free trial</button>
+                
+                <div class="signup-divider">
+                    <span>or</span>
+                </div>
+                
+                <div id="g_id_onload"
+                     data-client_id="YOUR_GOOGLE_CLIENT_ID"
+                     data-context="signup"
+                     data-ux_mode="popup"
+                     data-callback="handleGoogleSignUp"
+                     data-auto_prompt="false">
+                </div>
+                
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-shape="rectangular"
+                     data-theme="filled_blue"
+                     data-text="signup_with"
+                     data-size="large"
+                     data-logo_alignment="left">
+                </div>
                 
                 <p class="signup-terms">By signing up, you agree to our Terms of Service and Privacy Policy.</p>
             </form>

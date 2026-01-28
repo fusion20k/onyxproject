@@ -1,55 +1,5 @@
-const BACKEND_URL = 'https://onyxbackend-55af.onrender.com';
-
-const mockData = {
-    user: {
-        name: 'Demo User',
-        email: 'demo@onyx.ai',
-        trialDaysRemaining: 14
-    },
-    metrics: {
-        activeConversations: 24,
-        replyRate: '32%',
-        qualifiedLeads: 12,
-        readyForYou: 5
-    },
-    pipeline: {
-        new: [
-            { id: 1, name: 'John Smith', company: 'TechCorp', status: 'Outreach sent' },
-            { id: 2, name: 'Jane Doe', company: 'SaaS Inc', status: 'Prospecting' },
-            { id: 3, name: 'Mike Johnson', company: 'StartupXYZ', status: 'Outreach sent' }
-        ],
-        engaged: [
-            { id: 4, name: 'Sarah Williams', company: 'CloudTech', status: 'Replied' },
-            { id: 5, name: 'Tom Brown', company: 'DataCo', status: 'Following up' }
-        ],
-        qualified: [
-            { id: 6, name: 'Emily Davis', company: 'Growth Inc', status: 'Qualified' },
-            { id: 7, name: 'David Miller', company: 'ScaleUp', status: 'Qualified' }
-        ],
-        ready: [
-            { id: 8, name: 'Lisa Anderson', company: 'Enterprise LLC', status: 'Ready to close' },
-            { id: 9, name: 'Chris Wilson', company: 'BigCorp', status: 'Needs your input' }
-        ]
-    },
-    conversations: [
-        {
-            id: 1,
-            name: 'Lisa Anderson',
-            company: 'Enterprise LLC',
-            status: 'needs-attention',
-            lastMessage: 'When can we schedule a call?',
-            timestamp: '5 min ago'
-        },
-        {
-            id: 2,
-            name: 'Chris Wilson',
-            company: 'BigCorp',
-            status: 'active',
-            lastMessage: 'Thanks for the info',
-            timestamp: '2 hours ago'
-        }
-    ]
-};
+// Onyx Workspace - Single Column Dashboard
+// Updated to use real API calls instead of mock data
 
 document.addEventListener('DOMContentLoaded', function() {
     checkAuth();
@@ -74,29 +24,22 @@ async function checkAuth() {
     }
 
     try {
-        const response = await fetch('/api/auth/status', {
-            headers: {
-                'Authorization': `Bearer ${token}`
+        const response = await onyxAPI.checkAuthStatus();
+        
+        if (response.user) {
+            localStorage.setItem('onyx-user-data', JSON.stringify(response.user));
+            
+            if (response.user.subscription_status === 'expired') {
+                window.location.href = '/payment';
+                return;
             }
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            if (data.user) {
-                localStorage.setItem('onyx-user-data', JSON.stringify(data.user));
-                
-                if (data.user.subscription_status === 'expired') {
+            
+            if (response.user.trial_end) {
+                const trialEnd = new Date(response.user.trial_end);
+                const now = new Date();
+                if (trialEnd < now && response.user.subscription_status !== 'active') {
                     window.location.href = '/payment';
                     return;
-                }
-                
-                if (data.user.trial_end) {
-                    const trialEnd = new Date(data.user.trial_end);
-                    const now = new Date();
-                    if (trialEnd < now && data.user.subscription_status !== 'active') {
-                        window.location.href = '/payment';
-                        return;
-                    }
                 }
             }
         }
@@ -106,78 +49,195 @@ async function checkAuth() {
 
     setTimeout(() => {
         loadingState.style.display = 'none';
-        mainWorkspace.style.display = 'grid';
+        mainWorkspace.style.display = 'block';
         initializeWorkspace();
     }, 500);
 }
 
-function initializeWorkspace() {
+async function initializeWorkspace() {
     loadUserInfo();
-    loadDashboardData();
-    initializeNavigation();
+    await loadDashboardData();
     initializeUserMenu();
-    initializeMobileMenu();
-    initializePipeline();
-    initializeConversations();
+    initializeFAB();
+    setCurrentDate();
 }
 
 function loadUserInfo() {
-    const userName = document.getElementById('user-name');
-    const trialDays = document.getElementById('trial-days');
-    const trialBadge = document.getElementById('trial-badge');
-    const trialWarning = document.getElementById('trial-warning');
-    const warningDays = document.getElementById('warning-days');
+    const userNameEl = document.getElementById('user-name');
+    const userAvatarEl = document.getElementById('user-avatar');
     
-    userName.textContent = mockData.user.name;
-    const daysRemaining = mockData.user.trialDaysRemaining;
-    trialDays.textContent = daysRemaining;
-    
-    if (daysRemaining <= 3) {
-        trialBadge.classList.add('trial-badge--warning');
-        if (trialWarning) {
-            trialWarning.style.display = 'flex';
-            warningDays.textContent = daysRemaining;
-        }
-    } else if (daysRemaining <= 7) {
-        trialBadge.classList.add('trial-badge--caution');
-        if (trialWarning) {
-            trialWarning.style.display = 'flex';
-            warningDays.textContent = daysRemaining;
+    const userData = localStorage.getItem('onyx-user-data');
+    if (userData) {
+        try {
+            const user = JSON.parse(userData);
+            userNameEl.textContent = user.display_name || user.name || 'User';
+            userAvatarEl.textContent = (user.display_name || user.name || 'U')[0].toUpperCase();
+        } catch (e) {
+            console.error('Error parsing user data:', e);
         }
     }
 }
 
-function loadDashboardData() {
-    document.getElementById('metric-active').textContent = mockData.metrics.activeConversations;
-    document.getElementById('metric-reply').textContent = mockData.metrics.replyRate;
-    document.getElementById('metric-qualified').textContent = mockData.metrics.qualifiedLeads;
-    document.getElementById('metric-ready').textContent = mockData.metrics.readyForYou;
+function setCurrentDate() {
+    const summaryDateEl = document.getElementById('summary-date');
+    const today = new Date();
+    const options = { weekday: 'long', month: 'long', day: 'numeric' };
+    summaryDateEl.textContent = `Today (${today.toLocaleDateString('en-US', options)})`;
 }
 
-function initializeNavigation() {
-    const navItems = document.querySelectorAll('.nav-item');
-    const views = document.querySelectorAll('.view');
+async function loadDashboardData() {
+    try {
+        // Try to load real data, fallback to mock if API not available
+        const dashboardData = await onyxAPI.safeRequest('/api/workspace/dashboard', 
+            onyxAPI.getDashboardDataFallback.bind(onyxAPI)
+        );
+        const pipelineData = await onyxAPI.safeRequest('/api/workspace/pipeline',
+            onyxAPI.getPipelineDataFallback.bind(onyxAPI)
+        );
+        const activityData = await onyxAPI.safeRequest('/api/workspace/activity',
+            onyxAPI.getActivityStreamFallback.bind(onyxAPI)
+        );
 
-    navItems.forEach(navItem => {
-        navItem.addEventListener('click', function() {
-            const targetView = this.getAttribute('data-view');
-            
-            navItems.forEach(item => item.classList.remove('active'));
-            this.classList.add('active');
-            
-            views.forEach(view => view.classList.remove('active'));
-            document.getElementById(`${targetView}-view`).classList.add('active');
-        });
+        // Update daily summary
+        if (dashboardData.summary) {
+            updateDailySummary(dashboardData.summary);
+        }
+
+        // Update status indicator
+        if (dashboardData.status) {
+            updateStatusIndicator(dashboardData.status);
+        }
+
+        // Update pipeline
+        if (pipelineData.pipeline) {
+            updatePipeline(pipelineData.pipeline);
+        }
+
+        // Update activity stream
+        if (activityData.activities) {
+            updateActivityStream(activityData.activities);
+        }
+
+    } catch (error) {
+        console.error('Error loading dashboard data:', error);
+        // Show error message to user
+        showErrorMessage('Unable to load dashboard data. Please refresh the page.');
+    }
+}
+
+function updateDailySummary(summary) {
+    const conversationsStartedEl = document.getElementById('conversations-started');
+    const peopleRepliedEl = document.getElementById('people-replied');
+    const qualifiedLeadsEl = document.getElementById('qualified-leads');
+
+    if (conversationsStartedEl) conversationsStartedEl.textContent = summary.conversations_started || 0;
+    if (peopleRepliedEl) peopleRepliedEl.textContent = summary.replies || 0;
+    if (qualifiedLeadsEl) qualifiedLeadsEl.textContent = summary.qualified_leads || 0;
+}
+
+function updateStatusIndicator(status) {
+    const statusIndicator = document.getElementById('status-indicator');
+    const statusDot = statusIndicator.querySelector('.status-dot');
+    const statusText = statusIndicator.querySelector('.status-text');
+    
+    if (status.is_active && !status.is_paused) {
+        statusDot.className = 'status-dot active';
+        statusText.textContent = 'Active';
+    } else if (status.is_paused) {
+        statusDot.className = 'status-dot paused';
+        statusText.textContent = 'Paused';
+    } else {
+        statusDot.className = 'status-dot inactive';
+        statusText.textContent = 'Inactive';
+    }
+}
+
+function updatePipeline(pipeline) {
+    const stages = ['found', 'contacted', 'talking', 'ready'];
+    
+    stages.forEach(stage => {
+        const countEl = document.getElementById(`count-${stage}`);
+        const contentEl = document.getElementById(`prospects-${stage}`);
+        const prospects = pipeline[stage] || [];
+        
+        // Update count
+        if (countEl) countEl.textContent = prospects.length;
+        
+        // Update content
+        if (contentEl) {
+            if (prospects.length === 0) {
+                contentEl.innerHTML = '<div class="empty-stage">No prospects yet</div>';
+            } else {
+                contentEl.innerHTML = prospects.map(prospect => `
+                    <div class="prospect-card" data-prospect-id="${prospect.id}">
+                        <div class="prospect-name">${prospect.first_name}</div>
+                        <div class="prospect-company">${prospect.company}</div>
+                        <div class="prospect-priority priority-${prospect.priority || 'normal'}"></div>
+                    </div>
+                `).join('');
+                
+                // Add click handlers
+                contentEl.querySelectorAll('.prospect-card').forEach(card => {
+                    card.addEventListener('click', function() {
+                        const prospectId = this.dataset.prospectId;
+                        showProspectDetails(prospectId);
+                    });
+                });
+            }
+        }
     });
 }
 
+function updateActivityStream(activities) {
+    const activityStreamEl = document.getElementById('activity-stream');
+    
+    if (!activityStreamEl) return;
+    
+    if (activities.length === 0) {
+        activityStreamEl.innerHTML = '<div class="empty-activity">No recent activity</div>';
+        return;
+    }
+    
+    activityStreamEl.innerHTML = activities.map(activity => {
+        const timeAgo = formatTimeAgo(activity.created_at);
+        return `
+            <div class="activity-item">
+                <div class="activity-time">${timeAgo}</div>
+                <div class="activity-description">${activity.description}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+function formatTimeAgo(timestamp) {
+    const now = new Date();
+    const activityTime = new Date(timestamp);
+    const diffMs = now - activityTime;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    
+    return activityTime.toLocaleDateString();
+}
+
+function showProspectDetails(prospectId) {
+    // TODO: Implement prospect details modal or sidebar
+    console.log('Show prospect details for:', prospectId);
+    alert(`Prospect details for ID: ${prospectId}\n\nThis will show a modal with conversation history, notes, and actions.`);
+}
+
 function initializeUserMenu() {
-    const menuTrigger = document.getElementById('user-menu-trigger');
+    const menuBtn = document.getElementById('user-menu-btn');
     const menuDropdown = document.getElementById('user-menu-dropdown');
     const logoutBtn = document.getElementById('logout-btn');
 
-    if (menuTrigger) {
-        menuTrigger.addEventListener('click', function(e) {
+    if (menuBtn) {
+        menuBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             const isVisible = menuDropdown.style.display === 'block';
             menuDropdown.style.display = isVisible ? 'none' : 'block';
@@ -193,130 +253,140 @@ function initializeUserMenu() {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            localStorage.removeItem('onyx-token');
-            localStorage.removeItem('onyx-user-data');
-            localStorage.removeItem('onyx-onboarding-complete');
-            localStorage.removeItem('onyx-onboarding-data');
-            window.location.href = '/';
+            logout();
         });
     }
 }
 
-function initializeMobileMenu() {
-    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
-    const workspaceNav = document.querySelector('.workspace-nav');
-    const navItems = document.querySelectorAll('.nav-item');
+function initializeFAB() {
+    const fabBtn = document.getElementById('floating-action-btn');
+    const fabMenu = document.getElementById('fab-menu');
+    const addPersonBtn = document.getElementById('add-person');
+    const pauseOnyxBtn = document.getElementById('pause-onyx');
+    const settingsBtn = document.getElementById('settings');
 
-    if (mobileMenuToggle && workspaceNav) {
-        mobileMenuToggle.addEventListener('click', function(e) {
+    if (fabBtn) {
+        fabBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            mobileMenuToggle.classList.toggle('active');
-            workspaceNav.classList.toggle('active');
+            const isVisible = fabMenu.style.display === 'block';
+            fabMenu.style.display = isVisible ? 'none' : 'block';
         });
+    }
 
-        navItems.forEach(item => {
-            item.addEventListener('click', function() {
-                if (window.innerWidth <= 768) {
-                    mobileMenuToggle.classList.remove('active');
-                    workspaceNav.classList.remove('active');
-                }
-            });
+    document.addEventListener('click', function() {
+        if (fabMenu) {
+            fabMenu.style.display = 'none';
+        }
+    });
+
+    if (addPersonBtn) {
+        addPersonBtn.addEventListener('click', function() {
+            showAddPersonModal();
+            fabMenu.style.display = 'none';
         });
+    }
 
-        document.addEventListener('click', function(e) {
-            if (window.innerWidth <= 768 && 
-                !workspaceNav.contains(e.target) && 
-                !mobileMenuToggle.contains(e.target)) {
-                mobileMenuToggle.classList.remove('active');
-                workspaceNav.classList.remove('active');
-            }
+    if (pauseOnyxBtn) {
+        pauseOnyxBtn.addEventListener('click', function() {
+            toggleOnyxStatus();
+            fabMenu.style.display = 'none';
+        });
+    }
+
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', function() {
+            showSettingsModal();
+            fabMenu.style.display = 'none';
         });
     }
 }
 
-function initializePipeline() {
-    renderPipelineColumn('new', mockData.pipeline.new);
-    renderPipelineColumn('engaged', mockData.pipeline.engaged);
-    renderPipelineColumn('qualified', mockData.pipeline.qualified);
-    renderPipelineColumn('ready', mockData.pipeline.ready);
+function showAddPersonModal() {
+    // TODO: Implement add person modal
+    const name = prompt('Enter person\'s name:');
+    const company = prompt('Enter company name:');
+    const email = prompt('Enter email address:');
+    
+    if (name && company && email) {
+        addProspectManually(name, company, email);
+    }
 }
 
-function renderPipelineColumn(columnId, leads) {
-    const columnContent = document.getElementById(`column-${columnId}`);
-    const countElement = document.getElementById(`count-${columnId}`);
-    
-    if (!columnContent) return;
-    
-    countElement.textContent = leads.length;
-    
-    columnContent.innerHTML = leads.map(lead => `
-        <div class="lead-card" data-lead-id="${lead.id}">
-            <div class="lead-name">${lead.name}</div>
-            <div class="lead-company">${lead.company}</div>
-            <div class="lead-status">${lead.status}</div>
-        </div>
-    `).join('');
+async function addProspectManually(name, company, email) {
+    try {
+        const prospectData = {
+            first_name: name.split(' ')[0],
+            last_name: name.split(' ').slice(1).join(' '),
+            company: company,
+            email: email
+        };
+        
+        await onyxAPI.addProspect(prospectData);
+        
+        // Refresh dashboard
+        await loadDashboardData();
+        
+        showSuccessMessage(`${name} from ${company} has been added to your pipeline.`);
+    } catch (error) {
+        console.error('Error adding prospect:', error);
+        showErrorMessage('Failed to add prospect. Please try again.');
+    }
 }
 
-function initializeConversations() {
-    const conversationsList = document.getElementById('conversations-list');
-    
-    if (!conversationsList) return;
-    
-    conversationsList.innerHTML = mockData.conversations.map(conv => `
-        <div class="conversation-item" data-conversation-id="${conv.id}">
-            <div style="font-size: 0.9375rem; margin-bottom: 4px;">${conv.name}</div>
-            <div style="font-size: 0.8125rem; color: rgba(255, 255, 255, 0.6); margin-bottom: 8px;">${conv.company}</div>
-            <div style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.5);">${conv.lastMessage}</div>
-            <div style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.4); margin-top: 4px;">${conv.timestamp}</div>
-        </div>
-    `).join('');
-    
-    document.querySelectorAll('.conversation-item').forEach(item => {
-        item.addEventListener('click', function() {
-            document.querySelectorAll('.conversation-item').forEach(i => i.classList.remove('active'));
-            this.classList.add('active');
-            loadConversationDetail(this.getAttribute('data-conversation-id'));
+async function toggleOnyxStatus() {
+    try {
+        const currentSettings = await onyxAPI.getUserSettings();
+        const newStatus = !currentSettings.is_paused;
+        
+        await onyxAPI.updateSettings({ is_paused: newStatus });
+        
+        // Update status indicator
+        updateStatusIndicator({
+            is_active: !newStatus,
+            is_paused: newStatus
         });
-    });
+        
+        showSuccessMessage(newStatus ? 'Onyx has been paused.' : 'Onyx is now active.');
+    } catch (error) {
+        console.error('Error toggling status:', error);
+        showErrorMessage('Failed to update Onyx status. Please try again.');
+    }
 }
 
-function loadConversationDetail(conversationId) {
-    const detailArea = document.getElementById('conversation-detail');
-    const conversation = mockData.conversations.find(c => c.id == conversationId);
-    
-    if (!conversation) return;
-    
-    detailArea.innerHTML = `
-        <div style="padding: 32px; width: 100%; max-width: 700px;">
-            <div style="margin-bottom: 24px;">
-                <div style="font-size: 1.5rem; margin-bottom: 8px;">${conversation.name}</div>
-                <div style="font-size: 0.9375rem; color: rgba(255, 255, 255, 0.6);">${conversation.company}</div>
-            </div>
-            
-            <div style="background: #0a0a0a; border: 1px solid #222; padding: 20px; margin-bottom: 16px;">
-                <div style="font-size: 0.8125rem; color: rgba(255, 255, 255, 0.5); margin-bottom: 8px;">ONYX (Yesterday)</div>
-                <div style="font-size: 0.9375rem; line-height: 1.6;">
-                    Hi ${conversation.name.split(' ')[0]}, I noticed ${conversation.company} is in the ${mockData.pipeline.ready[0]?.status || 'growth'} phase. 
-                    I wanted to reach out about how we help companies like yours scale their outreach operations.
-                </div>
-            </div>
-            
-            <div style="background: #1a1a1a; border: 1px solid #333; padding: 20px; margin-bottom: 24px;">
-                <div style="font-size: 0.8125rem; color: rgba(255, 255, 255, 0.5); margin-bottom: 8px;">${conversation.name.toUpperCase()} (5 min ago)</div>
-                <div style="font-size: 0.9375rem; line-height: 1.6;">
-                    ${conversation.lastMessage}
-                </div>
-            </div>
-            
-            <button class="btn-primary">Jump In & Reply</button>
-        </div>
-    `;
+function showSettingsModal() {
+    // TODO: Implement settings modal
+    alert('Settings modal will be implemented here.\n\nUsers will be able to:\n- Adjust targeting parameters\n- Update messaging preferences\n- Configure notification settings\n- Manage integrations');
 }
 
-const saveCampaignBtn = document.getElementById('save-campaign');
-if (saveCampaignBtn) {
-    saveCampaignBtn.addEventListener('click', function() {
-        alert('Campaign configuration saved! (Demo mode - backend integration required)');
-    });
+function logout() {
+    localStorage.removeItem('onyx-token');
+    localStorage.removeItem('onyx-user-data');
+    localStorage.removeItem('onyx-onboarding-complete');
+    localStorage.removeItem('onyx-onboarding-data');
+    window.location.href = '/';
 }
+
+function showSuccessMessage(message) {
+    // TODO: Implement proper notification system
+    alert('✅ ' + message);
+}
+
+function showErrorMessage(message) {
+    // TODO: Implement proper notification system  
+    alert('❌ ' + message);
+}
+
+// Details button handler
+document.getElementById('details-btn')?.addEventListener('click', function() {
+    // TODO: Implement detailed analytics modal
+    alert('Detailed analytics will show:\n\n• Hourly activity breakdown\n• Performance trends\n• Conversion metrics\n• Response time analysis');
+});
+
+// Auto-refresh dashboard every 30 seconds
+setInterval(async () => {
+    try {
+        await loadDashboardData();
+    } catch (error) {
+        console.error('Auto-refresh failed:', error);
+    }
+}, 30000);

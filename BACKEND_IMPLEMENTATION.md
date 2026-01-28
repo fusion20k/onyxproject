@@ -266,6 +266,25 @@ Users can access `/payment` at any time during or after trial. The page shows:
 
 ### Required Endpoints
 
+#### **GET /payment/config**
+
+Get Stripe publishable key for frontend.
+
+**Auth**: Not required (public endpoint)
+
+**Response (200)**:
+```json
+{
+  "publishableKey": "pk_test_..."
+}
+```
+
+**Logic**:
+1. Return Stripe publishable key from environment variable
+2. This key is safe to expose publicly
+
+---
+
 #### **POST /payment/create-checkout**
 
 Create Stripe Checkout session for plan selection and START TRIAL.

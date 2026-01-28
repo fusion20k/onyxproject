@@ -1,14 +1,17 @@
 // Onyx Onboarding Flow
 
 let currentStep = 1;
-const totalSteps = 5;
+const totalSteps = 3;
 const onboardingData = {
-    profile: {},
-    icp: {},
-    channels: {
-        linkedin: false,
-        email: false
-    }
+    business_help_who: '',
+    business_help_with: '',
+    target_industries: [],
+    target_company_size: '',
+    target_job_titles: '',
+    target_location: '',
+    service_type: '',
+    email_option: '',
+    forward_email: null
 };
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -82,57 +85,129 @@ function populateFormFields() {
 }
 
 function initializeForms() {
-    const profileForm = document.getElementById('profile-form');
-    if (profileForm) {
-        profileForm.addEventListener('submit', function(e) {
+    // Step 1: Business Form
+    const businessForm = document.getElementById('business-form');
+    if (businessForm) {
+        businessForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            saveProfileData();
+            saveBusinessData();
             nextStep();
         });
     }
 
-    const icpForm = document.getElementById('icp-form');
-    if (icpForm) {
-        icpForm.addEventListener('submit', function(e) {
+    // Step 2: Email Form
+    const emailForm = document.getElementById('email-form');
+    if (emailForm) {
+        emailForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            saveICPData();
+            saveEmailData();
             nextStep();
         });
     }
+
+    // Initialize selectors
+    initializeSelectors();
 }
 
-function saveProfileData() {
-    onboardingData.profile = {
-        companyName: document.getElementById('company-name').value,
-        description: document.getElementById('company-description').value,
-        website: document.getElementById('company-website').value,
-        industry: document.getElementById('company-industry').value
-    };
+function initializeSelectors() {
+    // Industry selector (multi-select)
+    const industrySelector = document.getElementById('industry-selector');
+    if (industrySelector) {
+        industrySelector.addEventListener('click', function(e) {
+            if (e.target.classList.contains('tag-option')) {
+                e.target.classList.toggle('selected');
+                updateSelectedIndustries();
+            }
+        });
+    }
+
+    // Single-select button groups
+    const selectors = ['size-selector', 'title-selector', 'location-selector', 'service-selector'];
+    selectors.forEach(selectorId => {
+        const selector = document.getElementById(selectorId);
+        if (selector) {
+            selector.addEventListener('click', function(e) {
+                if (e.target.classList.contains('option-btn')) {
+                    // Remove active from siblings
+                    selector.querySelectorAll('.option-btn').forEach(btn => 
+                        btn.classList.remove('active')
+                    );
+                    // Add active to clicked
+                    e.target.classList.add('active');
+                    
+                    // Update hidden input
+                    const hiddenInput = selector.closest('.selector-row').querySelector('input[type="hidden"]');
+                    if (hiddenInput) {
+                        hiddenInput.value = e.target.dataset.value;
+                    }
+                }
+            });
+        }
+    });
+
+    // Email option selector
+    const emailOptions = document.querySelectorAll('.email-option');
+    emailOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Remove selected class from all options
+            emailOptions.forEach(opt => opt.classList.remove('selected'));
+            // Add to clicked option
+            this.classList.add('selected');
+            
+            // Check the radio button
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = true;
+            }
+
+            // Show/hide forward email field
+            const forwardField = document.querySelector('.forward-email-field');
+            if (forwardField) {
+                forwardField.style.display = 
+                    radio.value === 'forward' ? 'block' : 'none';
+            }
+        });
+    });
+}
+
+function updateSelectedIndustries() {
+    const selectedTags = document.querySelectorAll('#industry-selector .tag-option.selected');
+    const industries = Array.from(selectedTags).map(tag => tag.dataset.value);
+    document.getElementById('selected-industries').value = industries.join(',');
+}
+
+function saveBusinessData() {
+    onboardingData.business_help_who = document.getElementById('help-who').value;
+    onboardingData.business_help_with = document.getElementById('help-with').value;
+    onboardingData.target_industries = document.getElementById('selected-industries').value.split(',').filter(Boolean);
+    onboardingData.target_company_size = document.getElementById('selected-size').value;
+    onboardingData.target_job_titles = document.getElementById('selected-titles').value;
+    onboardingData.target_location = document.getElementById('selected-location').value;
+    onboardingData.service_type = document.getElementById('selected-service').value;
+    
     saveData();
 }
 
-function saveICPData() {
-    onboardingData.icp = {
-        industries: document.getElementById('icp-industries').value,
-        size: document.getElementById('icp-size').value,
-        location: document.getElementById('icp-location').value,
-        titles: document.getElementById('icp-titles').value,
-        painPoints: document.getElementById('icp-pain-points').value
-    };
+function saveEmailData() {
+    const emailOption = document.querySelector('input[name="email-option"]:checked');
+    onboardingData.email_option = emailOption ? emailOption.value : '';
+    
+    if (onboardingData.email_option === 'forward') {
+        onboardingData.forward_email = document.getElementById('forward-email').value;
+    }
+    
     saveData();
-    updateSummary();
-}
-
-function updateSummary() {
-    document.getElementById('summary-industries').textContent = onboardingData.icp.industries || '—';
-    document.getElementById('summary-size').textContent = onboardingData.icp.size || '—';
-    document.getElementById('summary-titles').textContent = onboardingData.icp.titles || '—';
-    document.getElementById('summary-location').textContent = onboardingData.icp.location || '—';
 }
 
 function nextStep() {
     if (currentStep < totalSteps) {
-        updateStepDisplay(currentStep + 1);
+        if (currentStep === 2) {
+            // Moving to step 3 (launch), start launch sequence
+            updateStepDisplay(currentStep + 1);
+            startLaunchSequence();
+        } else {
+            updateStepDisplay(currentStep + 1);
+        }
     }
 }
 
@@ -165,48 +240,65 @@ function updateStepDisplay(stepNumber) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function connectChannel(channel) {
-    alert(`Channel connection will be implemented with backend integration.\n\nFor now, this is a placeholder. You'll connect your ${channel.charAt(0).toUpperCase() + channel.slice(1)} account here.`);
+function startLaunchSequence() {
+    const statusMessages = [
+        'Configuring your outreach parameters...',
+        'Setting up prospect targeting...',
+        'Initializing AI messaging system...',
+        'Onyx is ready to work!'
+    ];
     
-    onboardingData.channels[channel] = true;
+    const statusElement = document.getElementById('status-message');
+    const dots = document.querySelectorAll('.progress-dots .dot');
     
-    const channelCards = document.querySelectorAll('.channel-card');
-    channelCards.forEach(card => {
-        const channelName = card.querySelector('.channel-name').textContent.toLowerCase();
-        if (channelName === channel) {
-            const statusEl = card.querySelector('.channel-status');
-            const btnEl = card.querySelector('.btn-channel');
-            statusEl.textContent = 'Connected';
-            statusEl.classList.add('connected');
-            btnEl.textContent = 'Disconnect';
-            btnEl.classList.add('connected');
+    let messageIndex = 0;
+    let dotIndex = 0;
+    
+    const updateMessage = () => {
+        if (messageIndex < statusMessages.length - 1) {
+            statusElement.textContent = statusMessages[messageIndex];
+            
+            // Update dots
+            if (dotIndex < dots.length) {
+                dots[dotIndex].classList.add('active');
+                dotIndex++;
+            }
+            
+            messageIndex++;
+            setTimeout(updateMessage, 1500);
+        } else {
+            // Final message and complete onboarding
+            statusElement.textContent = statusMessages[statusMessages.length - 1];
+            dots.forEach(dot => dot.classList.add('active'));
+            
+            setTimeout(() => {
+                completeOnboarding();
+            }, 2000);
         }
-    });
+    };
     
-    saveData();
+    // Start the sequence after a short delay
+    setTimeout(updateMessage, 1000);
 }
 
-function completeOnboarding() {
-    if (!onboardingData.profile.companyName) {
-        alert('Please complete your business profile first.');
-        updateStepDisplay(2);
-        return;
+async function completeOnboarding() {
+    try {
+        // Send onboarding data to backend
+        const response = await onyxAPI.completeOnboarding(onboardingData);
+        
+        localStorage.setItem('onyx-onboarding-complete', 'true');
+        localStorage.setItem('onyx-onboarding-data', JSON.stringify(onboardingData));
+        
+        // Redirect to workspace
+        window.location.href = '/app';
+        
+    } catch (error) {
+        console.error('Failed to complete onboarding:', error);
+        
+        // Fallback: complete locally
+        localStorage.setItem('onyx-onboarding-complete', 'true');
+        localStorage.setItem('onyx-onboarding-data', JSON.stringify(onboardingData));
+        
+        window.location.href = '/app';
     }
-    
-    if (!onboardingData.icp.industries || !onboardingData.icp.size) {
-        alert('Please complete your ICP configuration first.');
-        updateStepDisplay(3);
-        return;
-    }
-    
-    localStorage.setItem('onyx-onboarding-complete', 'true');
-    
-    localStorage.setItem('onyx-user-data', JSON.stringify({
-        profile: onboardingData.profile,
-        icp: onboardingData.icp,
-        channels: onboardingData.channels,
-        setupDate: new Date().toISOString()
-    }));
-    
-    window.location.href = '/app';
 }

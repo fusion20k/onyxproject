@@ -8,9 +8,10 @@
    ======================================== */
 
 .onboarding-page {
-    background-color: #000;
-    color: #fff;
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-family: var(--font-primary);
+    font-size: var(--text-base);
     line-height: 1.6;
     margin: 0;
     padding: 0;
@@ -49,22 +50,23 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    border: 2px solid #333;
-    background: #000;
-    transition: all 0.3s;
+    border: 2px solid var(--color-border);
+    background: var(--color-bg-primary);
+    transition: var(--transition-normal);
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .progress-step.active .progress-dot {
-    border-color: #fff;
-    background: #fff;
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    box-shadow: 0 0 12px rgba(91, 159, 239, 0.3);
 }
 
 .progress-step.completed .progress-dot {
-    border-color: #4ade80;
-    background: #4ade80;
+    border-color: var(--color-success);
+    background: var(--color-success);
 }
 
 .progress-step.completed .progress-dot::after {
@@ -77,25 +79,27 @@
 .progress-label {
     position: absolute;
     top: 40px;
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.5);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
     white-space: nowrap;
-    transition: color 0.3s;
+    transition: var(--transition-normal);
+    font-weight: 500;
 }
 
 .progress-step.active .progress-label {
-    color: #fff;
+    color: var(--color-text-primary);
 }
 
 .progress-line {
     width: 80px;
     height: 2px;
-    background: #333;
-    margin: 0 8px;
+    background: var(--color-border);
+    margin: 0 var(--spacing-xs);
+    border-radius: 1px;
 }
 
 .progress-step.completed + .progress-line {
-    background: #4ade80;
+    background: var(--color-success);
 }
 
 /* ========================================

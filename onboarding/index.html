@@ -7,6 +7,7 @@
     <title>Setup - Onyx</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/onboarding.css">
+    <script src="../js/api.js"></script>
 </head>
 <body class="onboarding-page">
     <div class="onboarding-container" role="main">
@@ -14,82 +15,139 @@
         <div class="progress-bar" role="progressbar" aria-label="Onboarding progress">
             <div class="progress-step active" data-step="1">
                 <div class="progress-dot"></div>
-                <div class="progress-label">Welcome</div>
             </div>
             <div class="progress-line"></div>
             <div class="progress-step" data-step="2">
                 <div class="progress-dot"></div>
-                <div class="progress-label">Profile</div>
             </div>
             <div class="progress-line"></div>
             <div class="progress-step" data-step="3">
                 <div class="progress-dot"></div>
-                <div class="progress-label">ICP</div>
-            </div>
-            <div class="progress-line"></div>
-            <div class="progress-step" data-step="4">
-                <div class="progress-dot"></div>
-                <div class="progress-label">Channels</div>
-            </div>
-            <div class="progress-line"></div>
-            <div class="progress-step" data-step="5">
-                <div class="progress-dot"></div>
-                <div class="progress-label">Launch</div>
             </div>
         </div>
 
-        <!-- Step 1: Welcome -->
+        <!-- Step 1: Tell Onyx about your business -->
         <div class="onboarding-step active" id="step-1">
             <div class="step-content">
-                <div class="step-brand">ONYX</div>
-                <h1 class="step-title">Welcome to Your Autonomous Outreach Co-Founder</h1>
-                <p class="step-description">In the next 5 minutes, you'll configure Onyx to autonomously generate qualified leads while you focus on what matters most—delivering value to your clients.</p>
-                
-                <div class="feature-grid">
-                    <div class="feature-item">
-                        <div class="feature-text">Define your ideal client profile</div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-text">AI handles outreach and qualification</div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-text">You join when leads are ready</div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-text">Track performance in real-time</div>
-                    </div>
-                </div>
+                <h1 class="step-title">Tell Onyx about your business</h1>
+                <p class="step-description">This helps Onyx understand who you help and how to find your ideal clients.</p>
 
-                <button class="btn-primary" onclick="nextStep()">Let's get started</button>
+                <form class="onboarding-form" id="business-form">
+                    <!-- Section A: What You Do -->
+                    <div class="form-section">
+                        <h3 class="section-title">What You Do</h3>
+                        <div class="sentence-builder">
+                            <label class="sentence-label">I help</label>
+                            <input type="text" class="sentence-input" id="help-who" placeholder="SaaS companies" required>
+                            <label class="sentence-label">with</label>
+                            <input type="text" class="sentence-input" id="help-with" placeholder="customer retention" required>
+                        </div>
+                        <div class="examples">
+                            <small class="field-hint">Examples: "SaaS companies with conversion optimization" • "e-commerce brands with email marketing"</small>
+                        </div>
+                    </div>
+
+                    <!-- Section B: Your Ideal Client -->
+                    <div class="form-section">
+                        <h3 class="section-title">Your Ideal Client</h3>
+                        <div class="client-selector">
+                            <div class="selector-row">
+                                <label class="field-label">Industry</label>
+                                <div class="tag-selector" id="industry-selector">
+                                    <button type="button" class="tag-option" data-value="SaaS">SaaS</button>
+                                    <button type="button" class="tag-option" data-value="E-commerce">E-commerce</button>
+                                    <button type="button" class="tag-option" data-value="FinTech">FinTech</button>
+                                    <button type="button" class="tag-option" data-value="HealthTech">HealthTech</button>
+                                    <button type="button" class="tag-option" data-value="EdTech">EdTech</button>
+                                    <button type="button" class="tag-option" data-value="Other">Other</button>
+                                </div>
+                                <input type="hidden" id="selected-industries" required>
+                            </div>
+
+                            <div class="selector-row">
+                                <label class="field-label">Company Size</label>
+                                <div class="button-selector" id="size-selector">
+                                    <button type="button" class="option-btn" data-value="small">Small (1-50)</button>
+                                    <button type="button" class="option-btn" data-value="medium">Medium (51-200)</button>
+                                    <button type="button" class="option-btn" data-value="large">Large (201+)</button>
+                                </div>
+                                <input type="hidden" id="selected-size" required>
+                            </div>
+
+                            <div class="selector-row">
+                                <label class="field-label">Job Title</label>
+                                <div class="button-selector" id="title-selector">
+                                    <button type="button" class="option-btn" data-value="founders">Founders</button>
+                                    <button type="button" class="option-btn" data-value="executives">Executives</button>
+                                    <button type="button" class="option-btn" data-value="managers">Managers</button>
+                                    <button type="button" class="option-btn" data-value="specialists">Specialists</button>
+                                </div>
+                                <input type="hidden" id="selected-titles" required>
+                            </div>
+
+                            <div class="selector-row">
+                                <label class="field-label">Location</label>
+                                <div class="button-selector" id="location-selector">
+                                    <button type="button" class="option-btn" data-value="anywhere">Anywhere</button>
+                                    <button type="button" class="option-btn" data-value="north-america">North America</button>
+                                    <button type="button" class="option-btn" data-value="europe">Europe</button>
+                                </div>
+                                <input type="hidden" id="selected-location" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section C: How You Help -->
+                    <div class="form-section">
+                        <h3 class="section-title">How You Help</h3>
+                        <div class="button-selector" id="service-selector">
+                            <button type="button" class="option-btn" data-value="one-time">One-time project</button>
+                            <button type="button" class="option-btn" data-value="ongoing">Ongoing work</button>
+                            <button type="button" class="option-btn" data-value="both">Both</button>
+                        </div>
+                        <input type="hidden" id="selected-service" required>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Continue</button>
+                    </div>
+                </form>
             </div>
         </div>
 
-        <!-- Step 2: Business Profile -->
+        <!-- Step 2: Email Setup -->
         <div class="onboarding-step" id="step-2">
             <div class="step-content">
-                <h1 class="step-title">Tell us about your business</h1>
-                <p class="step-description">This helps Onyx craft personalized outreach that resonates with your prospects.</p>
+                <h1 class="step-title">How should people reply?</h1>
+                <p class="step-description">Choose how you want to receive and manage prospect replies.</p>
 
-                <form class="onboarding-form" id="profile-form">
-                    <div class="form-field">
-                        <label class="field-label">Company Name</label>
-                        <input type="text" class="field-input" id="company-name" placeholder="e.g., Acme Inc" required>
-                    </div>
+                <form class="onboarding-form" id="email-form">
+                    <div class="email-options">
+                        <div class="email-option recommended" data-option="onyx-email">
+                            <div class="option-header">
+                                <input type="radio" name="email-option" value="onyx-email" id="option-onyx" required>
+                                <label for="option-onyx" class="option-title">Use Onyx Email <span class="recommended-badge">Recommended</span></label>
+                            </div>
+                            <div class="option-description">
+                                <p>Prospects reply to <strong>yourname@onyx-outreach.com</strong></p>
+                                <p>You see replies in your dashboard</p>
+                                <p>No setup required</p>
+                            </div>
+                        </div>
 
-                    <div class="form-field">
-                        <label class="field-label">What does your company do?</label>
-                        <textarea class="field-textarea" id="company-description" placeholder="Brief description of your product or service..." rows="4" required></textarea>
-                        <small class="field-hint">Be specific. This will be used to personalize outreach.</small>
-                    </div>
-
-                    <div class="form-field">
-                        <label class="field-label">Your website (optional)</label>
-                        <input type="url" class="field-input" id="company-website" placeholder="https://yourcompany.com">
-                    </div>
-
-                    <div class="form-field">
-                        <label class="field-label">Industry</label>
-                        <input type="text" class="field-input" id="company-industry" placeholder="e.g., SaaS, Consulting, E-commerce" required>
+                        <div class="email-option" data-option="forward">
+                            <div class="option-header">
+                                <input type="radio" name="email-option" value="forward" id="option-forward" required>
+                                <label for="option-forward" class="option-title">Forward to my email</label>
+                            </div>
+                            <div class="option-description">
+                                <p>Replies forward to your regular email</p>
+                                <p>Simple verification required</p>
+                            </div>
+                            <div class="forward-email-field" style="display: none;">
+                                <input type="email" class="field-input" id="forward-email" placeholder="your@email.com">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-actions">
@@ -100,143 +158,26 @@
             </div>
         </div>
 
-        <!-- Step 3: ICP Configuration -->
+        <!-- Step 3: Launch -->
         <div class="onboarding-step" id="step-3">
             <div class="step-content">
-                <h1 class="step-title">Define your ideal client profile</h1>
-                <p class="step-description">Who should Onyx reach out to? Be as specific as possible for best results.</p>
-
-                <form class="onboarding-form" id="icp-form">
-                    <div class="form-field">
-                        <label class="field-label">Target Industries</label>
-                        <input type="text" class="field-input" id="icp-industries" placeholder="e.g., SaaS, B2B Software, FinTech" required>
-                        <small class="field-hint">Separate multiple industries with commas</small>
+                <div class="launch-screen">
+                    <div class="launch-animation">
+                        <div class="pulse-circle"></div>
+                        <div class="onyx-logo">ONYX</div>
                     </div>
-
-                    <div class="form-grid">
-                        <div class="form-field">
-                            <label class="field-label">Company Size</label>
-                            <select class="field-select" id="icp-size" required>
-                                <option value="">Select size</option>
-                                <option value="1-10">1-10 employees</option>
-                                <option value="11-50">11-50 employees</option>
-                                <option value="51-200">51-200 employees</option>
-                                <option value="201-1000">201-1000 employees</option>
-                                <option value="1000+">1000+ employees</option>
-                            </select>
-                        </div>
-
-                        <div class="form-field">
-                            <label class="field-label">Location</label>
-                            <input type="text" class="field-input" id="icp-location" placeholder="e.g., United States, North America" required>
-                        </div>
+                    <h1 class="step-title">Onyx is now working</h1>
+                    <p class="step-description">Finding your first prospects...</p>
+                    
+                    <div class="status-message" id="status-message">
+                        Configuring your outreach parameters...
                     </div>
-
-                    <div class="form-field">
-                        <label class="field-label">Job Titles to Target</label>
-                        <input type="text" class="field-input" id="icp-titles" placeholder="e.g., CEO, Founder, VP of Sales, Head of Marketing" required>
-                        <small class="field-hint">Separate multiple titles with commas</small>
+                    
+                    <div class="progress-dots">
+                        <span class="dot active"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
                     </div>
-
-                    <div class="form-field">
-                        <label class="field-label">Pain Points (optional)</label>
-                        <textarea class="field-textarea" id="icp-pain-points" placeholder="What problems does your ideal client face that you solve?" rows="3"></textarea>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="button" class="btn-secondary" onclick="prevStep()">Back</button>
-                        <button type="submit" class="btn-primary">Continue</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Step 4: Channel Connection -->
-        <div class="onboarding-step" id="step-4">
-            <div class="step-content">
-                <h1 class="step-title">Connect your outreach channels</h1>
-                <p class="step-description">Onyx will use these channels to find and engage prospects. You can skip this and connect later.</p>
-
-                <div class="channel-list">
-                    <div class="channel-card">
-                        <div class="channel-header">
-                            <div class="channel-info">
-                                <div>
-                                    <div class="channel-name">LinkedIn</div>
-                                    <div class="channel-desc">Connect prospects on LinkedIn with personalized messages</div>
-                                </div>
-                            </div>
-                            <div class="channel-status">Not connected</div>
-                        </div>
-                        <button class="btn-channel" onclick="connectChannel('linkedin')">Connect LinkedIn</button>
-                    </div>
-
-                    <div class="channel-card">
-                        <div class="channel-header">
-                            <div class="channel-info">
-                                <div>
-                                    <div class="channel-name">Email</div>
-                                    <div class="channel-desc">Send personalized cold emails to prospects</div>
-                                </div>
-                            </div>
-                            <div class="channel-status">Not connected</div>
-                        </div>
-                        <button class="btn-channel" onclick="connectChannel('email')">Connect Email</button>
-                    </div>
-                </div>
-
-                <div class="skip-notice">
-                    <p>You can connect channels later from your dashboard settings.</p>
-                </div>
-
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="prevStep()">Back</button>
-                    <button type="button" class="btn-primary" onclick="nextStep()">Continue</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Step 5: Launch -->
-        <div class="onboarding-step" id="step-5">
-            <div class="step-content">
-                <h1 class="step-title">You're all set!</h1>
-                <p class="step-description">Onyx is configured and ready to start generating qualified leads for you.</p>
-
-                <div class="setup-summary">
-                    <h3 class="summary-title">Your Configuration</h3>
-                    <div class="summary-grid">
-                        <div class="summary-item">
-                            <div class="summary-label">Target Industries</div>
-                            <div class="summary-value" id="summary-industries">—</div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="summary-label">Company Size</div>
-                            <div class="summary-value" id="summary-size">—</div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="summary-label">Job Titles</div>
-                            <div class="summary-value" id="summary-titles">—</div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="summary-label">Location</div>
-                            <div class="summary-value" id="summary-location">—</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="next-steps">
-                    <h3 class="summary-title">What happens next?</h3>
-                    <ul class="next-steps-list">
-                        <li>Onyx will start finding prospects matching your ICP</li>
-                        <li>Personalized outreach will begin within 24 hours</li>
-                        <li>You'll receive notifications when leads are qualified</li>
-                        <li>Jump into conversations when prospects are ready to talk</li>
-                    </ul>
-                </div>
-
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="prevStep()">Back</button>
-                    <button type="button" class="btn-primary" onclick="completeOnboarding()">Launch Onyx</button>
                 </div>
             </div>
         </div>
