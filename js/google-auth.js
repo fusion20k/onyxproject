@@ -2,7 +2,7 @@
 // Handles Google Sign-In integration for both signup and login
 
 // Google OAuth configuration
-const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID'; // TODO: Replace with actual client ID
+const GOOGLE_CLIENT_ID = '810963662691-t48kqkocpcn67mrp05onjliqc1qa25kg.apps.googleusercontent.com'; // TODO: Replace with actual client ID
 
 // Initialize Google Auth when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
