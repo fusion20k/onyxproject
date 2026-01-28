@@ -41,8 +41,8 @@
     --color-warning: #ffffff;
     --color-error: #ffffff;
     
-    /* Typography - Clean Sans-Serif */
-    --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    /* Typography - Neo Folio Font */
+    --font-primary: 'Neo Folio', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
     --font-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
     
     /* Typography Scale */
@@ -702,17 +702,17 @@ section:not(.hero):not(.final-cta):not(.application):not(.pricing) .section-titl
 .form-group textarea {
     width: 100%;
     padding: 12px;
-    background-color: var(--color-bg);
+    background-color: var(--color-bg-secondary);
     border: 1px solid var(--color-border);
-    color: var(--color-text);
-    font-family: var(--font-mono);
+    color: var(--color-text-primary);
+    font-family: var(--font-primary);
     font-size: 1rem;
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: var(--color-text);
+    border-color: var(--color-text-primary);
 }
 
 .form-group textarea {
@@ -724,6 +724,58 @@ section:not(.hero):not(.final-cta):not(.application):not(.pricing) .section-titl
     margin-top: 0.5em;
     font-size: 0.75rem;
     opacity: 0.6;
+}
+
+.signup-divider {
+    text-align: center;
+    margin: var(--spacing-sm) 0;
+    position: relative;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+}
+
+.signup-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--color-border);
+    z-index: 1;
+}
+
+.signup-divider span {
+    background: var(--color-bg-primary);
+    padding: 0 1rem;
+    position: relative;
+    z-index: 2;
+}
+
+.google-signin-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 12px 24px;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    font-family: var(--font-primary);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition-normal);
+    margin-bottom: var(--spacing-sm);
+}
+
+.google-signin-btn:hover {
+    background: var(--color-bg-hover);
+    border-color: var(--color-text-primary);
+}
+
+.google-signin-btn svg {
+    flex-shrink: 0;
 }
 
 .signup-terms {

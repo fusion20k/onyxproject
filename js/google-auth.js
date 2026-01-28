@@ -10,12 +10,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeGoogleAuth() {
-    // Update the client ID in the HTML element
-    const gidOnload = document.getElementById('g_id_onload');
-    if (gidOnload) {
-        gidOnload.setAttribute('data-client_id', GOOGLE_CLIENT_ID);
-    }
-    
     // Initialize Google Identity Services
     if (typeof google !== 'undefined' && google.accounts) {
         google.accounts.id.initialize({
@@ -25,16 +19,11 @@ function initializeGoogleAuth() {
             cancel_on_tap_outside: true
         });
         
-        // Render the sign-in button
-        const signInDiv = document.querySelector('.g_id_signin');
-        if (signInDiv) {
-            google.accounts.id.renderButton(signInDiv, {
-                type: 'standard',
-                shape: 'rectangular',
-                theme: 'filled_blue',
-                text: 'signup_with',
-                size: 'large',
-                logo_alignment: 'left'
+        // Add click handler to custom button
+        const customBtn = document.getElementById('custom-google-btn');
+        if (customBtn) {
+            customBtn.addEventListener('click', () => {
+                google.accounts.id.prompt();
             });
         }
     } else {
