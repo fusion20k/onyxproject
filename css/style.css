@@ -775,7 +775,7 @@ section:not(.hero):not(.final-cta):not(.application):not(.pricing) .section-titl
 }
 
 .signup-divider span {
-    background: var(--color-bg-primary);
+    background: transparent;
     padding: 0 1rem;
     position: relative;
     z-index: 2;
