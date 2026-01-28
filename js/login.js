@@ -1,5 +1,3 @@
-const API_BASE_URL = 'https://onyxbackend-55af.onrender.com';
-
 let loginModal;
 let loginBtn;
 let closeLoginModal;

@@ -5,31 +5,55 @@
 const GOOGLE_CLIENT_ID = '810963662691-t48kqkocpcn67mrp05onjliqc1qa25kg.apps.googleusercontent.com'; // TODO: Replace with actual client ID
 
 // Initialize Google Auth when DOM is loaded
+let initAttempts = 0;
+const MAX_INIT_ATTEMPTS = 10;
+
 document.addEventListener('DOMContentLoaded', function() {
     initializeGoogleAuth();
 });
 
 function initializeGoogleAuth() {
+    initAttempts++;
+    
     // Initialize Google Identity Services
-    if (typeof google !== 'undefined' && google.accounts) {
-        google.accounts.id.initialize({
-            client_id: GOOGLE_CLIENT_ID,
-            callback: handleGoogleSignUp,
-            auto_select: false,
-            cancel_on_tap_outside: true
-        });
-        
-        // Add click handler to custom button
-        const customBtn = document.getElementById('custom-google-btn');
-        if (customBtn) {
-            customBtn.addEventListener('click', () => {
-                google.accounts.id.prompt();
+    if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+        try {
+            google.accounts.id.initialize({
+                client_id: GOOGLE_CLIENT_ID,
+                callback: handleGoogleSignUp,
+                auto_select: false,
+                cancel_on_tap_outside: true
             });
+            
+            // Add click handler to custom button
+            const customBtn = document.getElementById('custom-google-btn');
+            if (customBtn) {
+                customBtn.addEventListener('click', () => {
+                    try {
+                        google.accounts.id.prompt();
+                    } catch (error) {
+                        console.error('Error showing Google prompt:', error);
+                        showErrorMessage('Unable to show Google sign-in. Please try email signup instead.');
+                    }
+                });
+            }
+            
+            console.log('Google Identity Services initialized successfully');
+        } catch (error) {
+            console.error('Error initializing Google Identity Services:', error);
         }
     } else {
-        console.warn('Google Identity Services not loaded');
-        // Retry after a short delay
-        setTimeout(initializeGoogleAuth, 1000);
+        if (initAttempts < MAX_INIT_ATTEMPTS) {
+            console.warn(`Google Identity Services not loaded yet. Retry ${initAttempts}/${MAX_INIT_ATTEMPTS}`);
+            setTimeout(initializeGoogleAuth, 500);
+        } else {
+            console.error('Google Identity Services failed to load after maximum attempts');
+            // Hide Google sign-in button if it failed to load
+            const customBtn = document.getElementById('custom-google-btn');
+            if (customBtn) {
+                customBtn.style.display = 'none';
+            }
+        }
     }
 }
 
