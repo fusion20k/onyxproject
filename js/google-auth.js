@@ -25,17 +25,35 @@ function initializeGoogleAuth() {
                 cancel_on_tap_outside: true
             });
             
-            // Add click handler to custom button
+            // Replace custom button with Google's rendered button
             const customBtn = document.getElementById('custom-google-btn');
             if (customBtn) {
-                customBtn.addEventListener('click', () => {
-                    try {
-                        google.accounts.id.prompt();
-                    } catch (error) {
-                        console.error('Error showing Google prompt:', error);
-                        showErrorMessage('Unable to show Google sign-in. Please try email signup instead.');
+                // Hide custom button
+                customBtn.style.display = 'none';
+                
+                // Create container for Google button
+                const googleBtnContainer = document.createElement('div');
+                googleBtnContainer.id = 'google-button-container';
+                googleBtnContainer.style.width = '100%';
+                googleBtnContainer.style.display = 'flex';
+                googleBtnContainer.style.justifyContent = 'center';
+                
+                // Insert Google button container after custom button
+                customBtn.parentNode.insertBefore(googleBtnContainer, customBtn.nextSibling);
+                
+                // Render Google's button
+                google.accounts.id.renderButton(
+                    googleBtnContainer,
+                    {
+                        theme: 'filled_black',
+                        size: 'large',
+                        text: 'signup_with',
+                        width: customBtn.offsetWidth || 300,
+                        logo_alignment: 'left'
                     }
-                });
+                );
+                
+                console.log('Google button rendered successfully');
             }
             
             console.log('Google Identity Services initialized successfully');
